@@ -1,38 +1,44 @@
-# create-svelte
+# Ge zijt van Kapellen als ge ...
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+![Readme.jpg](src%2Flib%2Fimages%2FReadme.jpg)
 
-## Creating a project
+## Project Overview
 
-If you're seeing this, you've probably already done this step. Congrats!
+Welcome to the **"Ge zijt van Kapellen als ge ..."** project, an initiative dedicated to preserving and showcasing the rich history and culture of the beautiful town of Kapellen, Belgium. This project originated from a passionate community group and aims to revitalize the existing website, transforming it into an intuitive, responsive, and innovative archive that captures the essence of Kapellen.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+### Background
+The original website served as a simple image repository, housing a diverse collection of photographs related to Kapellen, including people, streets, schools, hairdressers, and other interesting subjects. However, the current website is outdated, unintuitive, and not responsive, making it challenging for users to navigate and explore the content.
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+### Project Goals
+Our primary objective is to upgrade the website into a quick-accessible archive that is both user-friendly and responsive. We aim to create an engaging platform that allows the community of Kapellen to explore and relive their town's history, fostering a sense of pride and nostalgia.
 
-## Developing
+## Features and Enhancements
+- **Intuitive Navigation**: Simplify the navigation to enhance user experience.
+- **Responsive Design**: Ensure the website is fully responsive across all devices.
+- **Innovative Elements**: Incorporate interactive features to make the browsing experience engaging and informative.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## To-Do List
 
-```bash
-npm run dev
+### 1. Finish Index Page
+- [ ] **Poem of the Day**: Display a "gedicht van de dag" section to highlight local poetry.
+- [ ] **Interactive Map**: Integrate a Leaflet map to allow users to explore major groups of pictures, including streets, schools, and other significant locations.
+- [ ] **Introductory Text**: Add a welcoming introductory text to set the context for new visitors.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+### 2. Create First Detail Page
+- [ ] **Load Specific Pictures**: Display pictures relevant to the selected detail page.
+- [ ] **Interactive Map**: Consider adding another interactive map specific to the detail page's content.
+- [ ] **Page Title**: Include a clear title for the current page to enhance navigation.
 
-## Building
+### 3. Storage Solution
+- [ ] **Evaluate Storage Options**: Determine whether to transfer the existing pictures to Amazon S3 or Google Cloud Storage for better scalability and accessibility.
 
-To create a production version of your app:
+## How to Contribute
+We welcome contributions from the community! Whether you're a developer, designer, or someone with a deep love for Kapellen, your input and support are invaluable. Here are a few ways you can help:
+- **Development**: Assist with coding and technical implementation.
+- **Design**: Help improve the website's aesthetics and user interface.
+- **Content**: Provide additional photos, stories, and historical information about Kapellen.
 
-```bash
-npm run build
-```
+## Contact Us
+If you have any questions or would like to contribute to the project, please reach out to us at [daniel.savin@ds-innovation.dev](mailto:daniel.savin@ds-innovation.dev).
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+Thank you for your support in preserving the rich history and culture of Kapellen!
