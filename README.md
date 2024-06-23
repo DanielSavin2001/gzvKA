@@ -32,6 +32,11 @@ Our primary objective is to upgrade the website into a quick-accessible archive 
 ### 3. Storage Solution
 - [ ] **Evaluate Storage Options**: Determine whether to transfer the existing pictures to Amazon S3 or Google Cloud Storage for better scalability and accessibility.
 
+### 4. Citizen Contribution
+- [ ] **GitHub Projects**: Add a GitHub project to track all issues & PR's, here it would be possible to suggest new features/improvements.
+- [ ] **Upload zone**: There should be an 'Upload zone' for citizens of Kapellen, so that they can upload new images, suggest where they belong and give extra information related to the images. Or even upload stories, poems and much more ...
+
+
 ## How to Contribute
 We welcome contributions from the community! Whether you're a developer, designer, or someone with a deep love for Kapellen, your input and support are invaluable. Here are a few ways you can help:
 - **Development**: Assist with coding and technical implementation.
