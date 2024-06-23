@@ -1,6 +1,6 @@
 # Ge zijt van Kapellen als ge ...
 
-![Readme.jpg](src%2Flib%2Fimages%2FReadme.jpg)
+![Readme.jpg](project-Kapellen/src%2Flib%2Fimages%2FReadme.jpg)
 
 ## Project Overview
 
