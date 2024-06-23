@@ -19,7 +19,7 @@
 
 </style>
 
-<Navbar color="light" navClass="px-2 sm:px-4 py-2.5 sticky w-full z-20 top-0 left-0 border-b"
+<Navbar color="light" navClass="px-2 sm:px-4 py-2.5 sticky w-full z-40 top-0 left-0 border-b"
         let:hidden
         let:toggle
 >
