@@ -19,6 +19,8 @@ Our primary objective is to upgrade the website into a quick-accessible archive 
 
 ## To-Do List
 
+The project can be followed on the following project overview: [https://github.com/users/DanielSavin2001/projects/4](https://github.com/users/DanielSavin2001/projects/4)
+
 ### 1. Finish Index Page
 - [ ] **Poem of the Day**: Display a "gedicht van de dag" section to highlight local poetry.
 - [ ] **Interactive Map**: Integrate a Leaflet map to allow users to explore major groups of pictures, including streets, schools, and other significant locations.
