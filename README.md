@@ -36,6 +36,11 @@ Our primary objective is to upgrade the website into a quick-accessible archive 
 - [ ] **GitHub Projects**: Add a GitHub project to track all issues & PR's, here it would be possible to suggest new features/improvements.
 - [ ] **Upload zone**: There should be an 'Upload zone' for citizens of Kapellen, so that they can upload new images, suggest where they belong and give extra information related to the images. Or even upload stories, poems and much more ...
 
+### 5. Image Search Engine
+- [ ] **Normalize image titles**: All the accents, upper/lower cases, and special characters should be removed.
+- [ ] **Image metadata & URL in db**: The image URL will be stored together with all the metadata related to it (Original title, Normalized title, WGS84 coordinates, Tags, ...).
+- [ ] **Image is searchable**: At last, the image should be searchable based on normalized title, coordinates, tags and much more...
+
 
 ## How to Contribute
 We welcome contributions from the community! Whether you're a developer, designer, or someone with a deep love for Kapellen, your input and support are invaluable. Here are a few ways you can help:
