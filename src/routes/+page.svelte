@@ -1,5 +1,26 @@
-<script>
-    import { MapLibre } from 'svelte-maplibre';
+<script lang="ts">
+    import { MapLibre, GeoJSON } from 'svelte-maplibre';
+    import * as turf from 'turf';
+    import {onMount} from "svelte";
+    import {GeoJSONFeatureCollection} from "./types";
+
+    let geojsonData:GeoJSONFeatureCollection;
+
+    onMount(async () => {
+        // Fetch GeoJSON data or load it from a local file
+        const response = await fetch('https://firebasestorage.googleapis.com/v0/b/gzvka-12a9f.appspot.com/o/TEST-MAP.geojson?alt=media&token=03a133ab-f6a5-459e-a30e-39e868b87d20');
+        console.log(response)
+        
+        
+        geojsonData = await response.json();
+        
+        console.log(geojsonData)
+        
+        // Example of using Turf.js to manipulate data
+        const bufferedFeatures = turf.buffer(geojsonData, 100, { units: 'meters' });
+        // Update geojsonData with buffered features
+        geojsonData = bufferedFeatures;
+    });
 </script>
 
 <div class="text-center">
@@ -16,7 +37,16 @@
         zoom={10}
         class="map"
         standardControls
-        style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json" />
+        style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json">
+    <GeoJSON 
+    id="my-data" 
+    data={geojsonData}
+    cluster={{ // Cluster configuration (optional)
+    radius: 50, // Adjust cluster radius as needed
+    maxZoom: 14, // Maximum zoom level for clusters
+    // Add other cluster options as needed
+    }}/>
+</MapLibre>
 
 <style>
     :global(.map) {

@@ -1,0 +1,108 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    4.42668,
+                    51.322146,
+                    0.0
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "id": "C1K5sQvMlDyfT2PVIjZS",
+                "imageName": "Bloemenlei - mobilisatie 1939",
+                "imgURL": "gs://gzvka-12a9f.appspot.com/C1K5sQvMlDyfT2PVIjZS.jpg",
+                "nameOfSender": "Heemkring Hoghescote",
+                "yearOfImage": "1939"
+            },
+            "type": "Feature"
+        },
+		    {
+      "type": "Feature",
+      "properties": {
+        "id": "C1K5sQvMlDyfT2PVIjZS",
+        "imgURL": "gs://gzvka-12a9f.appspot.com/C1K5sQvMlDyfT2PVIjZS.jpg",
+        "imageName": "Bloemenlei - mobilisatie 1939",
+        "yearOfImage": "1939",
+        "nameOfSender": "Heemkring Hoghescote"
+      },"geometry": {
+        "coordinates": [
+            4.42668,
+            51.322146,
+            0.0
+        ],
+        "type": "Point"
+		}
+	},
+	    {
+      "type": "Feature",
+      "properties": {
+        "id": "C1K5sQvMlDyfT2PVIjZS",
+        "imgURL": "gs://gzvka-12a9f.appspot.com/C1K5sQvMlDyfT2PVIjZS.jpg",
+        "imageName": "Bloemenlei - mobilisatie 1939",
+        "yearOfImage": "1939",
+        "nameOfSender": "Heemkring Hoghescote"
+      },"geometry": {
+        "coordinates": [
+            4.42668,
+            51.322146,
+            0.0
+        ],
+        "type": "Point"
+		}
+	},
+	    {
+      "type": "Feature",
+      "properties": {
+        "id": "C1K5sQvMlDyfT2PVIjZS",
+        "imgURL": "gs://gzvka-12a9f.appspot.com/C1K5sQvMlDyfT2PVIjZS.jpg",
+        "imageName": "Bloemenlei - mobilisatie 1939",
+        "yearOfImage": "1939",
+        "nameOfSender": "Heemkring Hoghescote"
+      },"geometry": {
+        "coordinates": [
+            4.42668,
+            51.322146,
+            0.0
+        ],
+        "type": "Point"
+		}
+	},
+	    {
+      "type": "Feature",
+      "properties": {
+        "id": "C1K5sQvMlDyfT2PVIjZS",
+        "imgURL": "gs://gzvka-12a9f.appspot.com/C1K5sQvMlDyfT2PVIjZS.jpg",
+        "imageName": "Bloemenlei - mobilisatie 1939",
+        "yearOfImage": "1939",
+        "nameOfSender": "Heemkring Hoghescote"
+      },"geometry": {
+        "coordinates": [
+            4.45668,
+            51.332146,
+            0.0
+        ],
+        "type": "Point"
+		}
+	},
+		    {
+      "type": "Feature",
+      "properties": {
+        "id": "C1K5sQvMlDyfT2PVIjZS",
+        "imgURL": "gs://gzvka-12a9f.appspot.com/C1K5sQvMlDyfT2PVIjZS.jpg",
+        "imageName": "Bloemenlei - mobilisatie 1939",
+        "yearOfImage": "1939",
+        "nameOfSender": "Heemkring Hoghescote"
+      },"geometry": {
+        "coordinates": [
+            4.44668,
+            51.342146,
+            0.0
+        ],
+        "type": "Point"
+		}
+	}
+    ]
+}
