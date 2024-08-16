@@ -1,25 +1,28 @@
 <script lang="ts">
-    import { MapLibre, GeoJSON } from 'svelte-maplibre';
-    import * as turf from 'turf';
+    import {CircleLayer, GeoJSON, MapLibre} from 'svelte-maplibre';
     import {onMount} from "svelte";
     import {GeoJSONFeatureCollection} from "./types";
+    import {toasts} from "svelte-toasts";
 
-    let geojsonData:GeoJSONFeatureCollection;
+    let geojsonData: GeoJSONFeatureCollection;
 
+    const showToast = () => {
+        const toast = toasts.add({
+            title: 'Toast was loaded!',
+            description: 'Here is the body!',
+            duration: 5000,
+            placement: 'bottom-right',
+            theme: 'dark',
+            type: 'success',
+            showProgress: true,
+            onClick: () => {},
+            onRemove: () => {},
+        })
+    };
     onMount(async () => {
-        // Fetch GeoJSON data or load it from a local file
-        const response = await fetch('https://firebasestorage.googleapis.com/v0/b/gzvka-12a9f.appspot.com/o/TEST-MAP.geojson?alt=media&token=03a133ab-f6a5-459e-a30e-39e868b87d20');
-        console.log(response)
-        
-        
+        const response = await fetch('http://127.0.0.1:5001/gzvka-12a9f/us-central1/http_retrieve_geojson');
         geojsonData = await response.json();
-        
-        console.log(geojsonData)
-        
-        // Example of using Turf.js to manipulate data
-        const bufferedFeatures = turf.buffer(geojsonData, 100, { units: 'meters' });
-        // Update geojsonData with buffered features
-        geojsonData = bufferedFeatures;
+        showToast()
     });
 </script>
 
@@ -38,16 +41,38 @@
         class="map"
         standardControls
         style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json">
-    <GeoJSON 
-    id="my-data" 
-    data={geojsonData}
-    cluster={{ // Cluster configuration (optional)
-    radius: 50, // Adjust cluster radius as needed
-    maxZoom: 14, // Maximum zoom level for clusters
-    // Add other cluster options as needed
-    }}/>
-</MapLibre>
+    <GeoJSON
+            id="geojsonData"
+            data={geojsonData}
+            cluster={{ 
+      radius: 500,
+      maxZoom: 14,
+    }}
+            on:layeradd={() => console.log("GeoJSON layer added.")}
+            on:error={(e) => console.error("GeoJSON error:", e)}
+    >
+        <CircleLayer
+                on:click={()=>showToast()}
+                id="clusters"
+                applyToClusters
+                paint={{
+                'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075', 750, '#f28cb1'],
+                'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40],
+            }}
+        />
 
+        <CircleLayer
+                id="points"
+                applyToClusters={false}
+                paint={{
+                'circle-color': '#11b4da',
+                'circle-radius': 4,
+                'circle-stroke-width': 1,
+                'circle-stroke-color': '#fff',
+            }}
+        />
+    </GeoJSON>
+</MapLibre>
 <style>
     :global(.map) {
         min-height: 500px;

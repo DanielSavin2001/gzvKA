@@ -1,20 +1,28 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-// import { Request, Response } from 'express';
+import {Request, Response} from 'express';
+import * as functions from 'firebase-functions';
+import {Storage} from "@google-cloud/storage";
+import {validateCors} from "./utils/corshelper"
+import {BUCKET_NAME} from "./constants/google-storage-constants";
 // import * as logger from 'firebase-functions/logger';
-// import * as functions from 'firebase-functions';
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+export const http_retrieve_geojson: functions.HttpsFunction = functions.https.onRequest(
+    async (request: Request, response: Response): Promise<any> => {
+        response = validateCors(request, response);
+        if (request.method === 'OPTIONS') return;
+        const storage = new Storage();
+
+        try {
+            // Fetch GeoJSON data from the bucket
+            const file = storage.bucket(BUCKET_NAME).file("TEST-MAP.geojson");
+
+            // Get the file's contents
+            const [contents] = await file.download();
+
+            // Send the contents as a response
+            response.status(200).send(contents.toString('utf8'));
+        } catch (error) {
+            console.error("Error retrieving file:", error);
+            response.status(500).send("Error retrieving file: " + error);
+        }
+    });
