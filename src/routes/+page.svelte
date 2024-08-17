@@ -5,6 +5,7 @@
     import {toasts} from "svelte-toasts";
 
     let geojsonData: GeoJSONFeatureCollection;
+    let mapLoaded = false;
 
     const showToast = () => {
         const toast = toasts.add({
@@ -15,14 +16,25 @@
             theme: 'dark',
             type: 'success',
             showProgress: true,
-            onClick: () => {},
-            onRemove: () => {},
+            onClick: () => {
+            },
+            onRemove: () => {
+            },
         })
     };
     onMount(async () => {
-        const response = await fetch('http://127.0.0.1:5001/gzvka-12a9f/us-central1/http_retrieve_geojson');
-        geojsonData = await response.json();
-        showToast()
+        try {
+            const response = await fetch(import.meta.env.VITE_BASE_URL_GF + 'http_retrieve_geojson');
+            if (response.ok) {
+                geojsonData = await response.json();
+                mapLoaded = true;
+                showToast();
+            } else {
+                console.error('Failed to fetch GeoJSON data');
+            }
+        } catch (error) {
+            console.error('Error fetching GeoJSON data:', error);
+        }
     });
 </script>
 
@@ -35,6 +47,8 @@
 
 <br>
 <br>
+
+{#if mapLoaded}
 <MapLibre
         center={[4.369681, 51.307764]}
         zoom={10}
@@ -73,6 +87,8 @@
         />
     </GeoJSON>
 </MapLibre>
+{/if}
+
 <style>
     :global(.map) {
         min-height: 500px;

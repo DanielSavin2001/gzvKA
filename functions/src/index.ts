@@ -25,4 +25,5 @@ export const http_retrieve_geojson: functions.HttpsFunction = functions.https.on
             console.error("Error retrieving file:", error);
             response.status(500).send("Error retrieving file: " + error);
         }
-    });
+    }
+);

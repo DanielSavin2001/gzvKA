@@ -5,6 +5,7 @@
 	"scripts": {
 		"start": "vite dev",
 		"build": "vite build",
+		"deploy": "vite build && firebase deploy --only hosting",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
