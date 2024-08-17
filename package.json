@@ -5,6 +5,7 @@
 	"scripts": {
 		"start": "vite dev",
 		"build": "vite build",
+		"deploy": "vite build && firebase deploy --only hosting",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
@@ -16,6 +17,7 @@
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/adapter-static": "^2.0.1",
 		"@sveltejs/kit": "^1.5.0",
+		"@types/geojson": "^7946.0.14",
 		"autoprefixer": "^10.4.7",
 		"classnames": "^2.3.2",
 		"eslint": "^8.28.0",
@@ -34,5 +36,9 @@
 		"typescript": "^4.9.3",
 		"vite": "^4.0.0"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"svelte-maplibre": "^0.9.8",
+		"svelte-toasts": "^1.1.2"
+	}
 }
