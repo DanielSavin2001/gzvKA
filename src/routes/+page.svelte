@@ -2,38 +2,26 @@
     import {CircleLayer, GeoJSON, MapLibre} from 'svelte-maplibre';
     import {onMount} from "svelte";
     import {GeoJSONFeatureCollection} from "./types";
-    import {toasts} from "svelte-toasts";
+    import {showSuccessToast} from "../services/toaster-service";
+    import {showErrorToast} from "../services/toaster-service.js";
+    import {throwError} from "svelte-preprocess/dist/modules/errors";
+    import {WidgetPlaceholder} from "flowbite-svelte";
 
     let geojsonData: GeoJSONFeatureCollection;
     let mapLoaded = false;
 
-    const showToast = () => {
-        const toast = toasts.add({
-            title: 'Toast was loaded!',
-            description: 'Here is the body!',
-            duration: 5000,
-            placement: 'bottom-right',
-            theme: 'dark',
-            type: 'success',
-            showProgress: true,
-            onClick: () => {
-            },
-            onRemove: () => {
-            },
-        })
-    };
     onMount(async () => {
         try {
             const response = await fetch(import.meta.env.VITE_BASE_URL_GF + 'http_retrieve_geojson');
             if (response.ok) {
                 geojsonData = await response.json();
                 mapLoaded = true;
-                showToast();
+                showSuccessToast("Map successfully loaded", "Now you can explore the image archive of Kapellen and it's surroundings.")
             } else {
-                console.error('Failed to fetch GeoJSON data');
+                throwError(response.statusText)
             }
         } catch (error) {
-            console.error('Error fetching GeoJSON data:', error);
+            showErrorToast("Map load failed", `It looks like something went wrong! Please contact the admins. ${error}`)
         }
     });
 </script>
@@ -49,44 +37,48 @@
 <br>
 
 {#if mapLoaded}
-<MapLibre
-        center={[4.369681, 51.307764]}
-        zoom={10}
-        class="map"
-        standardControls
-        style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json">
-    <GeoJSON
-            id="geojsonData"
-            data={geojsonData}
-            cluster={{ 
+    <MapLibre
+            center={[4.369681, 51.307764]}
+            zoom={10}
+            class="map"
+            standardControls
+            style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json">
+        <GeoJSON
+                id="geojsonData"
+                data={geojsonData}
+                cluster={{ 
       radius: 500,
       maxZoom: 14,
     }}
-            on:layeradd={() => console.log("GeoJSON layer added.")}
-            on:error={(e) => console.error("GeoJSON error:", e)}
-    >
-        <CircleLayer
-                on:click={()=>showToast()}
-                id="clusters"
-                applyToClusters
-                paint={{
+                on:layeradd={() => console.log("GeoJSON layer added.")}
+                on:error={(e) => console.error("GeoJSON error:", e)}
+        >
+            <CircleLayer
+                    on:click={()=>showSuccessToast("Clicked a cluster!", "congrats, it works!")}
+                    id="clusters"
+                    applyToClusters
+                    paint={{
                 'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075', 750, '#f28cb1'],
                 'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40],
             }}
-        />
+            />
 
-        <CircleLayer
-                id="points"
-                applyToClusters={false}
-                paint={{
+            <CircleLayer
+                    id="points"
+                    applyToClusters={false}
+                    paint={{
                 'circle-color': '#11b4da',
                 'circle-radius': 4,
                 'circle-stroke-width': 1,
                 'circle-stroke-color': '#fff',
             }}
-        />
-    </GeoJSON>
-</MapLibre>
+            />
+        </GeoJSON>
+    </MapLibre>
+{/if}
+
+{#if !mapLoaded}
+    <WidgetPlaceholder class="mx-auto"/>
 {/if}
 
 <style>
