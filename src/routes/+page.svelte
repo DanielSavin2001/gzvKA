@@ -1,18 +1,19 @@
 <script lang="ts">
     import {CircleLayer, GeoJSON, MapLibre} from 'svelte-maplibre';
     import {onMount} from "svelte";
-    import {GeoJSONFeatureCollection} from "./types";
     import {showSuccessToast} from "../services/toaster-service";
     import {showErrorToast} from "../services/toaster-service.js";
     import {throwError} from "svelte-preprocess/dist/modules/errors";
     import {WidgetPlaceholder} from "flowbite-svelte";
+    import {GeoJSONFeatureCollection} from "../../firestore-types/interfaces";
+    import {retrieveGeojson} from "../services/google-functions-service";
 
     let geojsonData: GeoJSONFeatureCollection;
     let mapLoaded = false;
 
     onMount(async () => {
         try {
-            const response = await fetch(import.meta.env.VITE_BASE_URL_GF + 'http_retrieve_geojson');
+            const response = await retrieveGeojson();
             if (response.ok) {
                 geojsonData = await response.json();
                 mapLoaded = true;
