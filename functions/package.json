@@ -23,6 +23,7 @@
     "firebase-functions": "^5.0.0"
   },
   "devDependencies": {
+    "@types/busboy": "^1.5.4",
     "concurrently": "^8.2.0",
     "firebase-functions-test": "^3.1.0",
     "nodemon": "^3.1.4",
