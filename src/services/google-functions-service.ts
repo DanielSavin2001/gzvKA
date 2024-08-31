@@ -27,9 +27,6 @@ export const uploadImages = async (subjectId: string, files: File[]): Promise<Re
     
     return await fetch(import.meta.env.VITE_BASE_URL_GF + `http_upload_images?subjectId=${subjectId}`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
         body: formData
     });
 };
