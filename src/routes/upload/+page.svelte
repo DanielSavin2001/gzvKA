@@ -70,7 +70,8 @@
 
         try {
             const response = await uploadImages(currentSubject.id, Array.from(files));
-
+            files = new DataTransfer().files;
+            
             if (response.ok) {
                 showSuccessToast("Upload successful", "Your images have been uploaded.");
             } else {
@@ -165,14 +166,14 @@
     </Listgroup>
     <div class="flex justify-center mt-5">
         <Button on:click={handleUpload} type="button" color="green" pill class="" disabled="{!currentSubject || files===undefined || files.length === 0}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" {...$$props}>
-                <path fill="currentColor"
-                      d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
-            </svg>
             {#if uploading}
                 <Spinner class="me-3" size="4" color="white"/>
                 Uploading...
             {:else}
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" {...$$props}>
+                    <path fill="currentColor"
+                          d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
+                </svg>
                 &nbsp; Upload Images
             {/if}
         </Button>
