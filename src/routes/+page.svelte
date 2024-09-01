@@ -1,19 +1,19 @@
 <script lang="ts">
-    import {CircleLayer, GeoJSON, MapLibre} from 'svelte-maplibre';
+    import {CircleLayer, GeoJSON, MapLibre, RasterLayer, RasterTileSource} from 'svelte-maplibre';
     import {onMount} from "svelte";
     import {showSuccessToast} from "../services/toaster-service";
     import {showErrorToast} from "../services/toaster-service.js";
     import {throwError} from "svelte-preprocess/dist/modules/errors";
     import {WidgetPlaceholder} from "flowbite-svelte";
-    import {GeoJSONFeatureCollection} from "../../firestore-types/interfaces";
-    import {retrieveGeojson} from "../services/google-functions-service";
+    import {GeoJSONFeatureCollection} from "../../sharedModels/interfaces";
+    import {getGeoJson} from "../services/google-functions-service";
 
     let geojsonData: GeoJSONFeatureCollection;
     let mapLoaded = false;
 
     onMount(async () => {
         try {
-            const response = await retrieveGeojson();
+            const response = await getGeoJson();
             if (response.ok) {
                 geojsonData = await response.json();
                 mapLoaded = true;
@@ -54,6 +54,9 @@
                 on:layeradd={() => console.log("GeoJSON layer added.")}
                 on:error={(e) => console.error("GeoJSON error:", e)}
         >
+            <RasterTileSource tiles={['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png']} tileSize={256}>
+                <RasterLayer paint={{}}/>
+            </RasterTileSource>
             <CircleLayer
                     on:click={()=>showSuccessToast("Clicked a cluster!", "congrats, it works!")}
                     id="clusters"

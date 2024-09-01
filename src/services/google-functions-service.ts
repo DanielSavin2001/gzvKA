@@ -1,15 +1,15 @@
-﻿import type {SubjectFS} from "../../firestore-types/interfaces";
+﻿import type {MapMarker, SubjectFS} from "../../sharedModels/interfaces";
 
-export const retrieveAllSubjects = async (): Promise<Response> => {
-    return (await fetch(import.meta.env.VITE_BASE_URL_GF + 'http_retrieve_subjects'));
+export const getAllSubjects = async (): Promise<Response> => {
+    return (await fetch(import.meta.env.VITE_BASE_URL_GF + 'getAllSubjects'));
 }
 
-export const retrieveGeojson = async (): Promise<Response> => {
-    return (await fetch(import.meta.env.VITE_BASE_URL_GF + 'http_retrieve_geojson'));
+export const getGeoJson = async (): Promise<Response> => {
+    return (await fetch(import.meta.env.VITE_BASE_URL_GF + 'getGeoJson'));
 }
 
 export const createSubject = async (subject: SubjectFS): Promise<Response> => {
-    return await fetch(import.meta.env.VITE_BASE_URL_GF + 'http_create_subject', {
+    return await fetch(import.meta.env.VITE_BASE_URL_GF + 'createSubject', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -18,14 +18,16 @@ export const createSubject = async (subject: SubjectFS): Promise<Response> => {
     });
 };
 
-export const uploadImages = async (subjectId: string, files: File[]): Promise<Response> => {
+export const uploadImages = async (subjectId: string, files: File[], marker: MapMarker | null): Promise<Response> => {
     const formData = new FormData();
-    
+
     files.forEach((file) => {
         formData.append('files', file);
     });
+
+    const coordinates = marker?`${marker.lngLat.lat},${marker.lngLat.lng}`:``;
     
-    return await fetch(import.meta.env.VITE_BASE_URL_GF + `http_upload_images?subjectId=${subjectId}`, {
+    return await fetch(import.meta.env.VITE_BASE_URL_GF + `uploadImages?subjectId=${subjectId}&coordinates=${coordinates}`, {
         method: 'POST',
         body: formData
     });
