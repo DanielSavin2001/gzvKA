@@ -23,7 +23,7 @@ The project can be followed on the following project overview: [https://github.c
 
 ### 1. Finish Index Page
 - [ ] **Poem of the Day**: Display a "gedicht van de dag" section to highlight local poetry.
-- [ ] **Interactive Map**: Integrate a Leaflet map to allow users to explore major groups of pictures, including streets, schools, and other significant locations.
+- [x] **Interactive Map**: Integrate a Leaflet map to allow users to explore major groups of pictures, including streets, schools, and other significant locations.
 - [ ] **Introductory Text**: Add a welcoming introductory text to set the context for new visitors.
 
 ### 2. Create First Detail Page
@@ -32,15 +32,15 @@ The project can be followed on the following project overview: [https://github.c
 - [ ] **Page Title**: Include a clear title for the current page to enhance navigation.
 
 ### 3. Storage Solution
-- [ ] **Evaluate Storage Options**: Determine whether to transfer the existing pictures to Amazon S3 or Google Cloud Storage for better scalability and accessibility.
+- [x] **Evaluate Storage Options**: Determine whether to transfer the existing pictures to Amazon S3 or Google Cloud Storage for better scalability and accessibility. => Google Storage for image storing & Firestore as db for metadata and other textual content.
 
 ### 4. Citizen Contribution
-- [ ] **GitHub Projects**: Add a GitHub project to track all issues & PR's, here it would be possible to suggest new features/improvements.
-- [ ] **Upload zone**: There should be an 'Upload zone' for citizens of Kapellen, so that they can upload new images, suggest where they belong and give extra information related to the images. Or even upload stories, poems and much more ...
+- [x] **GitHub Projects**: Add a GitHub project to track all issues & PR's, here it would be possible to suggest new features/improvements.
+- [x] **Upload zone**: There should be an 'Upload zone' for citizens of Kapellen, so that they can upload new images, suggest where they belong and give extra information related to the images. Or even upload stories, poems and much more ...
 
 ### 5. Image Search Engine
 - [ ] **Normalize image titles**: All the accents, upper/lower cases, and special characters should be removed.
-- [ ] **Image metadata & URL in db**: The image URL will be stored together with all the metadata related to it (Original title, Normalized title, WGS84 coordinates, Tags, ...).
+- [x] **Image metadata & URL in db**: The image URL will be stored together with all the metadata related to it (Original title, Normalized title, WGS84 coordinates, Tags, ...).
 - [ ] **Image is searchable**: At last, the image should be searchable based on normalized title, coordinates, tags and much more...
 
 
