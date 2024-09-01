@@ -46,10 +46,10 @@ export function extractDatesFromText(text: string): { dateOfAcquisition: string;
     switch (matches.length) {
         case 1:
             const singleMatchYear = parseInt(matches[0], 10);
-            if (singleMatchYear >= 2014) {
+            if (singleMatchYear >= 2014) 
                 dateOfAcquisition = matches[0];
-            }
-            yearOfImage = matches[0];
+            else 
+                yearOfImage = matches[0];
             break;
         case 2:
             const firstMatchYear = parseInt(matches[0], 10);

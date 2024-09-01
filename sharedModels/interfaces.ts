@@ -42,11 +42,6 @@ export interface ImageDocumentFS {
     yearOfImage: string; // The year when the image was taken
 }
 
-export interface Timestamp {
-    seconds: number;
-    nanoseconds: number;
-}
-
 export interface GeoPoint {
     latitude: number;
     longitude: number;
@@ -67,4 +62,11 @@ export interface FileData {
     fieldName: string,
     fields: FileDataFields,
     buffer: Buffer,
+}
+
+export interface MapMarker {
+    lngLat: {
+        lng: number,
+        lat: number
+    }
 }
