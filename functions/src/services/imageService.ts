@@ -4,7 +4,7 @@ import {storage, firestore} from "./externalServices";
 import * as Busboy from "busboy";
 import * as logger from "firebase-functions/logger";
 
-import {FileData, FileDataFields, ImageDocumentFS, MapMarker} from "../../../sharedModels/interfaces";
+import {FileData, FileDataFields, ImageDocument, ImageDocumentFS, MapMarker} from "../../../sharedModels/interfaces";
 import {extractDatesFromText, getFileExtension, removeFileExtension} from "../utils/string-helper";
 import {BUCKET_NAME, IMAGES_COLLECTION_NAME} from "../constants/google-storage-constants";
 import {subjectService} from "./";
@@ -89,4 +89,17 @@ function processImages(busboy: Busboy.Busboy, files: FileData[], subjectRef: Doc
 
 async function createImage(image: ImageDocumentFS): Promise<DocumentReference> {
     return await firestore.collection(IMAGES_COLLECTION_NAME).add(image);
+}
+
+export async function getAllImages(): Promise<ImageDocument[]> {
+
+    const documentRefs = await firestore
+        .collection(IMAGES_COLLECTION_NAME).get();
+
+    return documentRefs.docs.map(doc => {
+        return {
+            id: doc.id,
+            ...doc.data() as ImageDocumentFS
+        };
+    });
 }

@@ -10,8 +10,8 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "compile": "tsc",
-    "debug": "node --inspect node_modules/.bin/functions-framework --source=build/src/ --target=index",
-    "watch": "concurrently \"npm run compile -- --watch\" \"nodemon --watch ./build/ --exec npm run debug\""
+    "debug": "node --inspect node_modules/.bin/functions-framework --source=lib/functions/src/ --target=index",
+    "watch": "concurrently \"npm run compile -- --watch\" \"nodemon --watch ./lib/ --exec npm run debug\""
   },
   "engines": {
     "node": "18"
@@ -22,7 +22,8 @@
     "@google-cloud/storage": "^7.12.1",
     "busboy": "^1.6.0",
     "firebase-admin": "^12.1.0",
-    "firebase-functions": "^5.0.0"
+    "firebase-functions": "^5.1.1",
+    "functions-framework": "^0.6.10"
   },
   "devDependencies": {
     "@types/busboy": "^1.5.4",
