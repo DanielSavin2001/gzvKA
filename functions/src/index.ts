@@ -5,8 +5,16 @@ import * as controllers from "./controllers"
  * 
  * Retrieves GeoJSON data from the database.
  * @function getGeoJson
+ * 
+ * Creates the GeoJSON data manually.
+ * @function createGeoJson
+ *
+ * Sets-up the GeoJSON data automatically via recurring job.
+ * @function createGeoJsonJob
  */
 export const getGeoJson = controllers.dataController.getGeoJson;
+export const createGeoJson = controllers.dataController.createGeoJson;
+export const createGeoJsonJob = controllers.dataController.createGeoJsonJob;
 
 
 /**
