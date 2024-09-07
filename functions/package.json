@@ -23,7 +23,8 @@
     "busboy": "^1.6.0",
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.1.1",
-    "functions-framework": "^0.6.10"
+    "functions-framework": "^0.6.10",
+    "swagger-jsdoc": "^6.2.8"
   },
   "devDependencies": {
     "@types/busboy": "^1.5.4",

@@ -46,6 +46,52 @@ describe('isNullOrEmpty', () => {
     });
 });
 
+describe('isNotNullOrEmpty', () => {
+
+    /**
+     * Test case for when the input string is null.
+     */
+    it('should return false if the input is null', () => {
+        expect(stringHelper.isNotNullOrEmpty(null)).toBe(false);
+    });
+
+    /**
+     * Test case for when the input string is undefined.
+     */
+    it('should return false if the input is undefined', () => {
+        expect(stringHelper.isNotNullOrEmpty(undefined)).toBe(false);
+    });
+
+    /**
+     * Test case for when the input string is an empty string.
+     */
+    it('should return false if the input is an empty string', () => {
+        expect(stringHelper.isNotNullOrEmpty('')).toBe(false);
+    });
+
+    /**
+     * Test case for when the input string contains only whitespace.
+     */
+    it('should return false if the input is a string with only whitespace', () => {
+        expect(stringHelper.isNotNullOrEmpty('   ')).toBe(false);
+    });
+
+    /**
+     * Test case for when the input string contains non-whitespace characters.
+     */
+    it('should return true if the input is a non-empty string', () => {
+        expect(stringHelper.isNotNullOrEmpty('Hello')).toBe(true);
+    });
+
+    /**
+     * Test case for when the input string contains non-whitespace characters but with leading/trailing whitespace.
+     */
+    it('should return true if the input is a non-empty string with leading/trailing whitespace', () => {
+        expect(stringHelper.isNotNullOrEmpty('  Hello  ')).toBe(true);
+    });
+});
+
+
 describe('extractDatesFromText', () => {
     test('should return empty strings if no dates are present', () => {
         const result = stringHelper.extractDatesFromText('No dates here');

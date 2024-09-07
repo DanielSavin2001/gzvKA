@@ -1,8 +1,11 @@
-﻿import {DocumentReference} from "@google-cloud/firestore";
-
+﻿import {firestore} from "./externalServices";
 import {Subject, SubjectFS} from "../../../sharedModels/interfaces";
 import {SUBJECTS_COLLECTION_NAME} from "../constants/google-storage-constants";
-import {firestore} from "./externalServices";
+
+export async function getSubject(subjectId: string): Promise<Subject> {
+
+    return (await firestore.collection(SUBJECTS_COLLECTION_NAME).doc(subjectId).get()).data() as Subject
+}
 
 export async function getAllSubjects(): Promise<Subject[]> {
 
@@ -19,8 +22,4 @@ export async function getAllSubjects(): Promise<Subject[]> {
 
 export async function createSubject(subject: SubjectFS): Promise<void> {
     await firestore.collection(SUBJECTS_COLLECTION_NAME).add(subject);
-}
-
-export function createSubjectRef(subjectId: string): DocumentReference {
-    return firestore.doc(`${SUBJECTS_COLLECTION_NAME}/${subjectId}`);
 }
