@@ -8,7 +8,8 @@
     import {GeoJSONFeatureCollection, Subject} from "../../../../sharedModels/interfaces";
     import Map from "../../components/Map.svelte";
 
-
+    export const ssr = true;
+    export const prerender = false;
     export let data;
 
     let geoJsonData: GeoJSONFeatureCollection;
