@@ -11,6 +11,16 @@ export function isNullOrEmpty(str: string | null | undefined): boolean {
 }
 
 /**
+ * Checks if a given string is **NOT** null, undefined, or an empty string (including whitespace only).
+ *
+ * @param str - The string to check. Can be a string, null, or undefined.
+ * @returns True if the string is **NOT** null, undefined, or empty (including strings with only whitespace); otherwise, false.
+ */
+export function isNotNullOrEmpty(str: string | null | undefined): boolean {
+    return !isNullOrEmpty(str);
+}
+
+/**
  * Extracts and categorizes dates from a given string based on specified ranges.
  * The function identifies years between 1800 and 3000 and categorizes them into
  * `dateOfAcquisition` and `yearOfImage` based on certain conditions.
@@ -46,9 +56,9 @@ export function extractDatesFromText(text: string): { dateOfAcquisition: string;
     switch (matches.length) {
         case 1:
             const singleMatchYear = parseInt(matches[0], 10);
-            if (singleMatchYear >= 2014) 
+            if (singleMatchYear >= 2014)
                 dateOfAcquisition = matches[0];
-            else 
+            else
                 yearOfImage = matches[0];
             break;
         case 2:

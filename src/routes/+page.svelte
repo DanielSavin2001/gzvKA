@@ -1,21 +1,20 @@
 <script lang="ts">
-    import {CircleLayer, GeoJSON, MapLibre, RasterLayer, RasterTileSource} from 'svelte-maplibre';
     import {onMount} from "svelte";
-    import {showSuccessToast} from "../services/toaster-service";
-    import {showErrorToast} from "../services/toaster-service.js";
     import {throwError} from "svelte-preprocess/dist/modules/errors";
-    import {WidgetPlaceholder} from "flowbite-svelte";
-    import {GeoJSONFeatureCollection} from "../../sharedModels/interfaces";
-    import {getGeoJson} from "../services/google-functions-service";
 
-    let geojsonData: GeoJSONFeatureCollection;
+    import {showErrorToast, showSuccessToast} from "../services/toaster-service";
+    import {getGeoJson} from "../services/google-functions-service";
+    import {GeoJSONFeatureCollection} from "../../sharedModels/interfaces";
+    import Map from "./components/Map.svelte";
+
+    let geoJsonData: GeoJSONFeatureCollection;
     let mapLoaded = false;
 
     onMount(async () => {
         try {
-            const response = await getGeoJson();
+            const response = await getGeoJson("mapData");
             if (response.ok) {
-                geojsonData = await response.json();
+                geoJsonData = await response.json();
                 mapLoaded = true;
                 showSuccessToast("Map successfully loaded", "Now you can explore the image archive of Kapellen and it's surroundings.")
             } else {
@@ -37,56 +36,11 @@
 <br>
 <br>
 
-{#if mapLoaded}
-    <MapLibre
-            center={[4.369681, 51.307764]}
-            zoom={10}
-            class="map"
-            standardControls
-            style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json">
-        <GeoJSON
-                id="geojsonData"
-                data={geojsonData}
-                cluster={{ 
-      radius: 500,
-      maxZoom: 14,
-    }}
-                on:layeradd={() => console.log("GeoJSON layer added.")}
-                on:error={(e) => console.error("GeoJSON error:", e)}
-        >
-            <RasterTileSource tiles={['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png']} tileSize={256}>
-                <RasterLayer paint={{}}/>
-            </RasterTileSource>
-            <CircleLayer
-                    on:click={()=>showSuccessToast("Clicked a cluster!", "congrats, it works!")}
-                    id="clusters"
-                    applyToClusters
-                    paint={{
-                'circle-color': ['step', ['get', 'point_count'], '#51bbd6', 100, '#f1f075', 750, '#f28cb1'],
-                'circle-radius': ['step', ['get', 'point_count'], 20, 100, 30, 750, 40],
-            }}
-            />
+<Map geoJsonData="{geoJsonData}" mapLoaded="{mapLoaded}"/>
 
-            <CircleLayer
-                    id="points"
-                    applyToClusters={false}
-                    paint={{
-                'circle-color': '#11b4da',
-                'circle-radius': 4,
-                'circle-stroke-width': 1,
-                'circle-stroke-color': '#fff',
-            }}
-            />
-        </GeoJSON>
-    </MapLibre>
-{/if}
-
-{#if !mapLoaded}
-    <WidgetPlaceholder class="mx-auto"/>
-{/if}
 
 <style>
     :global(.map) {
-        min-height: 500px;
+        min-height: 600px;
     }
 </style>

@@ -1,13 +1,12 @@
 ﻿import {IncomingHttpHeaders} from "http";
 import {DocumentReference, GeoPoint} from "@google-cloud/firestore";
-import {storage, firestore} from "./externalServices";
 import * as Busboy from "busboy";
 import * as logger from "firebase-functions/logger";
 
-import {FileData, FileDataFields, ImageDocument, ImageDocumentFS, MapMarker} from "../../../sharedModels/interfaces";
+import {firestore, storage} from "./externalServices";
 import {extractDatesFromText, getFileExtension, removeFileExtension} from "../utils/string-helper";
+import {FileData, FileDataFields, ImageDocument, ImageDocumentFS, MapMarker} from "../../../sharedModels/interfaces";
 import {BUCKET_NAME, IMAGES_COLLECTION_NAME} from "../constants/google-storage-constants";
-import {subjectService} from "./";
 
 
 export async function handleImages(subjectId: string, imageFiles: any, headers: IncomingHttpHeaders, coordinates: MapMarker | null): Promise<void> {
@@ -16,7 +15,7 @@ export async function handleImages(subjectId: string, imageFiles: any, headers: 
     const files: FileData[] = [];
 
     extractImages(busboy, files);
-    processImages(busboy, files, subjectService.createSubjectRef(subjectId!.toString()), coordinates);
+    processImages(busboy, files, subjectId!.toString(), coordinates);
 
     busboy.end(imageFiles)
 }
@@ -46,7 +45,7 @@ function extractImages(busboy: Busboy.Busboy, files: FileData[]): void {
     });
 }
 
-function processImages(busboy: Busboy.Busboy, files: FileData[], subjectRef: DocumentReference, coordinates: MapMarker | null): void {
+function processImages(busboy: Busboy.Busboy, files: FileData[], subjectId: string, coordinates: MapMarker | null): void {
     busboy.on('finish', async () => {
         if (files.length === 0) throw Error('No files were uploaded.')
 
@@ -56,7 +55,7 @@ function processImages(busboy: Busboy.Busboy, files: FileData[], subjectRef: Doc
             const {dateOfAcquisition, yearOfImage} = extractDatesFromText(file.fields.filename);
 
             const imageDocument: ImageDocumentFS = {
-                subjectId: subjectRef,
+                subjectId: subjectId,
                 imageName: removeFileExtension(file.fields.filename),
                 dateOfAcquisition: dateOfAcquisition,
                 yearOfImage: yearOfImage,
@@ -71,7 +70,7 @@ function processImages(busboy: Busboy.Busboy, files: FileData[], subjectRef: Doc
             const documentId = documentRef.id;
 
             // Upload file to Google Cloud Storage with document ID as file name
-            const fileName = `${documentId}${getFileExtension(file.fields.filename)}`;
+            const fileName = `images/${documentId}${getFileExtension(file.fields.filename)}`;
             const fileUpload = storage.file(fileName);
 
             await fileUpload.save(file.buffer, {

@@ -11,14 +11,14 @@ export interface GeoJSONFeature {
     type: 'Feature';
     geometry: {
         type: 'Point';
-        coordinates: [number, number];
+        coordinates: [number, number, 0];
     };
     properties: {
         "id": string,
         "imageName": string,
         "imgURL": string,
         "nameOfSender": string,
-        "yearOfImage": number
+        "yearOfImage": string
     };
 }
 
@@ -38,7 +38,7 @@ export interface ImageDocumentFS {
     imageName: string; // The name of the image
     imgURL: string; // The URL of the image stored in Firebase Storage
     nameOfSender: string; // The name of the person or organization who sent the image
-    subjectId: DocumentReference; // A reference to the subject document in Firestore
+    subjectId: string; // A reference to the subject document in Firestore
     yearOfImage: string; // The year when the image was taken
 }
 

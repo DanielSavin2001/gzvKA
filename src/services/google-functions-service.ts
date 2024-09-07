@@ -1,11 +1,15 @@
 ﻿import type {MapMarker, SubjectFS} from "../../sharedModels/interfaces";
 
+export const getSubject = async (subjectId: string): Promise<Response> => {
+    return (await fetch(import.meta.env.VITE_BASE_URL_GF + `getSubject?subjectId=${subjectId}`));
+}
+
 export const getAllSubjects = async (): Promise<Response> => {
     return (await fetch(import.meta.env.VITE_BASE_URL_GF + 'getAllSubjects'));
 }
 
-export const getGeoJson = async (): Promise<Response> => {
-    return (await fetch(import.meta.env.VITE_BASE_URL_GF + 'getGeoJson'));
+export const getGeoJson = async (fileName: string): Promise<Response> => {
+    return (await fetch(import.meta.env.VITE_BASE_URL_GF + `getGeoJson?fileName=${fileName}`));
 }
 
 export const createSubject = async (subject: SubjectFS): Promise<Response> => {
@@ -25,8 +29,8 @@ export const uploadImages = async (subjectId: string, files: File[], marker: Map
         formData.append('files', file);
     });
 
-    const coordinates = marker?`${marker.lngLat.lat},${marker.lngLat.lng}`:``;
-    
+    const coordinates = marker ? `${marker.lngLat.lat},${marker.lngLat.lng}` : ``;
+
     return await fetch(import.meta.env.VITE_BASE_URL_GF + `uploadImages?subjectId=${subjectId}&coordinates=${coordinates}`, {
         method: 'POST',
         body: formData
