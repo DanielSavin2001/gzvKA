@@ -39,6 +39,14 @@ export const createSubject = controllers.subjectController.createSubject
  * Functions related to the Image Controller
  *
  * Handles the uploading of images related to subjects.
- * @function uploadImages
+ * @function uploadImages 
+ *
+ * Retrieves all Images of a subject from the database.
+ * @function getImageDocuments 
+ * 
+ * Retrieves Image from Google Storage by imgURL
+ * @function retrieveImage
  */
 export const uploadImages = controllers.imageController.uploadImages
+export const getImageDocuments = controllers.imageController.getImageDocuments
+export const retrieveImage = controllers.imageController.retrieveImage

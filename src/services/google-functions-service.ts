@@ -8,6 +8,14 @@ export const getAllSubjects = async (): Promise<Response> => {
     return (await fetch(import.meta.env.VITE_BASE_URL_GF + 'getAllSubjects'));
 }
 
+export const getImageDocuments = async (subjectId: string): Promise<Response> => {
+    return (await fetch(import.meta.env.VITE_BASE_URL_GF + `getImageDocuments?subjectId=${subjectId}`));
+}
+
+export const retrieveImage = async (imgURL: string): Promise<Response> => {
+    return (await fetch(import.meta.env.VITE_BASE_URL_GF + `retrieveImage?imgURL=${imgURL}`));
+}
+
 export const getGeoJson = async (fileName: string): Promise<Response> => {
     return (await fetch(import.meta.env.VITE_BASE_URL_GF + `getGeoJson?fileName=${fileName}`));
 }

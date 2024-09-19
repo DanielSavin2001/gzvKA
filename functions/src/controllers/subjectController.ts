@@ -13,7 +13,7 @@ export const getSubject: HttpsFunction = https.onRequest(
         try {
             const subjectId = request.query.subjectId?.toString();
             if (isNotNullOrEmpty(subjectId))
-                response.status(200).send(await subjectService.getSubject(subjectId!));
+                response.send(await subjectService.getSubject(subjectId!));
             else
                 response.status(400).send("Validation error - 'subjectId' query parameter is missing.")
         } catch (error) {
@@ -27,7 +27,7 @@ export const getAllSubjects: HttpsFunction = https.onRequest(
     async (request: Request, response: Response): Promise<any> => {
         response = validateCors(request, response);
         try {
-            response.status(200).send(await subjectService.getAllSubjects());
+            response.send(await subjectService.getAllSubjects());
         } catch (error) {
             logger.error("Error retrieving subjects:", error);
             response.status(500).send("Error retrieving subjects: " + error);

@@ -100,3 +100,33 @@ export function removeFileExtension(filename: string): string {
     const match = filename.match(/^(.*)\.(\w+)$/);
     return match ? match[1] : filename;
 }
+
+/**
+ * Extracts the path of an image within a Google Cloud Storage bucket from a provided URL.
+ *
+ * The URL must follow the format:
+ * `https://storage.googleapis.com/gs://{bucket-name}/{path-to-object}`
+ *
+ * For example, given the URL `https://storage.googleapis.com/gs://my-bucket/images/photo.jpg`,
+ * this function will return `images/photo.jpg`.
+ *
+ * @param {string} imgURL - The URL of the image from which to extract the path.
+ * This URL must be in the format described above.
+ *
+ * @returns {string} - The extracted path of the image within the bucket.
+ *
+ * @throws {Error} - Throws an error if the `imgURL` parameter is empty or if the URL does not match
+ * the expected format. Specifically:
+ *   - Throws an error with the message 'The parameter imgURL can not be empty.' if `imgURL` is null or empty.
+ *   - Throws an error with the message 'Invalid imgURL format.' if the URL does not match the expected pattern.
+ */
+export function extractImagePath(imgURL: string): string {
+    if (isNullOrEmpty(imgURL)) throw new Error('The parameter imgURL can not be empty.');
+    
+    const urlPattern = /gs:\/\/([^\/]+)\/(.+)/;
+    const match = imgURL.match(urlPattern);
+    if (!match || match.length < 3) throw new Error('Invalid imgURL format.');
+
+    // Return the object path within the bucket
+    return match[2];
+}
