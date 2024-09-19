@@ -188,3 +188,42 @@ describe('removeFileExtension', () => {
         expect(stringHelper.removeFileExtension('anotherfilename.')).toBe('anotherfilename.');
     });
 });
+
+describe('extractImagePath', () => {
+
+    it('should extract the image path from a valid gs:// URL', () => {
+        const imgURL = 'gs://gzvka-resources/images/3PxzTlVqjxGbWOdDOmfg.jpg';
+        const expectedPath = 'images/3PxzTlVqjxGbWOdDOmfg.jpg';
+
+        const result = stringHelper.extractImagePath(imgURL);
+
+        expect(result).toBe(expectedPath);
+    });
+
+    it('should extract the image path from a nested valid gs:// URL', () => {
+        const imgURL = 'gs://gzvka-resources/nested/folder/images/3PxzTlVqjxGbWOdDOmfg.jpg';
+        const expectedPath = 'nested/folder/images/3PxzTlVqjxGbWOdDOmfg.jpg';
+
+        const result = stringHelper.extractImagePath(imgURL);
+
+        expect(result).toBe(expectedPath);
+    });
+
+    it('should throw an error if the URL does not start with gs://', () => {
+        const imgURL = 'https://storage.googleapis.com/gzvka-resources/images/3PxzTlVqjxGbWOdDOmfg.jpg';
+
+        expect(() => stringHelper.extractImagePath(imgURL)).toThrow('Invalid imgURL format.');
+    });
+
+    it('should throw an error if the gs:// URL is incomplete', () => {
+        const imgURL = 'gs://gzvka-resources/';
+
+        expect(() => stringHelper.extractImagePath(imgURL)).toThrow('Invalid imgURL format.');
+    });
+
+    it('should throw an error if the URL is null or undefined or empty string.', () => {
+        expect(() => stringHelper.extractImagePath(null as any)).toThrow('The parameter imgURL can not be empty.');
+        expect(() => stringHelper.extractImagePath(undefined as any)).toThrow('The parameter imgURL can not be empty.');
+        expect(() => stringHelper.extractImagePath('')).toThrow('The parameter imgURL can not be empty.');
+    });
+});

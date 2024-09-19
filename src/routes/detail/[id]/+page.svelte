@@ -1,37 +1,49 @@
 <script lang="ts">
-    import {onMount} from "svelte";
-    import {throwError} from "svelte-preprocess/dist/modules/errors";
-    import {TextPlaceholder} from "flowbite-svelte";
+  import {onMount} from "svelte";
+  import {throwError} from "svelte-preprocess/dist/modules/errors";
+  import {TextPlaceholder} from "flowbite-svelte";
 
-    import {showErrorToast, showSuccessToast} from "../../../services/toaster-service";
-    import {getGeoJson, getSubject} from "../../../services/google-functions-service";
-    import {GeoJSONFeatureCollection, Subject} from "../../../../sharedModels/interfaces";
-    import Map from "../../components/Map.svelte";
-    
-    export let data;
+  import {showErrorToast, showSuccessToast} from "../../../services/toaster-service";
+  import {getGeoJson, getImageDocuments, getSubject} from "../../../services/google-functions-service";
+  import {GeoJSONFeatureCollection, ImageDocument, Subject} from "../../../../sharedModels/interfaces";
+  import Map from "../../components/Map.svelte";
+  import ImageCard from "../../components/cards/ImageCard.svelte";
 
-    let geoJsonData: GeoJSONFeatureCollection;
-    let mapLoaded = false;
-    let currentSubject: Subject;
+  export let data;
 
-    onMount(async () => {
-        try {
-            const responseSubject = await getSubject(data.id);
-            currentSubject = await responseSubject.json();
+  let geoJsonData: GeoJSONFeatureCollection;
+  let mapLoaded = false;
+  let imagesLoaded = false;
+  let currentSubject: Subject;
+  let imageDocuments: ImageDocument[];
 
-            const responseGeoJson = await getGeoJson(currentSubject.name);
-            if (responseGeoJson.ok) {
-                geoJsonData = await responseGeoJson.json();
-                showSuccessToast("Map successfully loaded", "Now you can explore the image archive of Kapellen and it's surroundings.")
-            } else {
-                throwError(responseGeoJson.statusText)
-            }
-        } catch (error) {
-            showErrorToast("Map load failed", `It looks like something went wrong! Please contact the admins. ${error}`)
-        } finally {
-            mapLoaded = true;
-        }
-    });
+  onMount(async () => {
+    try {
+      const responseSubject = await getSubject(data.id);
+      currentSubject = await responseSubject.json();
+
+      const responseGeoJson = await getGeoJson(currentSubject.name);
+      if (responseGeoJson.ok) {
+        geoJsonData = await responseGeoJson.json();
+        showSuccessToast("Map successfully loaded", `Now you can explore the map of related images of ${currentSubject.name}`)
+      } else {
+        throwError(responseGeoJson.statusText)
+      }
+
+      const responseGetImages = await getImageDocuments(data.id);
+      if (responseGetImages.ok) {
+        imageDocuments = await responseGetImages.json();
+        showSuccessToast("Images successfully loaded", "Now you can explore the image archive of Kapellen and it's surroundings.")
+      } else {
+        throwError(responseGeoJson.statusText)
+      }
+    } catch (error) {
+      showErrorToast("Map or Image load failed", `It looks like something went wrong! Please contact the admins. ${error}`)
+    } finally {
+      mapLoaded = true;
+      imagesLoaded = true;
+    }
+  });
 
 </script>
 
@@ -55,6 +67,16 @@
 <br>
 <br>
 <Map geoJsonData="{geoJsonData}" mapLoaded="{mapLoaded}"/>
+<br>
+<br>
+{#if imagesLoaded}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {#each imageDocuments as imageDocument}
+            <ImageCard imageDocument={imageDocument}/>
+        {/each}
+    </div>
+{/if}
+
 
 <style>
     :global(.map) {

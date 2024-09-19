@@ -102,3 +102,15 @@ export async function getAllImages(): Promise<ImageDocument[]> {
         };
     });
 }
+
+export async function getImageDocuments(subjectId: string): Promise<ImageDocument[]> {
+    const documentRefs = await firestore
+        .collection(IMAGES_COLLECTION_NAME).where("subjectId", "==", subjectId).get();
+
+    return documentRefs.docs.map(doc => {
+        return {
+            id: doc.id,
+            ...doc.data() as ImageDocumentFS
+        };
+    });
+}
