@@ -74,10 +74,24 @@
 		dispatch('cancel');
 	}
 
+	/** The coordinate to send: a chosen candidate's own, else whatever was pointed at. */
+	function coordinates(): { lat: number; lng: number } | null {
+		if (kind === 'candidate') {
+			const chosen = (approximation.candidates ?? []).find(
+				(candidate: Candidate) => candidate.label === candidateLabel
+			);
+			if (chosen) return { lat: chosen.lat, lng: chosen.lng };
+		}
+
+		return picked;
+	}
+
 	function send(): void {
+		const at = coordinates();
+
 		dispatch('submit', {
 			kind,
-			...(picked ? { lat: picked.lat, lng: picked.lng } : {}),
+			...(at ? { lat: at.lat, lng: at.lng } : {}),
 			...(candidateLabel ? { candidateLabel } : {}),
 			message: message.trim(),
 			name: name.trim(),
@@ -101,7 +115,9 @@
 	{:else}
 		<h3 class="flex items-center gap-2 font-bold text-red-900">
 			<span aria-hidden="true">&#9888;</span>
-			{#if isMissing}
+			{#if isPerson}
+				Dit is geen plaats
+			{:else if isMissing}
 				Nog niet gevonden
 			{:else if isCandidates}
 				Twee mogelijke locaties
@@ -113,7 +129,18 @@
 		</h3>
 
 		<div class="mt-2 space-y-2 text-sm text-red-900">
-			{#if isMissing}
+			{#if isPerson}
+				<!--
+					This branch has to come first. Without it the page told a visitor that the
+					real location was somewhere inside the circle, directly above the archive's
+					own sentence saying there is no location at all - which is the exact
+					mistake this whole panel exists to prevent.
+				-->
+				<p>
+					Deze naam hoort bij een persoon, niet bij een plek. De foto's staan hier op de plaats waar
+					het verhaal begint, maar ze zijn niet allemaal op één plek genomen.
+				</p>
+			{:else if isMissing}
 				<p>Deze plek staat niet op de kaart. We hebben ze nergens teruggevonden.</p>
 			{:else if isCandidates}
 				<p>

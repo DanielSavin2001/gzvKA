@@ -190,8 +190,11 @@ describe('the generated file', () => {
 			places.filter((entry) => entry.display === display).length;
 
 		expect(byDisplay('punt')).toBe(58);
-		expect(byDisplay('punt_met_twijfel')).toBe(7);
-		expect(byDisplay('benadering')).toBe(11);
+		// The research counted 7 doubted points and 11 approximations. The build moves Tajje
+		// out of `benadering`, because a circle around a person claims something the same
+		// record's doubt text denies - so 8 and 10 here.
+		expect(byDisplay('punt_met_twijfel')).toBe(8);
+		expect(byDisplay('benadering')).toBe(10);
 		expect(byDisplay('kandidaten')).toBe(5);
 		expect(byDisplay('niet_geplaatst')).toBe(1);
 
@@ -205,6 +208,73 @@ describe('the generated file', () => {
 
 		for (const entry of Object.values(file.places).filter((p) => p.correctable)) {
 			expect(entry.doubt && entry.doubt.length > 0).toBe(true);
+		}
+	});
+
+	it('was regenerated from the research it claims to come from', () => {
+		// The generator only runs when somebody types `npm run plaatsen`: neither the site
+		// build (vite), the functions build (tsc) nor either workflow runs it. So an edit to
+		// plaatsen.geojson can sit in a commit with the generated files still describing the
+		// previous version, and every other test here would pass, because they only read the
+		// generated file. This one reads the source.
+		const source = JSON.parse(
+			fs.readFileSync(
+				path.join(__dirname, '..', '..', '..', 'functions', 'src', 'data', 'plaatsen.geojson'),
+				'utf8'
+			)
+		) as { features: { properties: { plaats: string; fotos: number } }[] };
+
+		const file = JSON.parse(fs.readFileSync(generated, 'utf8')) as {
+			places: Record<string, Approximation>;
+		};
+		const built = Object.values(file.places);
+
+		expect(built).toHaveLength(source.features.length);
+
+		const photosByName = new Map(built.map((entry) => [entry.name, entry.priority]));
+		for (const feature of source.features) {
+			// Every researched place is in the output. `priority` is the photo count for a
+			// correctable row and zero otherwise, so only the correctable ones can be checked
+			// this way - which is the set that matters.
+			const present = built.some((entry) => entry.name === feature.properties.plaats);
+			if (!present) {
+				throw new Error(`"${feature.properties.plaats}" is missing from the generated file`);
+			}
+
+			const photos = photosByName.get(feature.properties.plaats);
+			if (photos) expect(photos).toBe(feature.properties.fotos);
+		}
+	});
+
+	it('ships the same file to the site and to the functions', () => {
+		// Two copies are written from one source: the site fetches one, and the deployed
+		// correction endpoint imports the other to know what the map was claiming. If they
+		// drift, a visitor reports what they see and the server records something else.
+		const beside = path.join(
+			__dirname,
+			'..',
+			'..',
+			'..',
+			'functions',
+			'src',
+			'data',
+			'place-approximations.json'
+		);
+
+		expect(fs.readFileSync(beside, 'utf8')).toBe(fs.readFileSync(generated, 'utf8'));
+	});
+
+	it('draws no circle around a person', () => {
+		// Tajje de Kotter was a man, and the photographs are of a parade across the whole
+		// municipality. A circle says "the real location is somewhere in here", which the
+		// same record's own doubt text denies.
+		const file = JSON.parse(fs.readFileSync(generated, 'utf8')) as {
+			places: Record<string, Approximation>;
+		};
+
+		for (const entry of Object.values(file.places).filter((p) => p.kind === 'persoon')) {
+			expect(entry.display).not.toBe('benadering');
+			expect(entry.radius).toBeUndefined();
 		}
 	});
 

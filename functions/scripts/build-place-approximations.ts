@@ -193,6 +193,21 @@ function main(): void {
 			continue;
 		}
 
+		// A person is not a place, and drawing one as an approximation says something the
+		// archive itself denies. Tajje de Kotter was a man; the 58 photographs are of the
+		// parade for his hundredth birthday, which crossed the whole municipality. The
+		// research gave the row a 300 m circle around the street he was collected from, and
+		// a circle means "the real location is somewhere in here" - which is exactly what
+		// the same row's own doubt text says is not true.
+		//
+		// The coordinate is still worth keeping: it is where the parade set off. So the
+		// marker stays and the panel stays; the circle and the claim that goes with it do
+		// not.
+		if (properties.type === 'persoon' && properties.weergave === 'benadering') {
+			properties.weergave = 'punt_met_twijfel';
+			properties.straal_m = null;
+		}
+
 		const entry: Approximation = {
 			id: place.id,
 			name: place.name,
@@ -233,6 +248,17 @@ function main(): void {
 				// it just cannot be a link to a page that does not exist.
 				unresolvedAliases.push(`${properties.plaats} -> ${properties.alias_van}`);
 			}
+		}
+
+		// Two rows resolving to one place would leave the second silently replacing the
+		// first, and the row that vanished would take its photographs' only description
+		// with it.
+		if (approximations[place.id]) {
+			problems.push(
+				`"${properties.plaats}" and "${approximations[place.id].name}" both resolve to ` +
+					`the place "${place.id}". One of them needs a different name.`
+			);
+			continue;
 		}
 
 		approximations[place.id] = entry;

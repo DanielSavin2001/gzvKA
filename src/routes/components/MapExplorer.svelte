@@ -159,22 +159,37 @@
 	 * dropped along with its circle and its warning. That is the point of a correction: it
 	 * replaces the guess rather than sitting beside it.
 	 */
-	function research(placeId: string): Approximation | undefined {
-		if (placed[placeId]) return undefined;
-		return approximations[placeId];
+	function research(
+		layer: Record<string, Approximation>,
+		pins: Record<string, PlacedCoordinate>,
+		placeId: string
+	): Approximation | undefined {
+		if (pins[placeId]) return undefined;
+		return layer[placeId];
 	}
 
-	/** Off the map on purpose: outside Kapellen, or never found. */
-	function belongsOnMap(place: ArchivePlace): boolean {
-		const found = approximations[place.id];
-		if (!found || placed[place.id]) return true;
+	/**
+	 * Off the map on purpose: outside Kapellen, or never found.
+	 *
+	 * Like `research`, the two records are arguments rather than closure reads. A reactive
+	 * statement in Svelte 3 re-runs only when an identifier written *in the statement*
+	 * changes, so a helper that reaches for `placed` or `approximations` internally makes
+	 * the list that calls it freeze at whatever those held on the first render.
+	 */
+	function belongsOnMap(
+		layer: Record<string, Approximation>,
+		pins: Record<string, PlacedCoordinate>,
+		place: ArchivePlace
+	): boolean {
+		const found = layer[place.id];
+		if (!found || pins[place.id]) return true;
 		return isDrawable(found);
 	}
 
 	$: locatedPlaces = allPlaces.filter(
 		(place) =>
-			belongsOnMap(place) &&
-			research(place.id)?.display !== 'kandidaten' &&
+			belongsOnMap(approximations, placed, place) &&
+			research(approximations, placed, place.id)?.display !== 'kandidaten' &&
 			locate(place.id, placed, geometry, approximations)
 	);
 
@@ -190,19 +205,25 @@
 	 * is not.
 	 */
 	$: candidatePins = allPlaces
-		.filter((place) => belongsOnMap(place) && research(place.id)?.display === 'kandidaten')
+		.filter(
+			(place) =>
+				belongsOnMap(approximations, placed, place) &&
+				research(approximations, placed, place.id)?.display === 'kandidaten'
+		)
 		.flatMap((place) =>
-			(research(place.id)?.candidates ?? []).map((candidate: Candidate, index: number) => ({
-				place,
-				candidate,
-				index
-			}))
+			(research(approximations, placed, place.id)?.candidates ?? []).map(
+				(candidate: Candidate, index: number) => ({
+					place,
+					candidate,
+					index
+				})
+			)
 		);
 
 	/** The circles of doubt, as real geometry so they keep their size on the ground. */
 	$: circles = circleCollection(
 		locatedPlaces
-			.map((place) => research(place.id))
+			.map((place) => research(approximations, placed, place.id))
 			.filter((entry): entry is Approximation => entry !== undefined)
 	);
 
@@ -224,8 +245,21 @@
 		relayout();
 	}
 
+	/**
+	 * Places that are deliberately not on the map, listed so they can still be opened.
+	 *
+	 * Blokjesweg was never found and three places sit outside Kapellen on purpose. Leaving
+	 * them out of the map is right; leaving them out of the panel as well made them
+	 * unreachable, and Blokjesweg's whole "help ons deze plek vinden" panel could never be
+	 * shown to the one person who might know where it was.
+	 */
+	$: offTheMap = allPlaces.filter((place) => {
+		const found = approximations[place.id];
+		return Boolean(found) && !placed[place.id] && !isDrawable(found);
+	});
+
 	/** The research behind the open place, if it was researched rather than looked up. */
-	$: selectedResearch = selected ? research(selected.id) : undefined;
+	$: selectedResearch = selected ? research(approximations, placed, selected.id) : undefined;
 
 	/** The street the next map click will locate. */
 	$: nextToPlace = placing ? unlocatedPlaces[0] ?? null : null;
@@ -390,6 +424,19 @@
 		resetCorrection();
 	}
 
+	/**
+	 * Closing the panel has to stop the picker with it.
+	 *
+	 * `picking` used to survive, and `onMapClick` checks it before anything else - so after
+	 * closing the panel mid-correction the next click on the map was swallowed, with the
+	 * result written to a panel that was no longer on screen. It read as the map having
+	 * stopped responding.
+	 */
+	function closePanel(): void {
+		selected = null;
+		resetCorrection();
+	}
+
 	async function sendCorrection(
 		event: CustomEvent<{
 			kind: CorrectionKind;
@@ -476,7 +523,7 @@
 					: 'border-blue-800 text-blue-800 hover:bg-blue-50'}"
 				on:click={() => {
 					placing = !placing;
-					selected = null;
+					closePanel();
 				}}
 			>
 				{placing ? 'Stoppen met plaatsen' : 'Plaatsen aanduiden'}
@@ -594,7 +641,7 @@
 					{/if}
 
 					{#each locatedPlaces as place (place.id)}
-						{@const found = research(place.id)}
+						{@const found = research(approximations, placed, place.id)}
 						{@const shift = shiftOf(shifts, place.id)}
 						{@const line = leader(shift)}
 						<Marker lngLat={markerAt(place.id)} asButton>
@@ -695,7 +742,7 @@
 					<button
 						type="button"
 						class="text-gray-500 hover:text-gray-900"
-						on:click={() => (selected = null)}
+						on:click={() => closePanel()}
 						aria-label="Sluiten"
 					>
 						&times;
@@ -719,20 +766,28 @@
 				</div>
 
 				{#if selectedResearch?.correctable}
-					<PlaceUncertainty
-						approximation={selectedResearch}
-						bind:picked
-						{picking}
-						sending={sendingCorrection}
-						sent={correctionSent}
-						error={correctionError}
-						on:pick={() => {
-							picking = true;
-							correctionError = null;
-						}}
-						on:cancel={resetCorrection}
-						on:submit={sendCorrection}
-					/>
+					<!--
+						Keyed on the place, so switching from one uncertain place to another builds a
+						fresh panel. Without it Svelte reuses the instance and only swaps the prop:
+						the form stayed open with the previous place's answer still selected, and
+						"Tajje is not a place" could be sent about Kasteel Bunderhof.
+					-->
+					{#key selected.id}
+						<PlaceUncertainty
+							approximation={selectedResearch}
+							bind:picked
+							{picking}
+							sending={sendingCorrection}
+							sent={correctionSent}
+							error={correctionError}
+							on:pick={() => {
+								picking = true;
+								correctionError = null;
+							}}
+							on:cancel={resetCorrection}
+							on:submit={sendCorrection}
+						/>
+					{/key}
 				{/if}
 
 				<a
@@ -771,6 +826,26 @@
 						</li>
 					{/each}
 				</ul>
+
+				{#if offTheMap.length > 0}
+					<h3 class="mt-4 text-sm font-bold text-gray-900">Niet op de kaart</h3>
+					<p class="mt-1 text-xs text-gray-600">
+						Nog niet teruggevonden, of net buiten Kapellen. Klik ze aan als u meer weet.
+					</p>
+					<ul class="mt-2 space-y-1 text-sm">
+						{#each offTheMap as place (place.id)}
+							<li>
+								<button
+									type="button"
+									class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50"
+									on:click={() => choose(place)}
+								>
+									<span>{place.name}</span><span class="text-gray-500">{place.count}</span>
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
 			{/if}
 		</aside>
 	</div>

@@ -85,6 +85,25 @@ describe('readCorrection', () => {
 		expect(() => readCorrection({ kind: 'still-unknown' })).toThrow(CorrectionError);
 	});
 
+	it('refuses a candidate label the place does not offer', () => {
+		// Without this, any text and any coordinate on earth could be filed against a place
+		// with no candidates at all, and it would reach a curator looking like a real choice.
+		expect(() =>
+			readCorrection({ kind: 'candidate', lat: 51.3, lng: 4.4, candidateLabel: 'ergens anders' }, [
+				'Kapelsestraat 246',
+				'Middelbeeklaan, Putte'
+			])
+		).toThrow(CorrectionError);
+	});
+
+	it('accepts one the place does offer', () => {
+		const read = readCorrection(
+			{ kind: 'candidate', lat: 51.3, lng: 4.4, candidateLabel: 'Middelbeeklaan, Putte' },
+			['Kapelsestraat 246', 'Middelbeeklaan, Putte']
+		);
+		expect(read.candidateLabel).toBe('Middelbeeklaan, Putte');
+	});
+
 	it('requires a chosen candidate', () => {
 		expect(() => readCorrection({ kind: 'candidate', lat: 51.3, lng: 4.4 })).toThrow(
 			CorrectionError
@@ -123,6 +142,16 @@ describe('applyCorrection', () => {
 		// inside a 600 m circle of doubt.
 		expect(after.display).not.toBe('benadering');
 		expect(after.radius).toBeLessThan(600);
+	});
+
+	it('keeps what the archive knew about the place', () => {
+		// The note holds the description - "the korfball clubhouse stands on the castle's
+		// footprint and contains parts of it". Replacing it with a provenance stamp loses
+		// the only account of the place the archive has.
+		const after = applyCorrection(approximation(), correction(), '2026-08-29');
+
+		expect(after.note).toContain('Afgeleid uit een omschrijving.');
+		expect(after.note).toContain('Gecorrigeerd door Daniel');
 	});
 
 	it('records who said so and when', () => {

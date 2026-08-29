@@ -84,7 +84,11 @@ export const CORRECTION_KINDS: CorrectionKind[] = [
  * would be stored as an accepted-looking record that moves nothing, and a reviewer would
  * approve it without noticing there was nothing to apply.
  */
-export function readCorrection(input: Record<string, unknown>): {
+export function readCorrection(
+	input: Record<string, unknown>,
+	/** The candidate labels this place actually offers, when it offers any. */
+	offered?: string[]
+): {
 	kind: CorrectionKind;
 	lat?: number;
 	lng?: number;
@@ -130,6 +134,14 @@ export function readCorrection(input: Record<string, unknown>): {
 	if (kind === 'candidate') {
 		const label = clean(input.candidateLabel, LIMITS.label);
 		if (!label) throw new CorrectionError('Geen van de mogelijkheden is gekozen.');
+
+		// The label has to be one this place actually offers. Without the check a request
+		// could file any text, with any coordinate on earth, against a place that has no
+		// candidates at all - and it would reach a curator looking like a real choice.
+		if (offered && !offered.includes(label)) {
+			throw new CorrectionError('Die mogelijkheid hoort niet bij deze plaats.');
+		}
+
 		result.candidateLabel = label;
 	}
 
@@ -209,6 +221,16 @@ export function applyCorrection(
 			? `: ${correction.candidateLabel}`
 			: '';
 
+	// `note` is the research's own account of the place - what it was, when it came down,
+	// the sentence the placement rests on. Kasteel Beaulieu's says the korfball clubhouse
+	// stands on its footprint and still contains parts of it. Overwriting that with a
+	// provenance stamp threw it away, and the `|| approximation.note` fallback could never
+	// fire, because the left side always contains "Gecorrigeerd door ... op ...". Both are
+	// kept now, the way the `still-unknown` branch already kept them.
+	const stamp = `Gecorrigeerd door ${by} op ${on}${where}.${
+		correction.message ? ` ${correction.message}` : ''
+	}`;
+
 	return {
 		...approximation,
 		lat: correction.lat,
@@ -219,8 +241,7 @@ export function applyCorrection(
 		candidates: undefined,
 		correctable: false,
 		doubt: undefined,
-		note:
-			`Gecorrigeerd door ${by} op ${on}${where}. ${correction.message}`.trim() || approximation.note
+		note: approximation.note ? `${approximation.note}\n\n${stamp}` : stamp
 	};
 }
 

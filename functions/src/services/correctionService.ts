@@ -45,7 +45,10 @@ export async function submit(
 	contributor: Contributor,
 	approximation: Approximation
 ): Promise<PlaceCorrection> {
-	const read = readCorrection(input);
+	const read = readCorrection(
+		input,
+		approximation.candidates?.map((candidate) => candidate.label)
+	);
 
 	const correction: PlaceCorrection = {
 		id: randomUUID(),
@@ -71,15 +74,18 @@ export async function submit(
 
 /** What a curator sees, newest first. */
 export async function list(status: CorrectionStatus): Promise<PlaceCorrection[]> {
+	// Ordered in the query, not afterwards. Sorting a page that the database chose by
+	// document id gives the newest of an arbitrary 200, which is not the newest 200 - so
+	// once the queue passed the cap a curator would have silently stopped seeing new
+	// reports. Needs the composite index in firestore.indexes.json.
 	const snapshotResult = await firestore
 		.collection(CORRECTION_COLLECTION)
 		.where('status', '==', status)
+		.orderBy('submittedAt', 'desc')
 		.limit(PAGE)
 		.get();
 
-	return snapshotResult.docs
-		.map((document) => document.data() as PlaceCorrection)
-		.sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+	return snapshotResult.docs.map((document) => document.data() as PlaceCorrection);
 }
 
 /**

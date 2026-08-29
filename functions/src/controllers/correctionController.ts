@@ -7,6 +7,7 @@ import { CorrectionError } from '../../../sharedModels/correction';
 import { readContributor } from '../../../sharedModels/submission';
 import { NotAuthorised, requireAdmin } from '../services/admin-auth';
 import * as corrections from '../services/correctionService';
+import { callerKey, countRequest, TooMany } from '../services/throttle';
 import { validateCors } from '../utils/cors-helper';
 import * as researched from '../data/place-approximations.json';
 
@@ -24,6 +25,11 @@ const PLACES = (researched as { places: Record<string, Approximation> }).places;
 function fail(response: Response, error: unknown): Response {
 	if (error instanceof NotAuthorised) {
 		logger.warn('Refused: ', error.message);
+		return response.status(error.status).send(error.message);
+	}
+
+	if (error instanceof TooMany) {
+		logger.warn('Throttled: ', error.message);
 		return response.status(error.status).send(error.message);
 	}
 
@@ -50,6 +56,11 @@ export const submitCorrection: HttpsFunction = https.onRequest(
 
 		try {
 			if (request.method !== 'POST') return response.status(405).send('Method Not Allowed');
+
+			// Before any work, and before the write. No account is needed to report a
+			// misplaced pin, so this is the only thing standing between the curator's queue
+			// and a script.
+			await countRequest(callerKey(request.headers as Record<string, unknown>));
 
 			const body = (request.body ?? {}) as Record<string, unknown>;
 			const placeId = typeof body.placeId === 'string' ? body.placeId : '';

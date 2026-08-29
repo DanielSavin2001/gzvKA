@@ -602,7 +602,7 @@
 			"id": "tajje",
 			"name": "Tajje",
 			"grade": "C",
-			"display": "benadering",
+			"display": "punt_met_twijfel",
 			"note": "Geen plaats maar een persoon. \"Tajje de Kotter\" was de bijnaam van Matheus Janssens. Zijn 100ste verjaardag werd op 9 juli 1976 gevierd met een optocht door heel Kapellen. gzvka.be heeft er een aparte pagina voor met bijschriften \"afhalen Akkerstraat\", \"optocht in de Akkerstraat\", \"optocht op de Hoevensebaan\", \"optocht in het centrum\". Punt = Akkerstraat, waar hij werd opgehaald. Zie de noot hieronder — dit hoort waarschijnlijk niet als plaats op de kaart.",
 			"correctable": true,
 			"priority": 58,
@@ -610,7 +610,6 @@
 			"outsideKapellen": false,
 			"lat": 51.30791,
 			"lng": 4.42484,
-			"radius": 300,
 			"doubt": "Dit is geen plaats. 'Tajje de Kotter' was de bijnaam van Matheus Janssens; de 58 foto's tonen de optocht voor zijn 100ste verjaardag op 9 juli 1976. Het punt is de Akkerstraat, waar hij werd opgehaald; de stoet liep verder over de Hoevensebaan naar het centrum.",
 			"research": "Modelleer als persoon of gebeurtenis, niet als locatie. Een parade op één huisnummer pinnen is misleidend."
 		},
