@@ -257,7 +257,7 @@
 		</div>
 
 		<aside class="rounded-xl border border-gray-300 bg-white p-4">
-			{#if selected}
+			{#if selected && archive}
 				<div class="flex items-start justify-between gap-2">
 					<div>
 						<h2 class="text-xl font-bold text-gray-900">{selected.name}</h2>
