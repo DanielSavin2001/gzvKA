@@ -191,9 +191,26 @@ photograph.
 
 ---
 
+## The gap between the repository and the live archive
+
+Worth settling before anything else, because it changes what "enrich the archive" means:
+**nothing in this repository ever writes the 2948 photographs to Firestore or Cloud
+Storage.** The only write path is the interactive upload endpoint, one contribution at a
+time. The images live in git; the live site reads Firestore.
+
+So either the live archive was populated by hand through the upload page, or the two are
+out of step. Either way, running the AI pass "over the archive" needs an ingest step first,
+walking the corpus and creating a record per photograph with its source path — which is
+also the natural moment to write the street, donor and date this branch can already extract.
+
+That step is not written yet, deliberately: it depends on which of the two is true, and
+that is your answer to give.
+
+---
+
 ## Fixed on the way through
 
-Four bugs surfaced while building and verifying the above.
+Seven bugs surfaced while building and verifying the above.
 
 **Uploaded images could never be displayed.** `imageService` writes an
 `https://storage.googleapis.com/...` URL on upload, but `extractImagePath` only parsed
@@ -216,17 +233,33 @@ actually being ignored outside Windows.
 them up as a second copy of each suite — doubling the reported count and letting a stale
 build report green after the TypeScript source had broken.
 
+**Uploads were answered before they were stored.** `handleImages` started the parse and
+returned; the code that writes to Firestore and Cloud Storage ran afterwards on an event,
+and the request answered `200` in the meantime. On Cloud Functions an instance may be
+frozen once it has responded, so a contribution could be lost while the contributor was
+told it had worked. The request now waits for the photograph to be durable.
+
+**Every uploaded image was stored with no content type at all.** `FileDataFields` declared
+`mimetype`; busboy spells it `mimeType`. Because the busboy callback was annotated with
+that interface, the mismatch type-checked happily while the value was always `undefined`.
+
+**Filenames misreport the format.** 55 of the 2948 photographs carry an extension that
+disagrees with their bytes — 28 GIFs named `.png`, 26 PNGs named `.jpg`. Uploads now take
+their type from the file's magic bytes.
+
 ---
 
 ## Open questions for you
 
-1. **The 114 street names from the town map** — worth an evening confirming them? It is
+1. **Are the 2948 photographs in this repository actually in the live Firestore archive?**
+   This decides whether the next step is an ingest run or a reconciliation. See above.
+2. **The 114 street names from the town map** — worth an evening confirming them? It is
    the cheapest big win available, and it is the difference between searching 43 streets
    and searching the whole municipality.
-2. **The AI budget.** ~$60–100 once, for the whole archive. Comfortable?
-3. **Who reviews?** The pipeline routes anything uncertain to a volunteer. How many people
+3. **The AI budget.** ~$60–100 once, for the whole archive. Comfortable?
+4. **Who reviews?** The pipeline routes anything uncertain to a volunteer. How many people
    will realistically do that, and how much should auto-approve?
-4. **The `Wedstrijden GZVKA/` subtree** (477 photographs) — browse it by event rather than
+5. **The `Wedstrijden GZVKA/` subtree** (477 photographs) — browse it by event rather than
    by place, and leave it out of the street index entirely?
-5. **`.github/workflows/main.yml`** deploys to GitHub Pages from `./dist`, which this
+6. **`.github/workflows/main.yml`** deploys to GitHub Pages from `./dist`, which this
    project never produces — the real deploy is the Firebase workflow next to it. Delete it?
