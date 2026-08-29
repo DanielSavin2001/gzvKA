@@ -19,13 +19,67 @@
  */
 
 import type { Archive } from './archive';
-import { loadArchive, thumbUrl } from './archive';
+import { loadArchive, photoAlt, placesWithPhotos, sortForDisplay, thumbUrl } from './archive';
 
-/** Just enough of a place for the head tags. */
+/** The shape of the archive, for the home page: what there is, and what to call it. */
+export interface ArchiveSummary {
+	imageCount: number;
+	streets: { id: string; name: string; count: number }[];
+	areas: { id: string; name: string; count: number }[];
+}
+
+/**
+ * The browse lists, without the archive behind them.
+ *
+ * Names and counts for 121 places, roughly 8 KB - against the 1.1 MB index the browser
+ * fetches to build the same lists a moment later. The home page is where a crawler starts
+ * and these are the only links out of it, so they cannot wait for that download.
+ */
+export async function archiveSummary(fetcher: typeof fetch): Promise<ArchiveSummary> {
+	const archive = await loadArchive(fetcher);
+	const named = ({ id, name, count }: { id: string; name: string; count: number }) => ({
+		id,
+		name,
+		count
+	});
+
+	return {
+		imageCount: archive.imageCount,
+		streets: placesWithPhotos(archive, true).map(named),
+		areas: placesWithPhotos(archive)
+			.filter((place) => !place.isStreet && place.count >= 8)
+			.map(named)
+	};
+}
+
+/** One photograph as a place page lists it. */
+export interface PhotoLink {
+	id: string;
+	title: string;
+	alt: string;
+	image: string;
+	year?: string;
+	houseNumber?: number;
+}
+
+/** A place, and the photographs it holds. */
 export interface PlaceSummary {
 	id: string;
 	name: string;
 	count: number;
+	/**
+	 * The photographs, in the order the page shows them.
+	 *
+	 * Here rather than left to the browser because these 121 pages are the only route to
+	 * 4,504 photographs, and they were rendering their grids from an index fetched after
+	 * the HTML had been served - so what a crawler received was a heading and the words
+	 * "Bezig met laden ...". Every photograph was an orphan, reachable through the sitemap
+	 * and nothing else, and a sitemap is a hint where a link is a path.
+	 *
+	 * About 200 bytes per photograph, so a typical street costs 5 KB and the largest 30 KB.
+	 * That is the page's actual content; it is the one thing worth inlining.
+	 */
+	photos: PhotoLink[];
 }
 
 export async function placeSummary(
@@ -34,8 +88,18 @@ export async function placeSummary(
 ): Promise<PlaceSummary | null> {
 	const archive = await loadArchive(fetcher);
 	const place = archive.placeById.get(slug);
+	if (!place) return null;
 
-	return place ? { id: place.id, name: place.name, count: place.count } : null;
+	const photos = sortForDisplay(archive.photosByPlace.get(slug) ?? []).map((photo) => ({
+		id: photo.id,
+		title: photo.t,
+		alt: photoAlt(archive, photo),
+		image: thumbUrl(archive, photo),
+		...(photo.y ? { year: photo.y } : {}),
+		...(photo.hn ? { houseNumber: photo.hn } : {})
+	}));
+
+	return { id: place.id, name: place.name, count: place.count, photos };
 }
 
 /** Just enough of a photograph for the head tags. */
@@ -43,6 +107,10 @@ export interface PhotoSummary {
 	id: string;
 	title: string;
 	place: string | null;
+	/** That place's own page, so a photograph is a way in rather than a dead end. */
+	placeId?: string;
+	/** The shared alt rule, so the picture describes itself the same way everywhere. */
+	alt: string;
 	year?: string;
 	donor?: string;
 	description?: string;
@@ -95,13 +163,17 @@ function summarisePhoto(archive: Archive, id: string): PhotoSummary | null {
 	const photo = archive.photoById.get(id);
 	if (!photo) return null;
 
-	const first = (photo.st ?? [])[0];
-	const place = first ? archive.placeById.get(first)?.name ?? null : null;
+	// The street if there is one, the first place otherwise - the same choice `photoAlt`
+	// makes, so the caption and the alt text name the same place.
+	const places = (photo.st ?? []).map((id) => archive.placeById.get(id)).filter(Boolean);
+	const found = places.find((place) => place?.isStreet) ?? places[0];
 
 	return {
 		id: photo.id,
 		title: photo.t,
-		place,
+		place: found?.name ?? null,
+		...(found ? { placeId: found.id } : {}),
+		alt: photoAlt(archive, photo),
 		image: thumbUrl(archive, photo),
 		...(photo.y ? { year: photo.y } : {}),
 		...(photo.d ? { donor: photo.d } : {}),

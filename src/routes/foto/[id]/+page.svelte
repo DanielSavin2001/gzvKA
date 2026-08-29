@@ -3,25 +3,15 @@
 	import { goto } from '$app/navigation';
 
 	import type { Archive, ArchivePhoto } from '$lib/archive';
-	import { detailUrl, loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
+	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
+	import type { PhotoSummary } from '$lib/page-data';
 	import { SITE, summarise } from '$lib/seo';
 	import Seo from '../../components/Seo.svelte';
 	import { swipe } from '$lib/gestures';
 	import type { PhotoContext } from '$lib/stories';
 	import { loadStory, loadStoryPhotos, photoContext } from '$lib/stories';
 
-	export let data: {
-		id: string;
-		summary: {
-			id: string;
-			title: string;
-			place: string | null;
-			year?: string;
-			donor?: string;
-			description?: string;
-			image: string;
-		} | null;
-	};
+	export let data: { id: string; summary: PhotoSummary | null };
 
 	let archive: Archive | null = null;
 	let error: string | null = null;
@@ -263,7 +253,9 @@
 				<div class="flex h-[58vh] items-center justify-center sm:h-[64vh]">
 					<img
 						src={data.summary.image}
-						alt={data.summary.title}
+						alt={data.summary.alt}
+						{...{ fetchpriority: 'high' }}
+						decoding="async"
 						class="max-h-full max-w-full rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
 					/>
 				</div>
@@ -273,8 +265,22 @@
 					</h1>
 					<p class="mt-2 text-gray-700 dark:text-gray-300">{photoDescription}</p>
 					{#if data.summary.place}
+						<!--
+							A link, not a label. These 4,504 pages are the largest thing on the site
+							and they pointed nowhere a crawler could follow, so the street pages had
+							almost no inbound links and the archive read as 4,504 dead ends.
+						-->
 						<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-							{data.summary.place}{data.summary.year ? ` · ${data.summary.year}` : ''}
+							{#if data.summary.placeId}
+								<a
+									class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+									href="/straat/{data.summary.placeId}"
+								>
+									{data.summary.place}
+								</a>
+							{:else}
+								{data.summary.place}
+							{/if}{data.summary.year ? ` · ${data.summary.year}` : ''}
 						</p>
 					{/if}
 				</figcaption>
@@ -333,6 +339,8 @@
 						<img
 							src={thumbUrl(archive, previous)}
 							alt=""
+							loading="lazy"
+							decoding="async"
 							draggable="false"
 							class="h-full w-full select-none rounded-l-lg object-cover opacity-40 transition hover:opacity-80"
 						/>
@@ -345,7 +353,8 @@
 					<img
 						src={detailUrl(archive, photo)}
 						on:error={fallBackToThumbnail}
-						alt={photo.t}
+						alt={photoAlt(archive, photo)}
+						{...{ fetchpriority: 'high' }}
 						draggable="false"
 						class="max-h-full max-w-full select-none rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 object-contain"
 					/>

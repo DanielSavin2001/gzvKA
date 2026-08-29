@@ -1,11 +1,15 @@
 /**
  * The archive, as the browser sees it.
  *
- * Everything needed to browse and search all 2948 photographs is in one generated file,
- * `static/data/archive-index.json` (66 KB over the wire). It is fetched once, kept in
- * memory, and every subsequent search is a scan over an array - which for three thousand
+ * Everything needed to browse and search all 4,504 photographs is in one generated file,
+ * `static/data/archive-index.json`: 1.1 MB, about 100 KB gzipped. It is fetched once, kept
+ * in memory, and every subsequent search is a scan over an array - which for four thousand
  * items is faster than a network round trip, and works with no backend, no credentials and
  * no connection.
+ *
+ * That is a real download, so nothing a page needs before it can be read should wait on it.
+ * The prerendered pages carry their own titles, headings and lists from `load`; this fills
+ * in the neighbours, the map and the search behind them.
  *
  * Rebuild the index with `npm run archive:index` after adding photographs.
  */
@@ -164,6 +168,26 @@ export function sortForDisplay(photos: ArchivePhoto[]): ArchivePhoto[] {
 		const by = b.y ? Number(b.y) : Number.POSITIVE_INFINITY;
 		return ay - by || (a.hn ?? 0) - (b.hn ?? 0) || a.t.localeCompare(b.t);
 	});
+}
+
+/**
+ * How a photograph describes itself to a screen reader and to image search.
+ *
+ * Shared rather than written at each place that shows a picture, because the two used to
+ * disagree: a thumbnail said "Akkerstraat - Bewoners in de Akkerstraat (1962)" and the
+ * photograph the thumbnail linked to said "Akkerstraat - Bewoners". The page whose entire
+ * purpose is the image had the thinner description of it.
+ *
+ * The house number is in here and not in the card's caption alone, because titles repeat:
+ * a street can hold a hundred photographs called "Bewoners", and the number is often the
+ * only thing that tells them apart.
+ */
+export function photoAlt(archive: Archive, photo: ArchivePhoto): string {
+	const street = photo.st.map((id) => archive.placeById.get(id)).find((place) => place?.isStreet);
+
+	const where = street ? `in de ${street.name}${photo.hn ? ` ${photo.hn}` : ''}` : '';
+
+	return [photo.t, where, photo.y ? `(${photo.y})` : ''].filter(Boolean).join(' ');
 }
 
 /** The URL of a photograph's larger image. */

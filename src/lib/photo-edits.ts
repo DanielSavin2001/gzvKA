@@ -28,11 +28,22 @@ const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
  * runner means the job burns its whole allowance and then fails with a timeout that says
  * nothing about why.
  *
- * Ten seconds is long enough for a cold Cloud Function and short enough that nobody
- * notices. Past it the archive is exactly what the generated index says, which is what it
- * was before the editor existed.
+ * Three seconds, because the same wait is also a visitor's. `loadArchive` does not resolve
+ * until this does, and the header menus, the browse grids and the search all wait on that -
+ * so a cold function held the whole site behind a third party. The prerendered pages carry
+ * their own heading, picture and links, so what is actually delayed is the layer on top;
+ * three seconds bounds it to something nobody sits through.
+ *
+ * Past it the archive is exactly what the generated index says, which is what it was before
+ * the editor existed. A curator's correction then waits for the next visit rather than the
+ * visitor waiting for it - and the prerendered HTML already carries whatever the build saw.
+ *
+ * The real fix is for the archive not to wait on this at all: resolve on the generated
+ * index and lay the corrections over it when they arrive. That needs `loadArchive` to hand
+ * back a second answer, which every caller would have to expect, so it is deliberately not
+ * bundled into a change about search engines.
  */
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 3_000;
 
 let cache: Record<string, PhotoEdit> | null = null;
 

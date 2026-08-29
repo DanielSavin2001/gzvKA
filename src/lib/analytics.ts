@@ -118,8 +118,12 @@ function load(): void {
 	gtag('config', MEASUREMENT_ID, {
 		// Page views are sent by hand on navigation: this is a single-page app, so gtag's
 		// own automatic one only ever fires for the first page somebody lands on.
-		send_page_view: false,
-		anonymize_ip: true
+		//
+		// No `anonymize_ip` here on purpose. It is a Universal Analytics parameter and GA4
+		// ignores it - GA4 anonymises addresses before they are stored either way. Setting
+		// it reads as a privacy control that is doing something, which in a file whose whole
+		// point is to be exact about what is collected is worse than not setting it.
+		send_page_view: false
 	});
 }
 
