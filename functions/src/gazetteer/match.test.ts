@@ -13,6 +13,8 @@ import {
 import { damerauLevenshtein, diceCoefficient } from './distance';
 import { corePlace, streetSuffixFamily } from './normalize';
 import { splitFilename, splitPathContext } from './segment';
+import { SEED_ENTRIES } from './seed';
+import { resolveGeometry } from '../../../sharedModels/gazetteer';
 
 const gazetteer = JSON.parse(
 	fs.readFileSync(path.join(__dirname, '..', 'data', 'kapellen-gazetteer.json'), 'utf8')
@@ -352,6 +354,62 @@ describe('the gazetteer data itself', () => {
 	it('has unique ids', () => {
 		const ids = gazetteer.entries.map((e) => e.id);
 		expect(new Set(ids).size).toBe(ids.length);
+	});
+
+	it("carries a curator's manual coordinate through a rebuild", () => {
+		// The generated JSON is rewritten wholesale by `npm run gazetteer:build`, so a
+		// coordinate hand-edited into it would vanish on the next rebuild while
+		// resolveGeometry still claims manual beats machine. The seed is therefore the
+		// only place a human may record one, and the generator must carry it through.
+		const seeded = SEED_ENTRIES.find((e) => e.manualGeometry != null);
+		const generated = gazetteer.entries.find((e) => e.id === seeded?.id);
+
+		if (seeded) {
+			expect(generated?.manualGeometry).toEqual(seeded.manualGeometry);
+		}
+
+		// Whether or not one is set today, every generated entry must expose the field, so
+		// that setting it in the seed is all a curator has to do.
+		for (const entry of gazetteer.entries) {
+			expect(entry).toHaveProperty('manualGeometry');
+		}
+	});
+
+	it('lets a manual coordinate win over the OSM file', () => {
+		const manual = {
+			centroid: { lat: 51.3125, lng: 4.4295 },
+			bbox: [4.42, 51.31, 4.44, 51.32] as [number, number, number, number],
+			source: 'manual' as const
+		};
+		const entry = { ...gazetteer.entries[0], manualGeometry: manual };
+		const osm = {
+			version: 1,
+			generatedAt: '2026-01-01',
+			overpassQueryHash: 'x',
+			municipality: {
+				osmRelationId: 1,
+				name: 'Kapellen',
+				bbox: [0, 0, 0, 0] as [number, number, number, number]
+			},
+			byEntryId: {
+				[entry.id]: {
+					centroid: { lat: 0, lng: 0 },
+					bbox: [0, 0, 0, 0] as [number, number, number, number],
+					source: 'osm' as const
+				}
+			},
+			unmatched: [],
+			unresolved: [],
+			needsReview: []
+		};
+
+		expect(resolveGeometry(entry, osm)).toEqual(manual);
+		// And with no manual coordinate, OSM is used rather than nothing.
+		expect(resolveGeometry({ ...entry, manualGeometry: null }, osm)?.source).toBe('osm');
+	});
+
+	it('ships no coordinates today, so none can have been invented', () => {
+		expect(gazetteer.entries.every((e) => e.manualGeometry === null)).toBe(true);
 	});
 
 	it('has no two distinct places reachable from one another by fuzzy matching', () => {

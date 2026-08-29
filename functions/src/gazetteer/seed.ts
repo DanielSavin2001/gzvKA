@@ -21,7 +21,7 @@
  *    photographs to a road that does not exist.
  */
 
-import type { District, PlaceKind } from '../../../sharedModels/gazetteer';
+import type { District, PlaceGeometry, PlaceKind } from '../../../sharedModels/gazetteer';
 
 /** A curated entry, before the corpus evidence is joined in. */
 export interface SeedEntry {
@@ -41,6 +41,16 @@ export interface SeedEntry {
 	negativeContext?: string[];
 	relatedIds?: string[];
 	note?: string;
+	/**
+	 * A coordinate placed here by a human, which always wins over anything fetched from
+	 * OpenStreetMap. This is the one place a coordinate may be written by hand, and it
+	 * must come from a deliberate click on a map - never from memory.
+	 *
+	 * It lives on the seed rather than on the generated JSON because the generator
+	 * rewrites that file wholesale: a coordinate hand-edited into the output would be
+	 * silently deleted on the next `npm run gazetteer:build`.
+	 */
+	manualGeometry?: PlaceGeometry | null;
 }
 
 /**

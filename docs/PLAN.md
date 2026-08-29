@@ -13,7 +13,7 @@ npm run corpus:report          # what the archive yields with no AI at all
 npm run corpus:report -- --samples
 npm run gazetteer:build        # rebuild the place list, verified against the corpus
 npm run map:labels             # street names recovered from the town map
-npx jest                       # 162 tests, no credentials needed
+npx jest                       # 165 tests, no credentials needed
 ```
 
 ---
@@ -88,9 +88,19 @@ to the gazetteer from them — see *Rules we hold to* below.
 
 ### Phase 2 — make it searchable (next)
 
-Search does **not** need Firestore queries or a search vendor. Measured: a complete
-prebuilt search index for the whole archive is ~92 KB gzipped — *smaller than the
-`mapData.geojson` the home page already downloads today* (119 KB gzipped). So:
+Search does **not** need Firestore queries or a search vendor. A complete prebuilt search
+index for the whole archive is around 92 KB gzipped, which the browser downloads once and
+then answers every keystroke from locally.
+
+A correction to an earlier draft of this plan, which claimed that index would be *smaller
+than a file the site already ships*: it would not. `converter.ts` filters the map data to
+images with a real coordinate, and no image has one yet, so `mapData.geojson` is nearly
+empty today rather than the 1.4 MB a full collection would be. The search index is a new
+payload, not a smaller replacement. It is still the right call — sub-millisecond
+keystrokes, ranking, fuzzy matching and offline use all stand on their own, and 92 KB
+once per visitor is a fair price for them — but the comparison was wrong and is withdrawn.
+
+So:
 
 - Extend the existing `createGeoJsonJob` pubsub job to also emit a search index and a
   street index into Cloud Storage, alongside the GeoJSON it already writes.
@@ -171,10 +181,16 @@ attribution — this is a heritage archive and provenance is part of the record.
 These are the ones worth stating out loud, because breaking any of them damages the
 archive quietly and permanently.
 
-**No invented coordinates.** Every gazetteer entry ships with `geometry: null`. Real
-coordinates come only from OpenStreetMap or a deliberate click on a map, and they live in a
-separate file so a refresh can never overwrite a human's correction. A latitude typed from
-memory puts a photograph on the wrong street forever, and nobody notices for years.
+**No invented coordinates.** Every gazetteer entry ships with no geometry at all. Real
+coordinates come only from OpenStreetMap or a deliberate click on a map. A latitude typed
+from memory puts a photograph on the wrong street forever, and nobody notices for years.
+
+The mechanism matters as much as the rule: a curator records a coordinate in
+`functions/src/gazetteer/seed.ts`, which the generator carries through, and `resolveGeometry`
+prefers it over anything fetched from OpenStreetMap. Recording it in the *generated* JSON
+instead would look like it worked and then be silently deleted by the next
+`npm run gazetteer:build` - which is exactly what the first version of this did, until a
+test was written for it.
 
 **No invented names.** The gazetteer is generated, and the generator reports any alias that
 occurs nowhere in the archive. That check has already caught four.
