@@ -191,11 +191,14 @@ export function splitFilename(filename: string): FilenameParts {
 /**
  * Whether a segment reads as a person's name rather than a place.
  *
+ * Exported so the archive index can drop a donor from a photograph's display title in the
+ * cases where the date convention broke down and the donor was never separated out.
+ *
  * Deliberately conservative: two or more capitalised words, none of which is a
  * street-shaped word or a digit. Getting this wrong in the permissive direction would
  * discard a place segment, so anything ambiguous is left as place text.
  */
-function looksLikePersonName(segment: string): boolean {
+export function looksLikePersonName(segment: string): boolean {
 	const withoutIndex = stripTrailingIndex(segment);
 	const words = withoutIndex.split(/\s+/).filter(Boolean);
 

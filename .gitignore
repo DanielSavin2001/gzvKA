@@ -281,3 +281,6 @@ vite.config.ts.timestamp-*
 /functions/.runtimeconfig.json
 /functions/lib/
 /functions/lib/*
+
+# Generated web-sized images - rebuild with `npm run thumbs`.
+/static/foto

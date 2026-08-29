@@ -2,6 +2,49 @@
 
 ![Readme.jpg](src%2Flib%2Fimages%2FReadme.jpg)
 
+## Running it locally
+
+You need [Node.js](https://nodejs.org/) 18 or newer. Nothing else - no Firebase account, no
+credentials, no network.
+
+```bash
+npm install          # the website
+npm run thumbs       # make web-sized copies of the photos (a few minutes, once)
+npm run start        # http://localhost:5173
+```
+
+That is the whole archive: all 2948 photographs, searchable, browsable by street. The photo
+index is generated from the images in this repository and committed, so it works on a fresh
+clone with nothing configured.
+
+`npm run thumbs` converts the 937 MB of originals into web-sized copies under
+`static/foto/` (about 440 MB, not committed). It is safe to re-run - it skips anything
+already converted. Without it the pages work but the images are missing.
+
+**Open `localhost:5173`, not `127.0.0.1:5173`.** The Cloud Functions only accept requests
+from `localhost` (see `functions/src/utils/cors-helper.ts`), so the upload zone silently
+fails on the other spelling.
+
+### The parts that need Firebase
+
+The upload zone and the older subject pages talk to Cloud Functions. For those, copy
+`.env.example` to `.env` and fill in `VITE_BASE_URL_GF`. Everything else works without it.
+
+### Regenerating the data
+
+```bash
+npm run archive:index   # rebuild the photo index after adding or renaming photos
+```
+
+```bash
+cd functions
+npm install
+npx jest                     # 165 tests, no credentials needed
+npm run gazetteer:build      # rebuild the Kapellen place list
+npm run corpus:report        # what the filenames alone yield
+npm run map:labels           # street names recovered from the town map PDF
+```
+
 ## Project Overview
 
 Welcome to the **"Ge zijt van Kapellen als ge ..."** project, an initiative dedicated to preserving and showcasing the rich history and culture of the beautiful town of Kapellen, Belgium. This project originated from a passionate community group and aims to revitalize the existing website, transforming it into an intuitive, responsive, and innovative archive that captures the essence of Kapellen.
