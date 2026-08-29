@@ -73,7 +73,29 @@ export function extractDatesFromText(text: string): { dateOfAcquisition: string;
             }
             break;
         default:
-            logger.warn(`Encountered a special case, manual intervention may be needed for ${text}`);
+            // Three or more years used to return nothing at all, which lost both dates on
+            // the archive's most metadata-rich filenames - a class photo carrying a school
+            // year range and a donation date, such as
+            // "Klasfoto - Kleuterschool Hoevensebaan 1969-1970 - Sonja Linders - 22.12.2014".
+            // A full dd.mm.yyyy date is the archive's unambiguous marker for when a photo
+            // was donated, so when one is present both fields can be filled with
+            // confidence: its year is the acquisition, and the earliest of the remaining
+            // years is when the photograph itself was taken. Without such a marker the
+            // years really are ambiguous, and nothing is asserted.
+            const fullDate = text.match(/\b\d{1,2}\.\d{1,2}\.(\d{4})\b/);
+
+            if (fullDate) {
+                dateOfAcquisition = fullDate[1];
+
+                const subjectYears = matches
+                    .filter(match => match !== fullDate[1])
+                    .map(match => parseInt(match, 10));
+
+                if (subjectYears.length > 0)
+                    yearOfImage = Math.min(...subjectYears).toString();
+            } else {
+                logger.warn(`Encountered a special case, manual intervention may be needed for ${text}`);
+            }
     }
 
     return {dateOfAcquisition, yearOfImage};

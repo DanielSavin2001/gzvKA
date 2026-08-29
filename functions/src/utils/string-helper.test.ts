@@ -157,6 +157,29 @@ describe('extractDatesFromText', () => {
         const result = stringHelper.extractDatesFromText('Louwke Poep 1925_2 - Swatti Alix - z.d.');
         expect(result).toEqual({dateOfAcquisition: '', yearOfImage: '1925'});
     });
+
+    test('should read a school year range alongside a donation date', () => {
+        // Three years, so this used to return nothing at all - a total loss on the class
+        // photos, which are among the best documented files in the archive.
+        const result = stringHelper.extractDatesFromText(
+            'Klasfoto - Kleuterschool Hoevensebaan 1969-1970 - Sonja Linders - 22.12.2014.jpg'
+        );
+        expect(result).toEqual({dateOfAcquisition: '2014', yearOfImage: '1969'});
+    });
+
+    test('should take the earliest subject year when several precede the donation date', () => {
+        const result = stringHelper.extractDatesFromText(
+            'Broedersschool 1962 1963 1964 - Stef Laevaert - 09.10.2014.jpg'
+        );
+        expect(result).toEqual({dateOfAcquisition: '2014', yearOfImage: '1962'});
+    });
+
+    test('should still assert nothing when three years carry no donation date', () => {
+        // Without the dd.mm.yyyy marker the years really are ambiguous, so guessing
+        // between them would put a wrong year on a photograph.
+        const result = stringHelper.extractDatesFromText('Straatbeeld 1900 1920 1940');
+        expect(result).toEqual({dateOfAcquisition: '', yearOfImage: ''});
+    });
 });
 
 describe('getFileExtension', () => {
