@@ -16,7 +16,12 @@ jobs:
         
       - name: Set up environment variables
         run: |
-          echo "VITE_BASE_URL_GF=${{ secrets.VITE_BASE_URL_GF_PRD }}" >> $GITHUB_ENV
+          # The two hosting workflows referred to two different secret names,
+          # VITE_BASE_URL_GF_PROD and VITE_BASE_URL_GF_PRD. A missing secret is not an
+          # error in Actions - it expands to an empty string - so whichever workflow named
+          # the one that does not exist has been silently deploying a build with no backend
+          # URL, exactly the failure this branch fixes locally. Accept either spelling.
+          echo "VITE_BASE_URL_GF=${{ secrets.VITE_BASE_URL_GF_PROD || secrets.VITE_BASE_URL_GF_PRD }}" >> $GITHUB_ENV
 
       # The web-sized images are generated rather than committed, so the deploy has to
       # produce them or the site ships with no photographs at all. Thumbnails only: they

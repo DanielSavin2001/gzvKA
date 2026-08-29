@@ -14,7 +14,7 @@ jobs:
         
       - name: Set up environment variables
         run: |
-          echo "VITE_BASE_URL_GF=${{ secrets.VITE_BASE_URL_GF_PROD }}" >> $GITHUB_ENV
+          echo "VITE_BASE_URL_GF=${{ secrets.VITE_BASE_URL_GF_PROD || secrets.VITE_BASE_URL_GF_PRD }}" >> $GITHUB_ENV
 
       # The web-sized images are generated rather than committed, so the deploy has to
       # produce them or the site ships with no photographs at all. Thumbnails only: they

@@ -99,6 +99,34 @@
 		<div class="py-16 text-center text-gray-500">Bezig met laden van het archief ...</div>
 	{:else}
 		<section class="py-8">
+			<div class="flex flex-wrap items-end justify-between gap-3">
+				<div>
+					<h2 class="text-2xl font-bold text-gray-900">Op de kaart</h2>
+					<p class="mt-1 text-gray-600">
+						Zoek een plek op de kaart van Kapellen en bekijk de foto's die er gemaakt zijn.
+					</p>
+				</div>
+				<a
+					class="rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900"
+					href="/kaart"
+				>
+					Open de kaart
+				</a>
+			</div>
+
+			<a
+				href="/kaart"
+				class="mt-4 flex items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center transition hover:border-blue-600 hover:bg-blue-50"
+			>
+				<span class="max-w-xl text-gray-600">
+					<strong class="block text-lg text-gray-900">Kaart van Kapellen</strong>
+					Elke plaats met foto's wordt een bol op de kaart, hoe groter hoe meer foto's. Klik erop en
+					je ziet ze meteen.
+				</span>
+			</a>
+		</section>
+
+		<section class="py-8">
 			<h2 class="text-2xl font-bold text-gray-900">Straten van Kapellen</h2>
 			<p class="mt-1 text-gray-600">
 				{streets.length} straten en pleinen met foto's in het archief.
