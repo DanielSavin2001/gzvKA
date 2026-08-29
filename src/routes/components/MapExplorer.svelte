@@ -27,6 +27,8 @@
 	import type { Approximation, Candidate } from '$lib/approximations';
 	import { circleCollection, isDrawable, loadApproximations } from '$lib/approximations';
 	import type { CorrectionKind } from '../../../sharedModels/correction';
+	import type { Bubble } from '../../../sharedModels/declutter';
+	import { declutter } from '../../../sharedModels/declutter';
 	import PlaceUncertainty from './PlaceUncertainty.svelte';
 
 	let archive: Archive | null = null;
@@ -45,6 +47,51 @@
 	let correctionError: string | null = null;
 
 	const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
+
+	/**
+	 * The map itself, so marker positions can be measured in screen pixels.
+	 *
+	 * Overlap is a screen-space problem - two places 40 m apart collide at zoom 12 and not at
+	 * zoom 16 - so it cannot be solved from coordinates alone.
+	 */
+	let map: import('maplibre-gl').Map | null = null;
+
+	/** How far each marker steps aside, in pixels, keyed by place id. */
+	let shifts: Map<string, { dx: number; dy: number }> = new Map();
+
+	/**
+	 * Bumped on every zoom, purely so the layout below re-runs.
+	 *
+	 * The map component does not write the zoom back to its prop, and waiting on the
+	 * `zoomend` event alone was not enough either: the map is ready long before the archive
+	 * has finished loading, so the one pass that did run found no markers to arrange and the
+	 * whole thing silently did nothing.
+	 */
+	let zoomTick = 0;
+	let watchingZoom = false;
+	let lastZoom = -1;
+
+	/**
+	 * Listen on the map object itself rather than through the component's events.
+	 *
+	 * `on:zoomend` on the component looked right and never fired the layout again: the
+	 * markers kept the arrangement worked out at the zoom the map opened at, so zooming in
+	 * left them sitting beside their real positions instead of settling back onto them.
+	 * Binding to the instance removes the question of what the wrapper forwards.
+	 *
+	 * Only a change of zoom matters. Screen distance between two fixed coordinates depends
+	 * on the zoom alone, so panning can neither create an overlap nor resolve one, and
+	 * recomputing on every `moveend` would be work for nothing.
+	 */
+	$: if (map && !watchingZoom) {
+		watchingZoom = true;
+		map.on('zoomend', () => {
+			const now = map?.getZoom() ?? 0;
+			if (Math.abs(now - lastZoom) < 0.01) return;
+			lastZoom = now;
+			zoomTick += 1;
+		});
+	}
 
 	/** The place whose photographs are shown in the panel. */
 	let selected: ArchivePlace | null = null;
@@ -166,6 +213,17 @@
 	 */
 	$: onTheMap = locatedPlaces.length + new Set(candidatePins.map((pin) => pin.place.id)).size;
 
+	/**
+	 * Re-arrange whenever the markers change or the zoom does.
+	 *
+	 * Every identifier it depends on is named in the statement itself: Svelte 3 works out a
+	 * reactive statement's dependencies from what is written in it, so reading them only
+	 * inside `relayout` would mean this never ran again after the first time.
+	 */
+	$: if (map && locatedPlaces.length + candidatePins.length > 0 && zoomTick >= 0) {
+		relayout();
+	}
+
 	/** The research behind the open place, if it was researched rather than looked up. */
 	$: selectedResearch = selected ? research(selected.id) : undefined;
 
@@ -207,6 +265,69 @@
 		if (found) return `${photos} (ligging opgezocht)`;
 
 		return photos;
+	}
+
+	/**
+	 * Works out how far each bubble has to step aside so none cover another.
+	 *
+	 * Screen distance between two fixed coordinates depends on the zoom alone, not on where
+	 * the map is centred, so this only has to run when the zoom changes - panning cannot
+	 * create or resolve an overlap. That is what makes it cheap enough to do properly.
+	 */
+	function relayout(): void {
+		if (!map) return;
+
+		const bubbles: Bubble[] = [];
+
+		for (const place of locatedPlaces) {
+			const point = map.project(markerAt(place.id));
+			bubbles.push({ id: place.id, x: point.x, y: point.y, r: markerSize(place.count) / 2 });
+		}
+
+		for (const pin of candidatePins) {
+			const point = map.project([pin.candidate.lng, pin.candidate.lat]);
+			bubbles.push({
+				id: `${pin.place.id}#${pin.index}`,
+				x: point.x,
+				y: point.y,
+				r: markerSize(pin.place.count) / 2
+			});
+		}
+
+		shifts = declutter(bubbles);
+	}
+
+	const STILL = { dx: 0, dy: 0 };
+
+	/**
+	 * The offset for one marker, or a standing still.
+	 *
+	 * `layout` is passed in rather than read from the closure, and that is load-bearing.
+	 * Svelte 3 decides whether to re-render a template expression from the identifiers
+	 * written in it, so `shiftOf(place.id)` - with `shifts` read only inside the body - kept
+	 * rendering the arrangement from the zoom the map opened at, however often the layout
+	 * was recomputed. Naming it here is what makes the markers actually move.
+	 */
+	function shiftOf(
+		layout: Map<string, { dx: number; dy: number }>,
+		id: string
+	): { dx: number; dy: number } {
+		return layout.get(id) ?? STILL;
+	}
+
+	/**
+	 * A displaced bubble is drawn with a thin line back to where the place really is.
+	 *
+	 * Without it the map would be quietly lying: the marker would sit somewhere the place is
+	 * not, and nothing would say so. Below a few pixels the line is not drawn, because a
+	 * marker that has barely moved is still on its own spot.
+	 */
+	function leader(shift: { dx: number; dy: number }): string | null {
+		const length = Math.hypot(shift.dx, shift.dy);
+		if (length < 6) return null;
+
+		const angle = (Math.atan2(shift.dy, shift.dx) * 180) / Math.PI;
+		return `width:${length.toFixed(1)}px;transform:rotate(${angle.toFixed(1)}deg)`;
 	}
 
 	function markerSize(count: number): number {
@@ -423,6 +544,7 @@
 				</div>
 			{:else}
 				<MapLibre
+					bind:map
 					center={KAPELLEN_CENTRE}
 					zoom={13}
 					class="h-[32rem] w-full lg:h-[38rem]"
@@ -473,53 +595,90 @@
 
 					{#each locatedPlaces as place (place.id)}
 						{@const found = research(place.id)}
+						{@const shift = shiftOf(shifts, place.id)}
+						{@const line = leader(shift)}
 						<Marker lngLat={markerAt(place.id)} asButton>
 							<div class="relative">
-								<button
-									type="button"
-									class="flex items-center justify-center rounded-full border-2 font-bold text-white shadow-md transition hover:z-10 {found?.display ===
-									'benadering'
-										? 'border-dashed border-red-200 bg-red-700'
-										: place.isStreet
-										? 'border-white bg-blue-700'
-										: 'border-white bg-emerald-700'} {selected?.id === place.id
-										? 'ring-4 ring-yellow-400'
-										: ''}"
-									style="width:{markerSize(place.count)}px;height:{markerSize(
-										place.count
-									)}px;font-size:{place.count > 99 ? 11 : 13}px"
-									title={markerTitle(place, found)}
-									on:click|stopPropagation={() => choose(place)}
-								>
-									{place.count}
-								</button>
-
-								{#if found?.display === 'benadering'}
-									<!-- The circle alone is not enough: zoomed out, a wide one reads as
-									     a shaded area rather than as doubt about this pin. -->
+								{#if line}
+									<!-- A thread back to where the place really is, so a bubble that
+									     stepped aside is not quietly claiming the wrong spot. -->
 									<span
-										class="pointer-events-none absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-white bg-red-600 text-[10px] font-bold leading-none text-white"
-										aria-hidden="true">!</span
-									>
+										class="pointer-events-none absolute left-1/2 top-1/2 h-px origin-left bg-gray-500/60"
+										style={line}
+										aria-hidden="true"
+									/>
+									<span
+										class="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray-600/70"
+										aria-hidden="true"
+									/>
 								{/if}
+
+								<div
+									class="transition-transform duration-500 ease-out"
+									style="transform: translate({shift.dx}px, {shift.dy}px)"
+								>
+									<button
+										type="button"
+										class="flex items-center justify-center rounded-full border-2 font-bold text-white shadow-md transition hover:z-10 {found?.display ===
+										'benadering'
+											? 'border-dashed border-red-200 bg-red-700'
+											: place.isStreet
+											? 'border-white bg-blue-700'
+											: 'border-white bg-emerald-700'} {selected?.id === place.id
+											? 'ring-4 ring-yellow-400'
+											: ''}"
+										style="width:{markerSize(place.count)}px;height:{markerSize(
+											place.count
+										)}px;font-size:{place.count > 99 ? 11 : 13}px"
+										title={markerTitle(place, found)}
+										on:click|stopPropagation={() => choose(place)}
+									>
+										{place.count}
+									</button>
+
+									{#if found?.display === 'benadering'}
+										<!-- The circle alone is not enough: zoomed out, a wide one reads as
+									     a shaded area rather than as doubt about this pin. -->
+										<span
+											class="pointer-events-none absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-white bg-red-600 text-[10px] font-bold leading-none text-white"
+											aria-hidden="true">!</span
+										>
+									{/if}
+								</div>
 							</div>
 						</Marker>
 					{/each}
 
 					{#each candidatePins as { place, candidate, index } (place.id + index)}
+						{@const shift = shiftOf(shifts, `${place.id}#${index}`)}
+						{@const line = leader(shift)}
 						<Marker lngLat={[candidate.lng, candidate.lat]} asButton>
-							<button
-								type="button"
-								class="flex items-center justify-center rounded-full border-2 border-dashed border-red-600 bg-white/90 font-bold text-red-700 shadow-md transition hover:z-10 {selected?.id ===
-								place.id
-									? 'ring-4 ring-yellow-400'
-									: ''}"
-								style="width:{markerSize(place.count)}px;height:{markerSize(place.count)}px"
-								title="{place.name}: mogelijk hier - {candidate.label}"
-								on:click|stopPropagation={() => choose(place)}
-							>
-								?
-							</button>
+							<div class="relative">
+								{#if line}
+									<span
+										class="pointer-events-none absolute left-1/2 top-1/2 h-px origin-left bg-gray-500/60"
+										style={line}
+										aria-hidden="true"
+									/>
+								{/if}
+								<div
+									class="transition-transform duration-500 ease-out"
+									style="transform: translate({shift.dx}px, {shift.dy}px)"
+								>
+									<button
+										type="button"
+										class="flex items-center justify-center rounded-full border-2 border-dashed border-red-600 bg-white/90 font-bold text-red-700 shadow-md transition hover:z-10 {selected?.id ===
+										place.id
+											? 'ring-4 ring-yellow-400'
+											: ''}"
+										style="width:{markerSize(place.count)}px;height:{markerSize(place.count)}px"
+										title="{place.name}: mogelijk hier - {candidate.label}"
+										on:click|stopPropagation={() => choose(place)}
+									>
+										?
+									</button>
+								</div>
+							</div>
 						</Marker>
 					{/each}
 				</MapLibre>
