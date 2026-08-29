@@ -268,7 +268,10 @@ node_modules
 /.svelte-kit
 /package
 .env.*
-.env.example
+# Negated: this one is meant to be committed. Without the "!" the template file
+# that documents the settings could never be added, which is how the repository
+# ended up with no example at all.
+!.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 /.idea/*
