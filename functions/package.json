@@ -21,7 +21,6 @@
     "watch": "concurrently \"npm run compile -- --watch\" \"nodemon --watch ./lib/ --exec npm run debug\""
   },
   "engines": {
-    "_comment": "Node 18 was decommissioned by Google on 2025-10-30 and deploys are refused outright. 22 rather than 20 because Node 20 reached end-of-life in April 2026 and is next in the queue.",
     "node": "22"
   },
   "main": "lib/functions/src/index.js",

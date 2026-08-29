@@ -286,12 +286,32 @@ matters — each step below is blocked by the one above it.
    document whose **ID is your email address, lower-cased** (the contents do not matter;
    `{ }` is fine). Adding another curator later is one more document.
 
-6. **Publish the rules and the functions**, both of which are in this repository:
+6. **Publish the rules, the indexes and the functions**, all of which are in this
+   repository:
 
    ```bash
-   firebase deploy --only firestore:rules,storage:rules
+   firebase deploy --only firestore:rules,firestore:indexes,storage:rules
    firebase deploy --only functions
    ```
+
+   `firestore:indexes` is not optional. Both curator queues filter on `status` and order by
+   `submittedAt`, and Firestore refuses that pair without a composite index for it. Leave it
+   out and `/beheer` answers 500.
+
+   **An index takes a few minutes to build, and the query keeps failing until it is done.**
+   A successful deploy is not the same as a usable index: Firestore builds them in the
+   background and answers `FAILED_PRECONDITION: ... That index is currently building and
+cannot be used yet` in the meantime. Firestore &rarr; Indexes in the console shows
+   _Building_ and then _Enabled_; nothing else needs doing.
+
+   ### A note on the Node version
+
+   `functions/package.json` pins `engines.node` to `"22"`, and that is the runtime Firebase
+   deploys to rather than a requirement on your machine. Installing with a newer Node prints
+   an `EBADENGINE` warning and is harmless. Do not widen it to a range: Firebase reads this
+   field to choose a runtime, and it wants one version. Node 18 was decommissioned on
+   2025-10-30 and its deploys are refused outright; 20 rather than 22 only moves the same
+   problem, since Node 20 reached end of life in April 2026.
 
 7. **Set the client values**, in `.env` locally and as repository secrets under the same
    names for the deploy. Both hosting workflows pass all four through to the build.
