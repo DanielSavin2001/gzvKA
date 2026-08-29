@@ -7,6 +7,7 @@
     "map:labels": "npm run build && node lib/functions/scripts/extract-map-labels.js",
     "archive:index": "npm run build && node lib/functions/scripts/build-archive-index.js",
     "stories": "npm run build && node lib/functions/scripts/build-stories.js",
+    "streets": "npm run build && node lib/functions/scripts/build-street-geometry.js",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",

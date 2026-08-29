@@ -2,15 +2,20 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive, ArchivePhoto, ArchivePlace } from '$lib/archive';
-	import { loadArchive } from '$lib/archive';
+	import { loadArchive, sortForDisplay } from '$lib/archive';
+	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
+	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
 	import type { StoryIndex } from '$lib/stories';
 	import { loadStoryIndex, storiesForPlace } from '$lib/stories';
+	import ArchiveMap from '../../components/ArchiveMap.svelte';
 	import PhotoCard from '../../components/PhotoCard.svelte';
 
 	export let data: { slug: string };
 
 	let archive: Archive | null = null;
 	let storyIndex: StoryIndex | null = null;
+	let placed: Record<string, PlacedCoordinate> = {};
+	let geometry: Record<string, StreetGeometry> = {};
 	let error: string | null = null;
 
 	onMount(async () => {
@@ -27,6 +32,10 @@
 		} catch {
 			storyIndex = null;
 		}
+
+		const [coordinates, streets] = await Promise.all([loadCoordinates(), loadStreetGeometry()]);
+		placed = coordinates.places;
+		geometry = streets;
 	});
 
 	let place: ArchivePlace | undefined;
@@ -35,16 +44,16 @@
 	$: place = archive?.placeById.get(data.slug);
 	$: photos = archive?.photosByPlace.get(data.slug) ?? [];
 
-	// Oldest first: this is a history archive, and the undated ones belong at the end.
-	$: sorted = [...photos].sort((a, b) => {
-		const ay = a.y ? Number(a.y) : Number.POSITIVE_INFINITY;
-		const by = b.y ? Number(b.y) : Number.POSITIVE_INFINITY;
-		return ay - by || (a.hn ?? 0) - (b.hn ?? 0) || a.t.localeCompare(b.t);
-	});
+	// Oldest first: this is a history archive, and the undated ones belong at the end. The
+	// same order the previous/next arrows on a photograph step through.
+	$: sorted = sortForDisplay(photos);
 
 	$: withNumbers = sorted.filter((photo) => photo.hn != null);
 
 	$: stories = storiesForPlace(storyIndex, data.slug);
+
+	/** The street's own shape, when the official register knows it. */
+	$: shape = geometry[data.slug];
 </script>
 
 <svelte:head>
@@ -109,12 +118,31 @@
 			</section>
 		{/if}
 
+		{#if shape}
+			<section class="mt-6">
+				<ArchiveMap
+					{archive}
+					{placed}
+					{geometry}
+					places={place ? [place] : []}
+					focusId={data.slug}
+					selectedId={data.slug}
+					height="320px"
+					zoom={15}
+				/>
+				<p class="mt-2 text-sm text-gray-500">
+					{place.name} op de kaart{#if shape.length}, {shape.length} meter lang{/if}. De ligging
+					komt uit het officiële stratenregister.
+				</p>
+			</section>
+		{/if}
+
 		{#if sorted.length === 0}
 			<p class="py-12 text-gray-600">Nog geen foto's aan deze plaats gekoppeld.</p>
 		{:else}
 			<div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
 				{#each sorted as photo (photo.id)}
-					<PhotoCard {archive} {photo} showSubject={false} />
+					<PhotoCard {archive} {photo} showSubject={false} list="straat:{data.slug}" />
 				{/each}
 			</div>
 		{/if}

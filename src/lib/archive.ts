@@ -134,6 +134,23 @@ export function thumbUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
 	return `${archive.imageBase}/${encodePath(photo.p)}.thumb.webp`;
 }
 
+/**
+ * The order photographs are shown in, everywhere.
+ *
+ * Oldest first - this is a history archive - with the undated ones after them, then by
+ * house number so a street reads as a walk down it. Shared rather than repeated because the
+ * previous/next arrows on a photograph have to step through exactly the order the visitor
+ * saw on the page they came from; two copies of this rule would drift and the arrows would
+ * start skipping.
+ */
+export function sortForDisplay(photos: ArchivePhoto[]): ArchivePhoto[] {
+	return [...photos].sort((a, b) => {
+		const ay = a.y ? Number(a.y) : Number.POSITIVE_INFINITY;
+		const by = b.y ? Number(b.y) : Number.POSITIVE_INFINITY;
+		return ay - by || (a.hn ?? 0) - (b.hn ?? 0) || a.t.localeCompare(b.t);
+	});
+}
+
 /** The URL of a photograph's larger image. */
 export function detailUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
 	return `${archive.imageBase}/${encodePath(photo.p)}.web.webp`;

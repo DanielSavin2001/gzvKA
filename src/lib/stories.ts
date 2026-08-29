@@ -67,8 +67,59 @@ export interface Story {
 	sections: StorySection[];
 }
 
-/** Where a photograph was written about: the story, and which section of it. */
-export type StoryPhotoMap = Record<string, { slug: string; section: number }>;
+/** Where a photograph appears: the story, the section, and its position within it. */
+export type StoryPhotoMap = Record<string, { slug: string; section: number; part: number }>;
+
+/** What a story says about one photograph, if anything. */
+export interface PhotoContext {
+	story: Story;
+	section: StorySection;
+	sectionIndex: number;
+	/** The old site's own caption, which often names a house number the filename lacks. */
+	caption?: string;
+	/**
+	 * The paragraphs immediately above the photograph, and nothing else.
+	 *
+	 * Several of the old pages put one heading over a run of forty photographs covering a
+	 * whole road, so the prose at the top of such a section describes the first picture and
+	 * says nothing about the fortieth. Showing it anyway put a paragraph about the
+	 * Geelhanddreef under a café on the Kapelsestraat. Empty is the honest answer whenever a
+	 * photograph is simply one of a gallery run.
+	 */
+	prose: string[];
+}
+
+/**
+ * Reads what a story actually says about one photograph.
+ *
+ * Walks back from the photograph to the paragraphs directly above it, stopping at the
+ * previous photograph - whatever lies beyond that belongs to a different picture.
+ */
+export function photoContext(
+	story: Story,
+	reference: { section: number; part: number }
+): PhotoContext | null {
+	const section = story.sections[reference.section];
+	if (!section) return null;
+
+	const self = section.parts[reference.part];
+	const caption = self?.k === 'i' ? self.c : undefined;
+
+	const prose: string[] = [];
+	for (let i = reference.part - 1; i >= 0; i -= 1) {
+		const part = section.parts[i];
+		if (part.k === 'i') break;
+		if (!part.credit) prose.unshift(part.t);
+	}
+
+	return {
+		story,
+		section,
+		sectionIndex: reference.section,
+		...(caption ? { caption } : {}),
+		prose
+	};
+}
 
 let indexCache: StoryIndex | null = null;
 let indexInFlight: Promise<StoryIndex> | null = null;

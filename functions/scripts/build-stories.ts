@@ -220,7 +220,7 @@ function main(): void {
 	const stories: StoredStory[] = [];
 	const summaries: StorySummary[] = [];
 	const byPlace = new Map<string, PlaceStoryRef[]>();
-	const byPhoto: Record<string, { slug: string; section: number }> = {};
+	const byPhoto: Record<string, { slug: string; section: number; part: number }> = {};
 
 	let referenced = 0;
 	let resolved = 0;
@@ -273,7 +273,12 @@ function main(): void {
 				}
 
 				// First writer wins: a photograph shown twice belongs to where it first appeared.
-				if (!(photo.id in byPhoto)) byPhoto[photo.id] = { slug, section: sections.length };
+				// The part index matters as much as the section: several pages put one heading
+				// over a run of forty photographs covering a whole road, so the prose at the top
+				// of that section is about the first of them and not about the fortieth.
+				if (!(photo.id in byPhoto)) {
+					byPhoto[photo.id] = { slug, section: sections.length, part: parts.length };
+				}
 
 				parts.push(
 					part.caption

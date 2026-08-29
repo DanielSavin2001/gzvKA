@@ -3,13 +3,19 @@
 
 	import type { Archive } from '$lib/archive';
 	import { loadArchive, placesWithPhotos } from '$lib/archive';
+	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
+	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
 	import type { StoryIndex } from '$lib/stories';
 	import { historyStories, loadStoryIndex, readingMinutes } from '$lib/stories';
+	import { goto } from '$app/navigation';
+	import ArchiveMap from './components/ArchiveMap.svelte';
 	import PhotoCard from './components/PhotoCard.svelte';
 	import SearchBox from './components/SearchBox.svelte';
 
 	let archive: Archive | null = null;
 	let storyIndex: StoryIndex | null = null;
+	let placed: Record<string, PlacedCoordinate> = {};
+	let geometry: Record<string, StreetGeometry> = {};
 	let error: string | null = null;
 
 	onMount(async () => {
@@ -24,6 +30,10 @@
 		} catch {
 			storyIndex = null; // the archive is the page; the writing is an extra on top of it
 		}
+
+		const [coordinates, streets] = await Promise.all([loadCoordinates(), loadStreetGeometry()]);
+		placed = coordinates.places;
+		geometry = streets;
 	});
 
 	$: streets = archive ? placesWithPhotos(archive, true) : [];
@@ -115,27 +125,28 @@
 				<div>
 					<h2 class="text-2xl font-bold text-gray-900">Op de kaart</h2>
 					<p class="mt-1 text-gray-600">
-						Zoek een plek op de kaart van Kapellen en bekijk de foto's die er gemaakt zijn.
+						Elke plaats met foto's is een bol, hoe groter hoe meer foto's. Klik erop en je gaat er
+						meteen naartoe.
 					</p>
 				</div>
 				<a
 					class="rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900"
 					href="/kaart"
 				>
-					Open de kaart
+					Kaart op volledig scherm
 				</a>
 			</div>
 
-			<a
-				href="/kaart"
-				class="mt-4 flex items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center transition hover:border-blue-600 hover:bg-blue-50"
-			>
-				<span class="max-w-xl text-gray-600">
-					<strong class="block text-lg text-gray-900">Kaart van Kapellen</strong>
-					Elke plaats met foto's wordt een bol op de kaart, hoe groter hoe meer foto's. Klik erop en
-					je ziet ze meteen.
-				</span>
-			</a>
+			<div class="mt-4">
+				<ArchiveMap
+					{archive}
+					{placed}
+					{geometry}
+					showAllStreets
+					height="460px"
+					on:select={(event) => goto(`/straat/${event.detail.id}`)}
+				/>
+			</div>
 		</section>
 
 		<section class="py-8">
