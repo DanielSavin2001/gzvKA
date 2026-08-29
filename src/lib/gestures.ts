@@ -42,6 +42,7 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 		if (current.enabled && !current.enabled()) return;
 
 		if (pointerId !== null) {
+			release(pointerId);
 			pointerId = null; // a second finger: this is a pinch, not a swipe
 			return;
 		}
@@ -49,10 +50,28 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 		pointerId = event.pointerId;
 		startX = event.clientX;
 		startY = event.clientY;
+
+		// Without capture the gesture is lost the moment the pointer leaves the element -
+		// which on a swipe is most of the time, because a swipe is precisely a movement
+		// towards the edge. `pointerup` then fires somewhere else and the swipe never lands.
+		try {
+			node.setPointerCapture(event.pointerId);
+		} catch {
+			// Capture is best-effort; a browser that refuses it still works most of the time.
+		}
+	}
+
+	function release(id: number): void {
+		try {
+			if (node.hasPointerCapture(id)) node.releasePointerCapture(id);
+		} catch {
+			// Nothing to release.
+		}
 	}
 
 	function up(event: PointerEvent): void {
 		if (pointerId !== event.pointerId) return;
+		release(pointerId);
 		pointerId = null;
 
 		if (current.enabled && !current.enabled()) return;
@@ -68,13 +87,24 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 		else current.onRight?.();
 	}
 
-	function cancel(): void {
+	function cancel(event: PointerEvent): void {
+		release(event.pointerId);
 		pointerId = null;
+	}
+
+	/**
+	 * A browser's own image dragging is what made this feel broken: press on a photograph,
+	 * move sideways, and the browser starts dragging a ghost of the picture instead. The
+	 * pointer sequence is cancelled with it, so roughly every third swipe did nothing.
+	 */
+	function noDrag(event: Event): void {
+		event.preventDefault();
 	}
 
 	node.addEventListener('pointerdown', down);
 	node.addEventListener('pointerup', up);
 	node.addEventListener('pointercancel', cancel);
+	node.addEventListener('dragstart', noDrag);
 
 	return {
 		update(next: SwipeOptions) {
@@ -84,6 +114,7 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 			node.removeEventListener('pointerdown', down);
 			node.removeEventListener('pointerup', up);
 			node.removeEventListener('pointercancel', cancel);
+			node.removeEventListener('dragstart', noDrag);
 		}
 	};
 }

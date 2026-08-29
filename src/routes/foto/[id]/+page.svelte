@@ -180,7 +180,7 @@
 				one photograph and the next - measured, and thoroughly annoying to click.
 			-->
 			<div
-				class="relative flex h-[58vh] items-center justify-center gap-3 sm:h-[64vh]"
+				class="relative flex h-[58vh] touch-pan-y select-none items-center justify-center gap-3 sm:h-[64vh]"
 				use:swipe={{ onLeft: () => step(next), onRight: () => step(previous) }}
 			>
 				{#if previous}
@@ -192,7 +192,8 @@
 						<img
 							src={thumbUrl(archive, previous)}
 							alt=""
-							class="h-full w-full rounded-l-lg object-cover opacity-40 transition hover:opacity-80"
+							draggable="false"
+							class="h-full w-full select-none rounded-l-lg object-cover opacity-40 transition hover:opacity-80"
 						/>
 					</a>
 				{:else}
@@ -204,7 +205,8 @@
 						src={detailUrl(archive, photo)}
 						on:error={fallBackToThumbnail}
 						alt={photo.t}
-						class="max-h-full max-w-full rounded-lg border border-gray-200 bg-gray-100 object-contain"
+						draggable="false"
+						class="max-h-full max-w-full select-none rounded-lg border border-gray-200 bg-gray-100 object-contain"
 					/>
 
 					{#if previous}

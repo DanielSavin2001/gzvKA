@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import {
 		GeoJSON,
 		LineLayer,
@@ -40,11 +39,14 @@
 
 	/**
 	 * The placing tool is for whoever curates the archive, not for a visitor looking at
-	 * photographs of their street. It stays a click away at `/kaart?beheer`, and is invisible
+	 * photographs of their street. It stays a click away at `/?beheer`, and is invisible
 	 * otherwise - the register already positions every street, so the tool is now only needed
 	 * for the castles, woods and districts it does not cover.
+	 *
+	 * Read from `window` rather than the page store because the home page is prerendered,
+	 * and SvelteKit rightly refuses to let a prerendered page depend on a query string.
 	 */
-	$: curating = $page.url.searchParams.has('beheer');
+	let curating = false;
 
 	/**
 	 * MapLibre needs WebGL, which some older machines and locked-down browsers do not have -
@@ -54,6 +56,8 @@
 	let webglAvailable = true;
 
 	onMount(async () => {
+		curating = new URLSearchParams(window.location.search).has('beheer');
+
 		try {
 			const probe = document.createElement('canvas');
 			webglAvailable = Boolean(probe.getContext('webgl2') || probe.getContext('webgl'));
@@ -168,14 +172,10 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Kaart van Kapellen | gzvKA fotoarchief</title>
-</svelte:head>
-
-<div class="mx-auto max-w-7xl px-4 py-6">
+<section id="kaart" class="scroll-mt-20">
 	<header class="mb-4 flex flex-wrap items-end justify-between gap-3">
 		<div>
-			<h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Kaart van Kapellen</h1>
+			<h2 class="text-2xl font-bold text-gray-900">Kaart van Kapellen</h2>
 			<p class="mt-1 text-gray-600">
 				{#if archive}
 					{locatedPlaces.length} van {allPlaces.length} plaatsen staan op de kaart. Klik een plaats om
@@ -382,4 +382,4 @@
 			{/if}
 		</aside>
 	</div>
-</div>
+</section>
