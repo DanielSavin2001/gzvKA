@@ -1,0 +1,2179 @@
+{
+	"version": 1,
+	"updatedAt": "2026-08-29",
+	"entries": [
+		{
+			"id": "akkerstraat",
+			"name": "Akkerstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 15,
+				"sampleFile": "src/lib/images/history-images/Akkerstraat - Nieuwe Wijk/Akkerstraat - Bewoners - Gustaaf Donckers - 15.12.2016.jpg"
+			}
+		},
+		{
+			"id": "antwerpsesteenweg",
+			"name": "Antwerpsesteenweg",
+			"aliases": [
+				"Antwerpsestraat"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 83,
+				"sampleFile": "src/lib/images/history-images/Antwerpsesteenweg/Antwerpsesteenweg - Afbraak woningen tunnel_1 2001 - Omer Cleiren - 01.10.2015.jpg"
+			}
+		},
+		{
+			"id": "bloemenlei",
+			"name": "Bloemenlei",
+			"aliases": [],
+			"kind": "street",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 6,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/Bloemenlei - mobilisatie 1939 - Swatti Alix - zd.jpg"
+			}
+		},
+		{
+			"id": "blokjesweg",
+			"name": "Blokjesweg",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/OWNP - Kapelsestraat-hoek Blokjesweg - Willem Van Bures - 18.08.2016.jpg"
+			}
+		},
+		{
+			"id": "bosdreef",
+			"name": "Bosdreef",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Wedstrijden GZVKA/Paaswedstrijd 26.03.2016/GZVKA - Pasen 2016 - Vraag 1_1 Bosdreef.jpg"
+			}
+		},
+		{
+			"id": "cafe-de-pancras",
+			"name": "Café De Pancras",
+			"aliases": [
+				"Café Pancras",
+				"Cafe De Pancras",
+				"Pancras"
+			],
+			"kind": "building",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 16,
+				"sampleFile": "src/lib/images/history-images/Café Pancras/Cafe De Pancras - Marc Brans - 10.04.2014.jpg"
+			}
+		},
+		{
+			"id": "casteleinhoeve",
+			"name": "Casteleinhoeve",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"kalmthoutsesteenweg"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Kasteel Mastenhof/Kasteel Mastenhof 3 Casteleinhoeve Kalmthoutsesteenweg - beschreven - Swatti Alix - zd.jpg"
+			}
+		},
+		{
+			"id": "christiaan-pallemansstraat",
+			"name": "Chr. Pallemansstraat",
+			"aliases": [
+				"Chr.Pallemansstraat",
+				"Christiaan Pallemansstraat",
+				"Pallemansstraat"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 16,
+				"sampleFile": "src/lib/images/history-images/Chr. Pallemansstraat-Heidestraat/Heidestraat - Chr. Pallemansstraat - Hoghescote - 05.09.2017.jpg"
+			}
+		},
+		{
+			"id": "de-barreel",
+			"name": "Café De Barreel",
+			"aliases": [
+				"Barreel"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"koning-albertlei"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 8,
+				"sampleFile": "src/lib/images/history-images/Antwerpsesteenweg/Antwerpsesteenweg - Barreel - Omer Cleiren - 27.09.2015.jpg"
+			}
+		},
+		{
+			"id": "de-grens",
+			"name": "De Grens",
+			"aliases": [
+				"Grens"
+			],
+			"kind": "area",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 15,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte - Cafes Grens - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "de-uitlegger",
+			"name": "De Uitlegger",
+			"aliases": [
+				"Uitlegger",
+				"UItlegger"
+			],
+			"kind": "area",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 124,
+				"sampleFile": "src/lib/images/history-images/De Uitlegger/UItlegger - Michel Van Marrewijck 1 - 21.04.2020.jpg"
+			}
+		},
+		{
+			"id": "denneburgdreef",
+			"name": "Denneburgdreef",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"relatedIds": [
+				"kasteel-dennenburg"
+			],
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/OWNP - Kapelsestraat-Denneburgdreef - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "domein-middelbeek",
+			"name": "Domein Middelbeek",
+			"aliases": [
+				"Middelbeek"
+			],
+			"kind": "building",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/Domein Middelbeek - Dirk Pelgrims - 16.01.2015.jpg"
+			}
+		},
+		{
+			"id": "dorpsplein",
+			"name": "Dorpsplein",
+			"aliases": [],
+			"kind": "square",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Antwerpsesteenweg/Antwerpsesteenweg - Dorpsplein - Swatti Alix - z.d.jpg"
+			}
+		},
+		{
+			"id": "dorpsstraat",
+			"name": "Dorpsstraat",
+			"aliases": [
+				"Dorpstraat",
+				"Doprsstraat"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 147,
+				"sampleFile": "src/lib/images/history-images/Dorpsstraat en Geuzenhoek/Doprsstraat 1960 - Wedyfoto - z.d.jpg"
+			}
+		},
+		{
+			"id": "driehoek",
+			"name": "Driehoek",
+			"aliases": [],
+			"kind": "area",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte - Driehoek - Hugo De Hoon - z.d.jpg"
+			}
+		},
+		{
+			"id": "duitse-wijk",
+			"name": "Duitse Wijk",
+			"aliases": [],
+			"kind": "area",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 26,
+				"sampleFile": "src/lib/images/history-images/Kalmhousesteenweg - Duitse Wijk/Dennenhuis - Kalmthoutsesteenweg - zn - zd.jpg"
+			}
+		},
+		{
+			"id": "engelselei",
+			"name": "Engelselei",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 7,
+				"sampleFile": "src/lib/images/history-images/Dorpsstraat en Geuzenhoek/Engelselei - Hoghescote - 05.09.2017.jpg"
+			}
+		},
+		{
+			"id": "erepark",
+			"name": "Erepark",
+			"aliases": [],
+			"kind": "park",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Wedstrijden GZVKA/Fietszoektocht 2014/Fietszoektocht 2014 - Foto's Brochure/FZ Erepark Begraafplaats 24.jpg"
+			}
+		},
+		{
+			"id": "ertbrand",
+			"name": "Ertbrand",
+			"aliases": [],
+			"kind": "area",
+			"district": "ertbrand",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 21,
+				"sampleFile": "src/lib/images/history-images/Fort van Ertbrand/Fort Ertbrand - luchtbeeld - zn - zd.jpg"
+			}
+		},
+		{
+			"id": "ertbrandstraat",
+			"name": "Ertbrandstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "ertbrand",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Molens in Kapellen/Molen Ertbrandstraat - Sonia Van Meel - 26.09.2014.jpg"
+			}
+		},
+		{
+			"id": "essenhout",
+			"name": "Essenhout",
+			"aliases": [],
+			"kind": "area",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Klooster Paters Oblaten Essenhout - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "fort-van-ertbrand",
+			"name": "Fort van Ertbrand",
+			"aliases": [
+				"Fort Ertbrand",
+				"Fort van Ertbrandt"
+			],
+			"kind": "fort",
+			"district": "ertbrand",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 18,
+				"sampleFile": "src/lib/images/history-images/Fort van Ertbrand/Fort Ertbrand - luchtbeeld - zn - zd.jpg"
+			}
+		},
+		{
+			"id": "fort-van-kapellen",
+			"name": "Fort van Kapellen",
+			"aliases": [],
+			"kind": "fort",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "District deliberately left unknown: do not assert Hoogboom without OSM confirmation.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 9,
+				"sampleFile": "src/lib/images/history-images/Fort van Kapellen/Fort van Kapellen - Chris Bordo - 16.01.2015.jpg"
+			}
+		},
+		{
+			"id": "galgeveld",
+			"name": "Galgeveld",
+			"aliases": [],
+			"kind": "area",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte - Galgeveld - Swatti Alix - z.d..jpg"
+			}
+		},
+		{
+			"id": "gasstraat",
+			"name": "Gasstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Station en omgeving/Stationsstraat - Gasstraat - Yolande Van de Weerd - zd.jpg"
+			}
+		},
+		{
+			"id": "geelhanddreef",
+			"name": "Geelhanddreef",
+			"aliases": [
+				"Raymond Geelhanddreef"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 6,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/OWNP - Geelhanddreef 1 - nr 9 hoeve - Swatti Alix - zd.jpg"
+			}
+		},
+		{
+			"id": "gemeentepark-beaulieu",
+			"name": "Gemeentepark Beaulieu",
+			"aliases": [
+				"Gemeentepark"
+			],
+			"kind": "park",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"kasteel-beaulieu"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 54,
+				"sampleFile": "src/lib/images/history-images/Dorpsstraat en Geuzenhoek/Dorpsstraat - Ingang gemeentepark - Robert Vingerhoed - 05.02.2015.jpg"
+			}
+		},
+		{
+			"id": "geuzenhoek",
+			"name": "Geuzenhoek",
+			"aliases": [],
+			"kind": "area",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 147,
+				"sampleFile": "src/lib/images/history-images/Dorpsstraat en Geuzenhoek/Doprsstraat 1960 - Wedyfoto - z.d.jpg"
+			}
+		},
+		{
+			"id": "guyotlei",
+			"name": "Guyotlei",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 18,
+				"sampleFile": "src/lib/images/history-images/Guyotlei - Ketelaars/Begrafenissen Ketelaars 1930 - Johan Van Elst - 10.04.2015.jpg"
+			}
+		},
+		{
+			"id": "heidestraat",
+			"name": "Heidestraat",
+			"aliases": [
+				"Heidestraat-Noord"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 19,
+				"sampleFile": "src/lib/images/history-images/Chr. Pallemansstraat-Heidestraat/Heidestraat - Chr. Pallemansstraat - Hoghescote - 05.09.2017.jpg"
+			}
+		},
+		{
+			"id": "het-rood",
+			"name": "Het Rood",
+			"aliases": [
+				"Rood"
+			],
+			"kind": "area",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 109,
+				"sampleFile": "src/lib/images/history-images/Het Rood/Het Rood - Raymond Roeland - 12.10.2020 1.jpg"
+			}
+		},
+		{
+			"id": "hoevensebaan",
+			"name": "Hoevensebaan",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 104,
+				"sampleFile": "src/lib/images/history-images/Hoevensebaan/Afbraak Bruggeske 1 - Erwin Gryp - 21.10.2019.jpg"
+			}
+		},
+		{
+			"id": "home-flor-mielants",
+			"name": "Home Flor Mielants",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 8,
+				"sampleFile": "src/lib/images/history-images/Kalmhousesteenweg - Duitse Wijk/Home Flor Mielants - Frans Meeus - 02.11.2021.jpg"
+			}
+		},
+		{
+			"id": "home-kindervreugd",
+			"name": "Home Kindervreugd",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 9,
+				"sampleFile": "src/lib/images/history-images/Kalmhousesteenweg - Duitse Wijk/Home Kindervreugd-Dennenhuis - Robert Vingerhoed - 02.11.2021.jpg"
+			}
+		},
+		{
+			"id": "home-philippe-speth",
+			"name": "Home Philippe Speth",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"kapelsestraat"
+			],
+			"note": "The corpus gives Kapelsestraat 246.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/Kapelsestraat - Home Philippe Speth - zn - zd.png"
+			}
+		},
+		{
+			"id": "hoogboom",
+			"name": "Hoogboom",
+			"aliases": [
+				"Hoghescote"
+			],
+			"kind": "area",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"negativeContext": [
+				"\\bheemkring\\s+hoghescote\\b"
+			],
+			"note": "Hoghescote is both the historical name of Hoogboom and the name of the local heritage society that contributed many photographs.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 343,
+				"sampleFile": "src/lib/images/history-images/Akkerstraat - Nieuwe Wijk/Akkerstraat-Nieuwe Wijk - Plan - Hoghescote - zd.jpg"
+			}
+		},
+		{
+			"id": "hoogboom-kazerne",
+			"name": "Hoogboom Kazerne",
+			"aliases": [
+				"Kazerne"
+			],
+			"kind": "building",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 34,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Kazerne/Hoogboom - Kazerne - Fiele Adriaensens - z.d.jpg"
+			}
+		},
+		{
+			"id": "hoogboomkruis",
+			"name": "Hoogboomkruis",
+			"aliases": [],
+			"kind": "building",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 14,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Hoogboomsteenweg/Hoogboom - Hoogboomkruis - Frans Meeus - 08.08.2018.jpg"
+			}
+		},
+		{
+			"id": "hoogboomsteenweg",
+			"name": "Hoogboomsteenweg",
+			"aliases": [
+				"Hoogboomsesteenweg"
+			],
+			"kind": "street",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 74,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Hoogboomsteenweg/Hoogboom - Brouwerij - Werner Hufkens - 03.05.2016.jpg"
+			}
+		},
+		{
+			"id": "ijzerenweglaan",
+			"name": "IJzerenweglaan",
+			"aliases": [
+				"IJjzerenweglaan"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 5,
+				"sampleFile": "src/lib/images/history-images/Koninklijke Straten/Kon. Astridlaan - IJjzerenweglaan - Swatti Alix - zd.jpg"
+			}
+		},
+		{
+			"id": "industriepark",
+			"name": "Industriepark",
+			"aliases": [],
+			"kind": "area",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Wedstrijden GZVKA/Fietszoektocht 2014/Fietszoektocht 2014 - Foto's Brochure/FZ Industriepark 8.jpg"
+			}
+		},
+		{
+			"id": "jagersdreef",
+			"name": "Jagersdreef",
+			"aliases": [],
+			"kind": "street",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 12,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Hoogboomsteenweg/Jagersdreef - zn - zd.png"
+			}
+		},
+		{
+			"id": "kalmthoutsesteenweg",
+			"name": "Kalmthoutsesteenweg",
+			"aliases": [
+				"Kalmhousesteenweg",
+				"Kalmrhoutsesteenweg",
+				"Kalthoutsesteenweg"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 33,
+				"sampleFile": "src/lib/images/history-images/Kalmhousesteenweg - Duitse Wijk/Dennenhuis - Kalmthoutsesteenweg - zn - zd.jpg"
+			}
+		},
+		{
+			"id": "kapel-de-heuvels",
+			"name": "Kapel De Heuvels",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 4,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Kapel De Heuvels - Hugo De Hoon - z.d..jpg"
+			}
+		},
+		{
+			"id": "kapel-olv-van-fatima",
+			"name": "Kapel OLV van Fatima",
+			"aliases": [
+				"OLV Fatima"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 11,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Kapel OLV van Fatima - Peter Van Alsenoy - 16.02.2015.jpg"
+			}
+		},
+		{
+			"id": "kapellen",
+			"name": "Kapellen",
+			"aliases": [
+				"Capellen",
+				"Cappellen"
+			],
+			"kind": "area",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"negativeContext": [
+				"\\bkerken\\s+en\\s+kapellen\\b",
+				"\\bkapelle?ke?n?\\b",
+				"\\b(fc|kfc|sk|vv)\\s+cap+ellen\\b",
+				"\\btram\\s+klapdorp"
+			],
+			"note": "The municipality itself. Guarded against the common noun \"kapellen\" (the archive has a folder \"Kerken en kapellen\") and against the football club FC Capellen.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 219,
+				"sampleFile": "src/lib/images/history-images/Antwerpsesteenweg/Antwerpsesteenweg - Hof van Cappellen - Johan Van Elst - 04.10.2015.jpg"
+			}
+		},
+		{
+			"id": "kapellenbos",
+			"name": "Kapellenbos",
+			"aliases": [],
+			"kind": "area",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 12,
+				"sampleFile": "src/lib/images/history-images/Villa De Maretak - Kapellenbos/Jozef Muls - Paul Theeuws - 19.02.2014.jpg"
+			}
+		},
+		{
+			"id": "kapelsestraat",
+			"name": "Kapelsestraat",
+			"aliases": [
+				"Kapelsesteenweg"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "Kapelsesteenweg is an attested variant: house number 45 appears under both spellings.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 54,
+				"sampleFile": "src/lib/images/history-images/Dorpsstraat en Geuzenhoek/Dorpsstraat-Kapelsestraat-Politie - Omer Cleiren - 24.09.2015 NIEUW.jpg"
+			}
+		},
+		{
+			"id": "kasteel-beaulieu",
+			"name": "Kasteel Beaulieu",
+			"aliases": [],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"gemeentepark-beaulieu"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 16,
+				"sampleFile": "src/lib/images/history-images/Kasteel Beaulieu/Kasteel Beaulieu - 100 jaar Belgie 1930 - Yolande Van de Weerd - z.d..jpg"
+			}
+		},
+		{
+			"id": "kasteel-beukenhof",
+			"name": "Kasteel Beukenhof",
+			"aliases": [
+				"Beukenhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 25,
+				"sampleFile": "src/lib/images/history-images/Kasteel Beukenhof/Beukenhof_1 - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "kasteel-blauwhof",
+			"name": "Kasteel Blauwhof",
+			"aliases": [
+				"Blauwhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 40,
+				"sampleFile": "src/lib/images/history-images/Hoevensebaan/Hoevensebaan - Blauwhof - Hugo De Hoon - 22.12.2014.jpg"
+			}
+		},
+		{
+			"id": "kasteel-boterberg",
+			"name": "Kasteel Boterberg",
+			"aliases": [
+				"Boterberg"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 21,
+				"sampleFile": "src/lib/images/history-images/Kasteel Boterberg/Kasteel Boterberg - Dirk Pelgrims - 16.01.2015.jpg"
+			}
+		},
+		{
+			"id": "kasteel-bunderhof",
+			"name": "Kasteel Bunderhof",
+			"aliases": [
+				"Bunderhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 17,
+				"sampleFile": "src/lib/images/history-images/Kasteel Bunderhof/Bunderhof - Hugo De Hoon - 13.10.2014.jpg"
+			}
+		},
+		{
+			"id": "kasteel-de-sterre",
+			"name": "Kasteel De Sterre",
+			"aliases": [
+				"De Sterre"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 24,
+				"sampleFile": "src/lib/images/history-images/Kasteel De Sterre/Hoogboom - De Sterre - Britta Holens - z.d.jpg"
+			}
+		},
+		{
+			"id": "kasteel-dennenburg",
+			"name": "Kasteel Dennenburg",
+			"aliases": [
+				"Denneburg",
+				"Kasteel Oud Dennenburg"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"denneburgdreef"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 30,
+				"sampleFile": "src/lib/images/history-images/Kasteel Dennenburg/Kasteel Denneburg - 6 - zn - zd.png"
+			}
+		},
+		{
+			"id": "kasteel-haezeldonck",
+			"name": "Kasteel Haezeldonck",
+			"aliases": [
+				"Haezeldonck-Good",
+				"Haezeldonck"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 9,
+				"sampleFile": "src/lib/images/history-images/Kasteel Haezeldonck-Good/Hoogboom - Kasteel Haezeldonck - Jan Verhelst - zd.jpg"
+			}
+		},
+		{
+			"id": "kasteel-heidehof",
+			"name": "Kasteel Heidehof",
+			"aliases": [
+				"Heidehof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"kapelsestraat"
+			],
+			"note": "The corpus places it at Kapelsestraat 45.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 37,
+				"sampleFile": "src/lib/images/history-images/Kasteel Heidehof/Heidehof - Bruine Beuk - Kapelsesteenweg 45 - zn - zd.jpg"
+			}
+		},
+		{
+			"id": "kasteel-heidelust-zilverhof",
+			"name": "Kasteel Heidelust",
+			"aliases": [
+				"Zilverhof",
+				"Heidelust"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 13,
+				"sampleFile": "src/lib/images/history-images/Kasteel Heidelust-Zilverhof/Hoogboom - Hoogboomkruis - Frans Meeus - 08.08.2018.jpg"
+			}
+		},
+		{
+			"id": "kasteel-hortensiahof",
+			"name": "Kasteel Hortensiahof",
+			"aliases": [
+				"Hortensiahof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 35,
+				"sampleFile": "src/lib/images/history-images/Kasteel Hortensiahof/Hortensiahof - Dirk Pelgrims - 16.01.2015.jpg"
+			}
+		},
+		{
+			"id": "kasteel-irishof",
+			"name": "Kasteel Irishof",
+			"aliases": [
+				"Irishof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 69,
+				"sampleFile": "src/lib/images/history-images/Kasteel Irishof/Irishof - Erwin Gryp - 11.02.2015.jpg"
+			}
+		},
+		{
+			"id": "kasteel-les-chataigniers",
+			"name": "Kasteel Les Chataigniers",
+			"aliases": [
+				"Kastanjehof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 4,
+				"sampleFile": "src/lib/images/history-images/Kasteel Les Chataigniers/Kasteel Les Chataigniers - Hobonia - zd.jpg"
+			}
+		},
+		{
+			"id": "kasteel-les-etangs",
+			"name": "Kasteel Les Etangs",
+			"aliases": [
+				"Hof Ter Vijvers",
+				"Hof ter Vijvers",
+				"Vijverhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"kapelsestraat"
+			],
+			"note": "The corpus places it at Kapelsestraat 43.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 12,
+				"sampleFile": "src/lib/images/history-images/Kasteel Les Etangs - Hof Ter Vijvers/Kapelsestraat - Vijverhof - Heemkring Hoghescote - 01.03.2020.jpg"
+			}
+		},
+		{
+			"id": "kasteel-mastenhof",
+			"name": "Kasteel Mastenhof",
+			"aliases": [
+				"Mastenhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 11,
+				"sampleFile": "src/lib/images/history-images/Kasteel Mastenhof/Kasteel Mastenhof - Frans Meeus - 10.01.2019.png"
+			}
+		},
+		{
+			"id": "kasteel-op-den-wal",
+			"name": "Kasteel Op den Wal",
+			"aliases": [
+				"Op den Wal",
+				"Kasteel Op de Wal"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"meidoornlaan"
+			],
+			"note": "The corpus places it at Meidoornlaan 9.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 35,
+				"sampleFile": "src/lib/images/history-images/Kasteel Op den Wal/Kasteel Op de Wal - U Gent - z.d..jpg"
+			}
+		},
+		{
+			"id": "kasteel-ravenhof",
+			"name": "Kasteel Ravenhof",
+			"aliases": [
+				"Ravenhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": false,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "Ravenhof lies in Stabroek, not Kapellen. Searchable, but excluded from the map of Kapellen.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte - Stabroek Ravenhof - Sonia Van Meel - 24.12.2014.jpg"
+			}
+		},
+		{
+			"id": "kasteel-san-salvador",
+			"name": "Kasteel San Salvador",
+			"aliases": [],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"nelson-mandelapark"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 4,
+				"sampleFile": "src/lib/images/history-images/Kasteel San Salvador - Nelson Mandelapark/Kasteel San Salvador - Hobonia - zd.jpg"
+			}
+		},
+		{
+			"id": "kasteel-starrenhof",
+			"name": "Kasteel Starrenhof",
+			"aliases": [
+				"Starrenhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 52,
+				"sampleFile": "src/lib/images/history-images/Kasteel Starrenhof/Kasteel Starrenhof - Google - zd.jpg"
+			}
+		},
+		{
+			"id": "kasteel-wolvenbos",
+			"name": "Kasteel Wolvenbos",
+			"aliases": [],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 45,
+				"sampleFile": "src/lib/images/history-images/Kasteel Wolvenbos/Kasteel Wolvenbos - Anse Klinsaer - zd.jpg"
+			}
+		},
+		{
+			"id": "kattekensberg",
+			"name": "Kattekensberg",
+			"aliases": [],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Klasfoto's/Klasfoto - Maria Immaculata op de Kattekensberg - Christiane Van Aerden - 23.08.2014.png"
+			}
+		},
+		{
+			"id": "kazerneplein",
+			"name": "Kazerneplein",
+			"aliases": [],
+			"kind": "square",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Spoorwegbataljon/Hoogboom - Spoorwegregiment Kazerneplein - Fiele Adriaensens - z.d.jpg"
+			}
+		},
+		{
+			"id": "kerk-olv-van-vrede",
+			"name": "Kerk OLV van Vrede",
+			"aliases": [
+				"Kerk OLV Vrede",
+				"Kerk O.L.V. van Vrede"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 12,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Kerk O.L.V. van Vrede Luciferdoosje - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "koerspleindreef",
+			"name": "Koerspleindreef",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Dorpsstraat en Geuzenhoek/Geuzenhoek - Cafe Sport - Hoek Koerspleindreef - Omer Cleiren - 14.11.2019.png"
+			}
+		},
+		{
+			"id": "koning-albertlei",
+			"name": "Koning Albertlei",
+			"aliases": [
+				"Kon. Albertlei",
+				"Albertlei"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 21,
+				"sampleFile": "src/lib/images/history-images/Koninklijke Straten/Kon. Albertlei - Marianne Verschueren - 16.01.2022.jpg"
+			}
+		},
+		{
+			"id": "koningin-astridlaan",
+			"name": "Kon. Astridlaan",
+			"aliases": [
+				"Kon.Astridlaan",
+				"Astridlaan",
+				"Koningin Astridlaan"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 18,
+				"sampleFile": "src/lib/images/history-images/Koninklijke Straten/Kon. Astridlaan - Fiele Adriaenssens - zd.jpg"
+			}
+		},
+		{
+			"id": "koningin-elisabethlei",
+			"name": "Koningin Elisabethlei",
+			"aliases": [
+				"Kon. Elisabethlei"
+			],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Koninklijke Straten/Koning Albertlei - Kon. Elisabethlei - zn - zd.png"
+			}
+		},
+		{
+			"id": "korte-vredestraat",
+			"name": "Korte Vredestraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Antwerpsesteenweg/Antwerpsesteenweg - Korte Vredestraat - Swatti Alix - zd.jpg"
+			}
+		},
+		{
+			"id": "lepelstraat",
+			"name": "Lepelstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte - Lepelstraat  - Sonia Van Meel - 03.02.2015.jpg"
+			}
+		},
+		{
+			"id": "lievenskapel",
+			"name": "Lievenskapel",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 21,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Lievenskapel - Heidestraat-Noord - Heemkring Hoghescote - 01.03.2020.jpg"
+			}
+		},
+		{
+			"id": "lobelialaan",
+			"name": "Lobelialaan",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 5,
+				"sampleFile": "src/lib/images/history-images/Kasteel Haezeldonck-Good/Hoogboom - Kasteel Haezeldonck - Lobelialaan 1 - Swatti Alix - zd.jpg"
+			}
+		},
+		{
+			"id": "loopgravenpad",
+			"name": "Loopgravenpad",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 162,
+				"sampleFile": "src/lib/images/history-images/Mastenbos en Loopgravenpad/Mastenbos - An Heremans 1 - 05.11.2018.jpg"
+			}
+		},
+		{
+			"id": "louisastraat",
+			"name": "Louisastraat",
+			"aliases": [
+				"Albert Louisastraat"
+			],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte - Albert Louisastraat - Hoghescote - z.d.jpg"
+			}
+		},
+		{
+			"id": "louwke-poep",
+			"name": "Louwke Poep",
+			"aliases": [
+				"Louwke"
+			],
+			"kind": "building",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "A local landmark rather than a building in the ordinary sense.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 30,
+				"sampleFile": "src/lib/images/history-images/Louwke Poep/Louwke - cover boek.png"
+			}
+		},
+		{
+			"id": "lusthof-hoenderhof",
+			"name": "Lusthof Hoenderhof",
+			"aliases": [
+				"Hoenderhof",
+				"Lusthof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 7,
+				"sampleFile": "src/lib/images/history-images/Lusthof Hoenderhof/Hoenderhof - ingang - zn - zd.jpg"
+			}
+		},
+		{
+			"id": "maison-la-chaine",
+			"name": "Maison La Chaine",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"stationsstraat"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Station en omgeving/Stationsstraat - Maison La Chaine - Sonia Van Meel - 27.12.2014.jpg"
+			}
+		},
+		{
+			"id": "mastbeekhof",
+			"name": "Mastbeekhof",
+			"aliases": [],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Kasteel Beukenhof/Kasteel Beukenhof - Mastbeekhof - Hugo De Hoon - z.d.jpg"
+			}
+		},
+		{
+			"id": "mastenbos",
+			"name": "Mastenbos",
+			"aliases": [],
+			"kind": "area",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 162,
+				"sampleFile": "src/lib/images/history-images/Mastenbos en Loopgravenpad/Mastenbos - An Heremans 1 - 05.11.2018.jpg"
+			}
+		},
+		{
+			"id": "meidoornlaan",
+			"name": "Meidoornlaan",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Kasteel Op den Wal/Kasteel Op den Wal 1 - Meidoornlaan 9 - zn - zd.jpg"
+			}
+		},
+		{
+			"id": "mulskapel",
+			"name": "Mulskapel",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 7,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Mulskapel - cover ABC - Robert Vingerhoed - 21.05.2015.jpg"
+			}
+		},
+		{
+			"id": "nelson-mandelapark",
+			"name": "Nelson Mandelapark",
+			"aliases": [
+				"Mandelapark"
+			],
+			"kind": "park",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"kasteel-san-salvador"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 4,
+				"sampleFile": "src/lib/images/history-images/Kasteel San Salvador - Nelson Mandelapark/Kasteel San Salvador - Hobonia - zd.jpg"
+			}
+		},
+		{
+			"id": "nieuwe-wijk",
+			"name": "Nieuwe Wijk",
+			"aliases": [],
+			"kind": "area",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 23,
+				"sampleFile": "src/lib/images/history-images/Akkerstraat - Nieuwe Wijk/Akkerstraat - Bewoners - Gustaaf Donckers - 15.12.2016.jpg"
+			}
+		},
+		{
+			"id": "nieuwstraat",
+			"name": "Nieuwstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Station en omgeving/Station en Nieuwstraat - Heemkring Hoghescote - 25.01.2018.jpg"
+			}
+		},
+		{
+			"id": "olmendreef",
+			"name": "Olmendreef",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 8,
+				"sampleFile": "src/lib/images/history-images/Station en omgeving/Olmendreef - Swatti Alix - zd.png"
+			}
+		},
+		{
+			"id": "olv-onbevlekte-ontvangenis",
+			"name": "OLV Onbevlekte Ontvangenis",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"zilverenhoek"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/OLV Onbevlekte Ontvangenis - Kapel - zd - zn.jpg"
+			}
+		},
+		{
+			"id": "oud-gemeentehuis",
+			"name": "Oud Gemeentehuis",
+			"aliases": [
+				"Gemeentehuis"
+			],
+			"kind": "building",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 37,
+				"sampleFile": "src/lib/images/history-images/Hoevensebaan/Hoevensebaan - Oud Gemeentehuis - Tram 72 - Andre Van Ophem - 21.12.2019.jpg"
+			}
+		},
+		{
+			"id": "oude-baan",
+			"name": "Oude Baan",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"relatedIds": [
+				"rubensheide"
+			],
+			"note": "from \"Rubensheide (Oude Baan)\"; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 7,
+				"sampleFile": "src/lib/images/history-images/Rubensheide/Rubensheide (Oude Baan) - Johan Van Elst - 12.01.2015.jpg"
+			}
+		},
+		{
+			"id": "oude-bergsebaan",
+			"name": "Oude Bergsebaan",
+			"aliases": [
+				"Bergsebaan"
+			],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Antwerpsesteenweg/Antwerpsesteenweg-Klein Heiken-Oude Bergsebaan 1932 - Johan Van Elst - 05.12.2014.jpg"
+			}
+		},
+		{
+			"id": "oude-galgenstraat",
+			"name": "Oude Galgenstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte - Fort van Ertbrandt - Oude Galgenstraat - Swatti Alix - z.d..jpg"
+			}
+		},
+		{
+			"id": "oude-kerkstraat",
+			"name": "Oude Kerkstraat",
+			"aliases": [
+				"Kerkstraat"
+			],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Dorpsstraat en Geuzenhoek/Dorpsstraat - Oude Kerkstraat - Ellen Van Gheem - 07.03.2020.jpg"
+			}
+		},
+		{
+			"id": "poloplein",
+			"name": "Poloplein",
+			"aliases": [],
+			"kind": "park",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 2,
+				"sampleFile": "src/lib/images/history-images/Sport in Kapellen/Hoogboom - Poloplein 1922 - Hugo De Hoon - 24.10.2014.jpg"
+			}
+		},
+		{
+			"id": "prinsendreef",
+			"name": "Prinsendreef",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 6,
+				"sampleFile": "src/lib/images/history-images/Prinsendreef/Prinsendreef - Marianne Verschueren - 27.10.2021.jpg"
+			}
+		},
+		{
+			"id": "putsesteenweg",
+			"name": "Putsesteenweg",
+			"aliases": [],
+			"kind": "street",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "single corpus occurrence; confirm against OSM",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/OWNP - Kapelsestraat - Putsesteenweg 4 - Swatti Alix - zd.png"
+			}
+		},
+		{
+			"id": "putte-kapellen",
+			"name": "Putte-Kapellen",
+			"aliases": [
+				"Putte"
+			],
+			"kind": "area",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"negativeContext": [
+				"\\bputte\\s*(nl|nederland|holland)\\b",
+				"\\b(sk|fc|kfc|vv)\\s+putte\\b"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 165,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Kapelleken -  Putte - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "rozenhof",
+			"name": "Villa Rozenhof",
+			"aliases": [
+				"Rozenhof",
+				"Parein-Rozenhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 8,
+				"sampleFile": "src/lib/images/history-images/Rubensheide/Rubensheide (Oude Baan) - Parein-Rozenhof - Ronald Sebrechts - 17.08.2014.jpg"
+			}
+		},
+		{
+			"id": "rubensheide",
+			"name": "Rubensheide",
+			"aliases": [],
+			"kind": "area",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"oude-baan"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 15,
+				"sampleFile": "src/lib/images/history-images/Rubensheide/Rubensheide (Oude Baan) - Johan Van Elst - 12.01.2015.jpg"
+			}
+		},
+		{
+			"id": "rustoord-welvaart",
+			"name": "Rustoord Welvaart",
+			"aliases": [
+				"Welvaart",
+				"Hoogboom Rustoord Welvaart"
+			],
+			"kind": "building",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 36,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Rustoord Welvaart/Hoogboom - Welvaart - Frans Meeus - z.d.jpg"
+			}
+		},
+		{
+			"id": "sint-dionysiuskerk",
+			"name": "Sint-Dionysiuskerk",
+			"aliases": [
+				"St. Dionysiuskerk",
+				"St. Dyonisiuskerk"
+			],
+			"kind": "building",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 19,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Putte - St. Dionysiuskerk - Luc De Cock - 15.05.2020.jpg"
+			}
+		},
+		{
+			"id": "sint-jacobuskerk",
+			"name": "Sint-Jacobuskerk",
+			"aliases": [
+				"St. Jacobuskerk",
+				"St. Jacobuskerkerk"
+			],
+			"kind": "building",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 31,
+				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/St. Jacobuskerk - Anne-Marie Coremans - 16.09.2014.jpg"
+			}
+		},
+		{
+			"id": "sint-jozefkapel",
+			"name": "Sint-Jozefkapel",
+			"aliases": [
+				"St. Jozefkapel"
+			],
+			"kind": "building",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 12,
+				"sampleFile": "src/lib/images/history-images/Akkerstraat - Nieuwe Wijk/Nieuwe Wijk - St. Jozefkapel - Kerknet - zd.jpg"
+			}
+		},
+		{
+			"id": "sint-jozefkerk",
+			"name": "Sint-Jozefkerk",
+			"aliases": [
+				"St. Jozefkerk"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"hoogboomsteenweg"
+			],
+			"note": "The corpus gives Hoogboomsteenweg 294.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 38,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Hoogboomsteenweg/Hoogboom - St. Jozefkerk - Dirk Van Laer - 23.02.2015.jpg"
+			}
+		},
+		{
+			"id": "station-kapellen",
+			"name": "Station Kapellen",
+			"aliases": [
+				"Statie"
+			],
+			"kind": "building",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 16,
+				"sampleFile": "src/lib/images/history-images/Station en omgeving/Station - Cafe aan de Statie - Sonia Van Meel - 18.11.2014.jpg"
+			}
+		},
+		{
+			"id": "stationsplein",
+			"name": "Stationsplein",
+			"aliases": [
+				"Statieplein"
+			],
+			"kind": "square",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 7,
+				"sampleFile": "src/lib/images/history-images/Guyotlei - Ketelaars/Stationsplein - Ben Lelie - 26.04.2016.jpg"
+			}
+		},
+		{
+			"id": "stationsstraat",
+			"name": "Stationsstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 47,
+				"sampleFile": "src/lib/images/history-images/Feesten in Kapellen/100 jaar Belgie - Eeuwfeesten 1930 - Stationsstraat - Hoghescote - z.d.jpg"
+			}
+		},
+		{
+			"id": "tajje",
+			"name": "Tajje",
+			"aliases": [],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"note": "A landmark; exact identity still to be confirmed.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 61,
+				"sampleFile": "src/lib/images/history-images/100 jaar Tajje - Matheus Janssens - 09.07.1976/100 Jaar Tajje - De Vrede - Vandoorne Rudy 1 - 04.03.2020.jpg"
+			}
+		},
+		{
+			"id": "villa-de-maretak",
+			"name": "Villa De Maretak",
+			"aliases": [
+				"Villa De Marentak"
+			],
+			"kind": "building",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 12,
+				"sampleFile": "src/lib/images/history-images/Villa De Maretak - Kapellenbos/Jozef Muls - Paul Theeuws - 19.02.2014.jpg"
+			}
+		},
+		{
+			"id": "villa-des-hirondelles",
+			"name": "Villa Des Hirondelles",
+			"aliases": [],
+			"kind": "building",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 5,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Hoogboomsteenweg/Villa des Hirondelles - Hoogboomsteenweg 2 - Jan Verhelst - zd.jpg"
+			}
+		},
+		{
+			"id": "villa-heirust",
+			"name": "Villa Heirust",
+			"aliases": [
+				"Heirust"
+			],
+			"kind": "building",
+			"district": "putte-kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 4,
+				"sampleFile": "src/lib/images/history-images/Putte Index/Putte NL - Heirust - Swatti Alix - z.d..jpg"
+			}
+		},
+		{
+			"id": "villa-plantijn",
+			"name": "Villa Plantijn",
+			"aliases": [
+				"Plantijn"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 14,
+				"sampleFile": "src/lib/images/history-images/Villa Plantijn/Plantijn - Bestuur KAC Mutsaers - Hugo De Hoon - 23.11.2014.jpg"
+			}
+		},
+		{
+			"id": "villa-zonnelicht",
+			"name": "Villa Zonnelicht",
+			"aliases": [
+				"Zonnelicht"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 22,
+				"sampleFile": "src/lib/images/history-images/Villa Zonnelicht/Villa Zonnelicht - AMSAB - zd.jpg"
+			}
+		},
+		{
+			"id": "waterstraat",
+			"name": "Waterstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Op weg naar Putte/OWNP - Bevrijding 1945 - Hoek Kapelsestraat-Waterstraat - Beuf Vets Sud Daniel - 07.04.2014.jpg"
+			}
+		},
+		{
+			"id": "zilverenhoek",
+			"name": "Zilverenhoek",
+			"aliases": [],
+			"kind": "area",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 6,
+				"sampleFile": "src/lib/images/history-images/Antwerpsesteenweg/Antwerpsesteenweg - Zilverenhoek - Grot OLV Lourdes 1 - Swatti Alix - zd.jpg"
+			}
+		}
+	]
+}

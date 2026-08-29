@@ -5,6 +5,7 @@ import * as logger from "firebase-functions/logger";
 import {validateCors} from "../utils/cors-helper";
 import {extractImagePath, isNullOrEmpty} from "../utils/string-helper";
 import {imageService} from "../services"
+import {UploadValidationError} from "../services/upload/multipart";
 import {MapMarker} from "../../../sharedModels/interfaces";
 import {storage} from "../services/externalServices";
 
@@ -32,11 +33,19 @@ export const uploadImages: HttpsFunction = https.onRequest(
           convertedCoordinates = {lngLat: {lat: parseFloat(splitCoordinates[0]), lng: parseFloat(splitCoordinates[1])}}
         }
 
+        // Awaited to completion: the response is only sent once every file is in Cloud
+        // Storage and recorded in Firestore. Answering earlier risks the instance being
+        // frozen mid-upload, which loses the contribution without telling anyone.
         await imageService.handleImages(subjectId!.toString(), request.body, request.headers, convertedCoordinates)
 
         response.sendStatus(200);
 
       } catch (error) {
+        if (error instanceof UploadValidationError) {
+          logger.warn('Rejected upload: ', error.message);
+          return response.status(400).send(error.message);
+        }
+
         logger.error('Error processing upload: ', error);
         response.status(500).send('Error processing upload: ' + error);
       }

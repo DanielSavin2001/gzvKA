@@ -1,89 +1,78 @@
 ﻿import {IncomingHttpHeaders} from "http";
 import {DocumentReference, GeoPoint} from "@google-cloud/firestore";
-import * as Busboy from "busboy";
 import * as logger from "firebase-functions/logger";
 
 import {firestore, storage} from "./externalServices";
 import {extractDatesFromText, getFileExtension, removeFileExtension} from "../utils/string-helper";
-import {FileData, FileDataFields, ImageDocument, ImageDocumentFS, MapMarker} from "../../../sharedModels/interfaces";
+import {resolveStoredFormat} from "../utils/image-format";
+import {collectFiles} from "./upload/multipart";
+import {FileData, ImageDocument, ImageDocumentFS, MapMarker} from "../../../sharedModels/interfaces";
 import {BUCKET_NAME, IMAGES_COLLECTION_NAME} from "../constants/google-storage-constants";
 
 
+/**
+ * Stores every image in a multipart upload and records it in Firestore.
+ *
+ * Resolves only once all of that work has finished, so the request handler can answer
+ * after the upload is durable rather than before it has begun. Any failure propagates to
+ * the caller and becomes a failed request instead of an unhandled rejection.
+ */
 export async function handleImages(subjectId: string, imageFiles: any, headers: IncomingHttpHeaders, coordinates: MapMarker | null): Promise<void> {
 
-    const busboy: Busboy.Busboy = Busboy({headers: headers});
-    const files: FileData[] = [];
+    const files: FileData[] = await collectFiles(headers, imageFiles);
 
-    extractImages(busboy, files);
-    processImages(busboy, files, subjectId!.toString(), coordinates);
-
-    busboy.end(imageFiles)
+    for (const file of files) {
+        await storeImage(file, subjectId, coordinates);
+    }
 }
 
-function extractImages(busboy: Busboy.Busboy, files: FileData[]): void {
+/** Writes one uploaded file to Cloud Storage and its metadata to Firestore. */
+async function storeImage(file: FileData, subjectId: string, coordinates: MapMarker | null): Promise<void> {
+    logger.log(`Creating firestore document for ${file.fields.filename}`);
 
-    busboy.on('file', (fieldName: string, file: any, fields: FileDataFields) => {
-        const chunks: Buffer[] = [];
+    const {dateOfAcquisition, yearOfImage} = extractDatesFromText(file.fields.filename);
 
-        file.on('data', (data: any) => {
-            chunks.push(data);
-            logger.log('Received data chunk for file:', fields?.filename);
-        });
+    const imageDocument: ImageDocumentFS = {
+        subjectId: subjectId,
+        imageName: removeFileExtension(file.fields.filename),
+        dateOfAcquisition: dateOfAcquisition,
+        yearOfImage: yearOfImage,
+        imageDescription: "",
+        imgURL: "",
+        nameOfSender: "",
+        geopoint: coordinates ? new GeoPoint(coordinates.lngLat.lat, coordinates.lngLat.lng) : null,
+    }
 
-        file.on('end', () => {
-            files.push({
-                fieldName,
-                fields,
-                buffer: Buffer.concat(chunks),
-            });
-            logger.log(`Finished processing file: ${fields?.filename}`);
-        });
+    // Add document to Firestore and get document ID
+    const documentRef = await createImage(imageDocument);
+    const documentId = documentRef.id;
 
-        file.on('error', (err: any) => {
-            logger.error('File stream error:', err);
-        });
+    // Trust the bytes over the filename: 55 images already in this archive carry an
+    // extension that disagrees with their content, and storing a GIF as image/png leaves
+    // the object permanently mislabelled.
+    const format = resolveStoredFormat(
+        file.buffer,
+        file.fields.mimeType,
+        getFileExtension(file.fields.filename)
+    );
+
+    if (format.correctedFromDeclared) {
+        logger.log(`"${file.fields.filename}" is actually ${format.mimeType}; storing it as such.`);
+    }
+
+    // Upload file to Google Cloud Storage with document ID as file name
+    const fileName = `images/${documentId}${format.extension}`;
+    const fileUpload = storage.file(fileName);
+
+    await fileUpload.save(file.buffer, {
+        contentType: format.mimeType,
     });
-}
 
-function processImages(busboy: Busboy.Busboy, files: FileData[], subjectId: string, coordinates: MapMarker | null): void {
-    busboy.on('finish', async () => {
-        if (files.length === 0) throw Error('No files were uploaded.')
+    // Set the URL of the uploaded image in Firestore document
+    const imgURL = `https://storage.googleapis.com/${BUCKET_NAME}/${fileName}`;
+    await documentRef.update({imgURL});
 
-        for (const file of files) {
-            logger.log(`Creating firestore document for ${file.fields.filename}`);
-
-            const {dateOfAcquisition, yearOfImage} = extractDatesFromText(file.fields.filename);
-
-            const imageDocument: ImageDocumentFS = {
-                subjectId: subjectId,
-                imageName: removeFileExtension(file.fields.filename),
-                dateOfAcquisition: dateOfAcquisition,
-                yearOfImage: yearOfImage,
-                imageDescription: "",
-                imgURL: "",
-                nameOfSender: "",
-                geopoint: coordinates ? new GeoPoint(coordinates.lngLat.lat, coordinates.lngLat.lng) : null,
-            }
-
-            // Add document to Firestore and get document ID
-            const documentRef = await createImage(imageDocument);
-            const documentId = documentRef.id;
-
-            // Upload file to Google Cloud Storage with document ID as file name
-            const fileName = `images/${documentId}${getFileExtension(file.fields.filename)}`;
-            const fileUpload = storage.file(fileName);
-
-            await fileUpload.save(file.buffer, {
-                contentType: file.fields.mimetype,
-            });
-
-            // Set the URL of the uploaded image in Firestore document
-            const imgURL = `https://storage.googleapis.com/${BUCKET_NAME}/${fileName}`;
-            await documentRef.update({imgURL});
-
-            logger.log(`Uploaded file to Google Storage and updated Firestore document: ${fileName}`);
-        }
-    });
+    logger.log(`Uploaded file to Google Storage and updated Firestore document: ${fileName}`);
 }
 
 async function createImage(image: ImageDocumentFS): Promise<DocumentReference> {

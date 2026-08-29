@@ -9,3 +9,13 @@ node_modules
 # Ignore files for PNPM, NPM and YARN
 pnpm-lock.yaml
 package-lock.json
+# The gazetteer seed is a curated data table: one place per line keeps it
+# reviewable and editable by hand. Reflowing it to printWidth triples its
+# length and makes the place list far harder to scan.
+functions/src/gazetteer/seed.ts
+
+# Generated file - rebuild with `npm run gazetteer:build` in functions/.
+functions/src/data/kapellen-gazetteer.json
+
+# Generated review file - rebuild with `npm run map:labels` in functions/.
+functions/src/data/map-label-candidates.json

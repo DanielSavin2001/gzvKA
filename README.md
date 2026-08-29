@@ -39,9 +39,19 @@ The project can be followed on the following project overview: [https://github.c
 - [x] **Upload zone**: There should be an 'Upload zone' for citizens of Kapellen, so that they can upload new images, suggest where they belong and give extra information related to the images. Or even upload stories, poems and much more ...
 
 ### 5. Image Search Engine
-- [ ] **Normalize image titles**: All the accents, upper/lower cases, and special characters should be removed.
+- [x] **Normalize image titles**: All the accents, upper/lower cases, and special characters should be removed. => `sharedModels/text.ts`, shared by the frontend and the functions so indexing and querying fold text identically.
 - [x] **Image metadata & URL in db**: The image URL will be stored together with all the metadata related to it (Original title, Normalized title, WGS84 coordinates, Tags, ...).
 - [ ] **Image is searchable**: At last, the image should be searchable based on normalized title, coordinates, tags and much more...
+
+### 6. Place, street and AI enrichment
+- [x] **Kapellen gazetteer**: 121 places generated from a curated seed joined against the 2948-image corpus, so every entry is backed by a real photograph. Coordinates are deliberately empty until they come from OpenStreetMap. => `functions/src/data/kapellen-gazetteer.json`
+- [x] **Match photographs to places from their filenames**: tolerates the archive's real spelling (`Kalmhousesteenweg`, `Doprsstraat`, `Kon. Astridlaan`) while refusing the false positives (an inflatable "Springkasteel" is not a castle, `FC Capellen` is not the municipality). Measured: 80.4% of images get a place, 29.1% a street. => `npm run corpus:report` in `functions/`
+- [x] **Recover Kapellen's street names from the town map**: `varia-text/plan Kapellen.pdf` is a vector map with live text; 195 street names the archive did not know are staged for human review. => `npm run map:labels`
+- [ ] **AI reads the photograph**: street plates, shop signs, house numbers and a Dutch description, for the ~70% of images the filename cannot place.
+- [ ] **Coordinates from OpenStreetMap**, so streets can be drawn on the map.
+- [ ] **Migrate the historical texts**, starting with the material already in `varia-text/`.
+
+**The full plan, with the measurements behind it, is in [docs/PLAN.md](docs/PLAN.md).**
 
 
 ## How to Contribute

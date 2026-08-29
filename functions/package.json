@@ -2,6 +2,9 @@
   "name": "functions",
   "scripts": {
     "build": "tsc",
+    "gazetteer:build": "npm run build && node lib/functions/scripts/build-gazetteer.js",
+    "corpus:report": "npm run build && node lib/functions/scripts/corpus-report.js",
+    "map:labels": "npm run build && node lib/functions/scripts/extract-map-labels.js",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",

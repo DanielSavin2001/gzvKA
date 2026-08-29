@@ -157,6 +157,29 @@ describe('extractDatesFromText', () => {
         const result = stringHelper.extractDatesFromText('Louwke Poep 1925_2 - Swatti Alix - z.d.');
         expect(result).toEqual({dateOfAcquisition: '', yearOfImage: '1925'});
     });
+
+    test('should read a school year range alongside a donation date', () => {
+        // Three years, so this used to return nothing at all - a total loss on the class
+        // photos, which are among the best documented files in the archive.
+        const result = stringHelper.extractDatesFromText(
+            'Klasfoto - Kleuterschool Hoevensebaan 1969-1970 - Sonja Linders - 22.12.2014.jpg'
+        );
+        expect(result).toEqual({dateOfAcquisition: '2014', yearOfImage: '1969'});
+    });
+
+    test('should take the earliest subject year when several precede the donation date', () => {
+        const result = stringHelper.extractDatesFromText(
+            'Broedersschool 1962 1963 1964 - Stef Laevaert - 09.10.2014.jpg'
+        );
+        expect(result).toEqual({dateOfAcquisition: '2014', yearOfImage: '1962'});
+    });
+
+    test('should still assert nothing when three years carry no donation date', () => {
+        // Without the dd.mm.yyyy marker the years really are ambiguous, so guessing
+        // between them would put a wrong year on a photograph.
+        const result = stringHelper.extractDatesFromText('Straatbeeld 1900 1920 1940');
+        expect(result).toEqual({dateOfAcquisition: '', yearOfImage: ''});
+    });
 });
 
 describe('getFileExtension', () => {
@@ -209,16 +232,80 @@ describe('extractImagePath', () => {
         expect(result).toBe(expectedPath);
     });
 
-    it('should throw an error if the URL does not start with gs://', () => {
+    it('should extract the image path from the https:// URL that imageService writes on upload', () => {
+        // imageService builds exactly this shape:
+        // `https://storage.googleapis.com/${BUCKET_NAME}/images/${documentId}.jpg`.
+        // Rejecting it made every freshly uploaded image fail to load in ImageCard.
         const imgURL = 'https://storage.googleapis.com/gzvka-resources/images/3PxzTlVqjxGbWOdDOmfg.jpg';
+        const expectedPath = 'images/3PxzTlVqjxGbWOdDOmfg.jpg';
 
-        expect(() => stringHelper.extractImagePath(imgURL)).toThrow('Invalid imgURL format.');
+        const result = stringHelper.extractImagePath(imgURL);
+
+        expect(result).toBe(expectedPath);
+    });
+
+    it('should extract the image path from a storage.cloud.google.com URL', () => {
+        const imgURL = 'https://storage.cloud.google.com/gzvka-resources/images/3PxzTlVqjxGbWOdDOmfg.jpg';
+
+        expect(stringHelper.extractImagePath(imgURL)).toBe('images/3PxzTlVqjxGbWOdDOmfg.jpg');
+    });
+
+    it('should extract the image path from the malformed https + gs:// hybrid', () => {
+        const imgURL = 'https://storage.googleapis.com/gs://gzvka-resources/images/3PxzTlVqjxGbWOdDOmfg.jpg';
+
+        expect(stringHelper.extractImagePath(imgURL)).toBe('images/3PxzTlVqjxGbWOdDOmfg.jpg');
+    });
+
+    it('should extract and decode the image path from a Firebase download URL', () => {
+        const imgURL =
+            'https://firebasestorage.googleapis.com/v0/b/gzvka-resources/o/images%2F3PxzTlVqjxGbWOdDOmfg.jpg?alt=media&token=abc';
+
+        expect(stringHelper.extractImagePath(imgURL)).toBe('images/3PxzTlVqjxGbWOdDOmfg.jpg');
+    });
+
+    it('should discard any query string or fragment', () => {
+        expect(
+            stringHelper.extractImagePath(
+                'https://storage.googleapis.com/gzvka-resources/images/a.jpg?generation=17123'
+            )
+        ).toBe('images/a.jpg');
+        expect(stringHelper.extractImagePath('gs://gzvka-resources/images/a.jpg#preview')).toBe(
+            'images/a.jpg'
+        );
+    });
+
+    it('should percent-decode an object path containing spaces', () => {
+        const imgURL = 'https://storage.googleapis.com/gzvka-resources/images/Kasteel%20Op%20den%20Wal.jpg';
+
+        expect(stringHelper.extractImagePath(imgURL)).toBe('images/Kasteel Op den Wal.jpg');
+    });
+
+    it('should tolerate a malformed percent-escape rather than throwing', () => {
+        const imgURL = 'https://storage.googleapis.com/gzvka-resources/images/100%.jpg';
+
+        expect(stringHelper.extractImagePath(imgURL)).toBe('images/100%.jpg');
     });
 
     it('should throw an error if the gs:// URL is incomplete', () => {
         const imgURL = 'gs://gzvka-resources/';
 
         expect(() => stringHelper.extractImagePath(imgURL)).toThrow('Invalid imgURL format.');
+    });
+
+    it('should throw an error if an https:// URL names a bucket but no object', () => {
+        expect(() => stringHelper.extractImagePath('https://storage.googleapis.com/gzvka-resources')).toThrow(
+            'Invalid imgURL format.'
+        );
+        expect(() => stringHelper.extractImagePath('https://storage.googleapis.com/gzvka-resources/')).toThrow(
+            'Invalid imgURL format.'
+        );
+    });
+
+    it('should throw an error if the URL is not a recognised storage location', () => {
+        expect(() => stringHelper.extractImagePath('https://example.com/images/a.jpg')).toThrow(
+            'Invalid imgURL format.'
+        );
+        expect(() => stringHelper.extractImagePath('images/a.jpg')).toThrow('Invalid imgURL format.');
     });
 
     it('should throw an error if the URL is null or undefined or empty string.', () => {
