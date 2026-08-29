@@ -234,7 +234,7 @@ describe('extractImagePath', () => {
 
     it('should extract the image path from the https:// URL that imageService writes on upload', () => {
         // imageService builds exactly this shape:
-        // `https://storage.googleapis.com/${BUCKET_NAME}/images/${documentId}.jpg`.
+        // `https://storage.googleapis.com/${getBucketName()}/images/${documentId}.jpg`.
         // Rejecting it made every freshly uploaded image fail to load in ImageCard.
         const imgURL = 'https://storage.googleapis.com/gzvka-resources/images/3PxzTlVqjxGbWOdDOmfg.jpg';
         const expectedPath = 'images/3PxzTlVqjxGbWOdDOmfg.jpg';

@@ -13,12 +13,12 @@ npm run thumbs       # make web-sized copies of the photos (a few minutes, once)
 npm run start        # http://localhost:5173
 ```
 
-That is the whole archive: all 2948 photographs, searchable, browsable by street, with the
+That is the whole archive: all 4504 photographs, searchable, browsable by street, with the
 writing from the old website beside them. The photo index and the stories are generated from
 the images and pages in this repository and committed, so it works on a fresh clone with
 nothing configured.
 
-`npm run thumbs` converts the 937 MB of originals into web-sized copies under
+`npm run thumbs` converts the originals into web-sized copies under
 `static/foto/` (about 440 MB, not committed). It is safe to re-run - it skips anything
 already converted. Without it the pages work but the images are missing.
 
@@ -42,7 +42,7 @@ npm run streets         # rebuild street positions from the official register
 ```bash
 cd functions
 npm install
-npx jest                     # 204 tests, no credentials needed
+npx jest                     # 209 tests, no credentials needed
 npm run gazetteer:build      # rebuild the Kapellen place list
 npm run corpus:report        # what the filenames alone yield
 npm run map:labels           # street names recovered from the town map PDF
@@ -169,3 +169,163 @@ Two rules hold:
 
 `docs/streets-not-in-register.md` lists the gazetteer streets today's register has never
 heard of. That is the archive's own evidence about which street names are historical.
+
+## Correcting a photograph
+
+Everything the archive knows about a photograph is worked out from its filename, which is
+right about four in five and quietly wrong about the rest. `functions/src/data/photo-corrections.json`
+is the one place a person overrules that:
+
+```json
+"station-en-omgeving-station-en-nieuwstraat-heemkring-hoghescote-25-01-2018": {
+  "places": ["rubensheide"],
+  "houseNumber": 144,
+  "note": "why this is the right answer",
+  "by": "Daniel Savin",
+  "on": "2026-08-29"
+}
+```
+
+The photograph's id is in its URL. `places` replaces what the matcher found rather than
+adding to it; `houseNumber`, `year` and `title` override those fields. Re-run
+`npm run archive:index` to apply.
+
+Two things the build refuses rather than ignores: a correction naming a place that is not in
+the gazetteer, and a correction naming a photograph that is not in the corpus. Either would
+mean somebody recorded a fact and the archive silently dropped it, which is worse than a
+build failure.
+
+## Folding in the rest of the website
+
+The repository originally held 2,948 photographs; the live gzvka.be showed 1,556 more that
+had never been added to it. Those arrived as a flat download in
+`src/lib/Legacy-website-images/` and were merged by:
+
+```bash
+node scripts/merge-legacy-images.mjs           # report what it would do
+node scripts/merge-legacy-images.mjs --apply   # do it
+```
+
+It decides where each photograph goes from **the page of the old site that shows it** —
+`legacy-site/` holds all 101 pages, so a photograph's subject folder is evidence rather than
+a guess. Where a page's photographs are already filed, its folder is learned from them;
+where a page had none, a folder named after that page is created. 17 subjects came into the
+archive that way, among them Kasteel Oude Gracht, Klein Bos, Kapellenbos and Ertbrandbos.
+
+Anything no page references is **left in the download folder and reported** rather than
+filed on a guess. After the merge, 99.9% of the old site's photograph references resolve to
+a file in this repository, up from 59%.
+
+Twenty of the downloaded names arrived as UTF-8 read as Latin-1 — `CafÃ© De Vrede`,
+`75 jaar BelgiÃ«` — and are repaired on the way in. Left alone they would never have matched
+the page that references them.
+
+## Formats
+
+```bash
+node scripts/fix-image-formats.mjs --apply
+```
+
+57 files were named for one format and held another. They displayed correctly only because
+the thumbnail build reads magic bytes rather than trusting the name — but every other tool
+trusts the name. GIFs are re-encoded to PNG, which is lossless for a palette image and means
+the archive holds no GIFs; everything else is renamed, leaving the bytes untouched, because
+re-encoding a PNG to JPEG to satisfy its filename would throw away quality to fix a name.
+
+A photograph's id ignores its extension, so none of this changes a URL.
+
+## Contributing a photograph, and curating what arrives
+
+Anyone can send a photograph in at `/upload` — no account, nothing required but the picture
+itself. Asking a seventy-year-old to register before they can contribute a photograph of
+their own street is how an archive stays empty. Nothing appears on the site until a curator
+has looked at it, which is the other half of the same decision.
+
+Curators work at `/beheer`: sign in with Google, then approve, reject, retitle, place on a
+street, set a house number, a year and a donor. Approving publishes immediately — the photo
+is served from Cloud Storage and merged into the archive in the browser, so there is no
+rebuild to wait for.
+
+### What has to be set up once
+
+None of this can be done from the repository; it needs the Firebase console. The order
+matters — each step below is blocked by the one above it.
+
+1. **Register a web app.** Project settings → _Your apps_ → the `</>` icon. A Firebase
+   project starts with no apps at all, and until one exists there is **no API key and no
+   auth domain**, so there is nothing to put in step 6 and sign-in cannot work. Name it
+   anything; do _not_ tick "Firebase Hosting" (hosting is already configured here).
+
+2. **Move to the Blaze plan.** Cloud Functions cannot be deployed on Spark — deployment
+   goes through Cloud Build and Artifact Registry, which Spark does not include — and on
+   projects created since late 2024 the default Cloud Storage bucket needs Blaze too.
+   Without it, `/upload` has nowhere to send a photograph and `/beheer` has nothing to
+   read. Blaze is pay-as-you-go on top of a free tier this archive sits well inside
+   (2M function calls and 5 GB of storage a month), but it does want a card, so set a
+   budget alert while you are there. **Authentication itself is free on Spark** — only
+   the functions and the bucket force the upgrade.
+
+3. **Enable Google sign-in.** Authentication → Sign-in method → Google → Enable. Two
+   fields in that panel block _Save_ until they are filled:
+
+   - **Public-facing name** defaults to something like `project-590536267591`. This is
+     the name Google shows on the consent screen — "Sign in to …" — so make it
+     `gzvKA fotoarchief`.
+   - **Support email** must be picked from the dropdown; it is empty by default and is
+     what the red _"Please select an email address"_ is complaining about.
+
+   The web client ID and secret fill themselves in once you save.
+
+4. **Authorise the domains you will sign in from.** Authentication → Settings →
+   Authorized domains. `gzvka-12a9f.web.app` and `gzvka-12a9f.firebaseapp.com` are added
+   for you, but `gzvka.com` is not, and neither is a PR preview channel like
+   `gzvka-12a9f--pr40-….web.app`. There is no wildcard: a domain that is not on this list
+   fails the sign-in popup with `auth/unauthorized-domain`.
+
+5. **Add yourself as a curator.** Firestore → create a collection `admins` → add a
+   document whose **ID is your email address, lower-cased** (the contents do not matter;
+   `{ }` is fine). Adding another curator later is one more document.
+
+6. **Publish the rules and the functions**, both of which are in this repository:
+
+   ```bash
+   firebase deploy --only firestore:rules,storage:rules
+   firebase deploy --only functions
+   ```
+
+7. **Set the client values**, in `.env` locally and as repository secrets under the same
+   names for the deploy. Both hosting workflows pass all four through to the build.
+
+   | Name                        | Value for this project                                | Where it comes from                        |
+   | --------------------------- | ----------------------------------------------------- | ------------------------------------------ |
+   | `VITE_FIREBASE_PROJECT_ID`  | `gzvka-12a9f`                                         | Project settings → General                 |
+   | `VITE_FIREBASE_AUTH_DOMAIN` | `gzvka-12a9f.firebaseapp.com`                         | always `<project>.firebaseapp.com`         |
+   | `VITE_FIREBASE_API_KEY`     | `AIza…`                                               | the web app from step 1 — **nowhere else** |
+   | `VITE_BASE_URL_GF`          | `https://us-central1-gzvka-12a9f.cloudfunctions.net/` | **keep the trailing slash**                |
+
+   Only the API key needs looking up, and only a registered web app has one: Project
+   settings → General → Your apps → the app → _SDK setup and configuration_ → _Config_.
+   None of the four is a secret — Firebase publishes all of them in every client app, and
+   an API key here identifies the project rather than authorising anything. They are
+   repository secrets only so the project can be pointed elsewhere without a commit.
+
+Without step 7 the page says so instead of failing in a confusing way.
+
+### How the security actually works
+
+The check that matters is on the server, in `functions/src/services/admin-auth.ts`. It
+verifies the Google ID token's signature, audience and expiry, requires the address to be
+one Google itself verified, and only then looks it up in `admins`. Hiding a button in the
+interface protects nothing; this is what does.
+
+Both `firestore.rules` and `storage.rules` deny browsers everything, with one exception:
+`archief/` in Cloud Storage is publicly readable, because that is where approved
+photographs live and they are meant to be seen. Pending submissions are not readable by
+anyone — a curator views them through a signed URL that expires in an hour.
+
+**Not verified end to end.** There are no Firebase credentials in the environment this was
+written in, so the sign-in, the token check, the queue and the storage moves have not been
+run against a real project. The logic that can be tested without Firebase is
+(24 tests in `functions/src/services/submission.test.ts`, covering validation, the state
+machine, the field allowlist and the rule that a contributor's email never reaches the
+website). Please try one photograph through the whole path before announcing it.

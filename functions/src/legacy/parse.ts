@@ -60,6 +60,12 @@ export interface LegacyPage {
 	sections: StorySection[];
 	/** Every image `src` on the page, in order, chrome excluded. */
 	images: string[];
+	/**
+	 * Files the page offered for download - the Fietszoektocht brochure, an answer form.
+	 * Taken from the page's own links, so a document is attached to the page that published
+	 * it rather than to one a person thought it belonged to.
+	 */
+	documents: string[];
 	/** Characters of prose, used to tell a written page from a bare photograph gallery. */
 	proseLength: number;
 }
@@ -184,6 +190,14 @@ export function parseLegacyHtml(fileName: string, bytes: Buffer): LegacyPage {
 
 	const blocks = readBlocks(contentRegions(html));
 
+	// Taken from the raw markup rather than the block reader: a download link is often the
+	// whole of a navigation line, which the reader drops as chrome before we could see it.
+	const documents = [
+		...new Set(
+			[...html.matchAll(/href="([^"]+\.(?:pdf|docx?))"/gi)].map((match) => decodeEntities(match[1]))
+		)
+	];
+
 	const sections: StorySection[] = [];
 	const images: string[] = [];
 	let current: StorySection = { parts: [] };
@@ -259,6 +273,7 @@ export function parseLegacyHtml(fileName: string, bytes: Buffer): LegacyPage {
 		title: pageHeading || documentTitle || baseName,
 		sections,
 		images,
+		documents,
 		proseLength
 	};
 }

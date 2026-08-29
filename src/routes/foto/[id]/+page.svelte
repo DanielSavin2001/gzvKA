@@ -5,6 +5,7 @@
 
 	import type { Archive, ArchivePhoto } from '$lib/archive';
 	import { detailUrl, loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
+	import { swipe } from '$lib/gestures';
 	import type { PhotoContext } from '$lib/stories';
 	import { loadStory, loadStoryPhotos, photoContext } from '$lib/stories';
 
@@ -173,29 +174,39 @@
 				slivers are hidden below `lg`, where there is no room beside the photograph for
 				anything but the arrows themselves.
 			-->
-			<div class="relative flex items-center justify-center gap-3">
+			<!--
+				The stage is a fixed height and the photograph is fitted inside it. Letting the
+				box follow each picture's own proportions moved the arrows up to 177px between
+				one photograph and the next - measured, and thoroughly annoying to click.
+			-->
+			<div
+				class="relative flex h-[58vh] touch-pan-y select-none items-center justify-center gap-3 sm:h-[64vh]"
+				use:swipe={{ onLeft: () => step(next), onRight: () => step(previous) }}
+			>
 				{#if previous}
 					<a
 						href="/foto/{previous.id}{neighbourQuery}"
-						class="hidden w-24 shrink-0 lg:block xl:w-32"
+						class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32"
 						aria-label="Vorige foto: {previous.t}"
 					>
 						<img
 							src={thumbUrl(archive, previous)}
 							alt=""
-							class="h-40 w-full rounded-l-lg object-cover opacity-40 transition hover:opacity-80 xl:h-52"
+							draggable="false"
+							class="h-full w-full select-none rounded-l-lg object-cover opacity-40 transition hover:opacity-80"
 						/>
 					</a>
 				{:else}
-					<div class="hidden w-24 shrink-0 lg:block xl:w-32" />
+					<div class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32" />
 				{/if}
 
-				<div class="relative min-w-0 flex-1">
+				<div class="relative flex h-full min-w-0 flex-1 items-center justify-center">
 					<img
 						src={detailUrl(archive, photo)}
 						on:error={fallBackToThumbnail}
 						alt={photo.t}
-						class="mx-auto max-h-[70vh] w-auto rounded-lg border border-gray-200 bg-gray-100 object-contain"
+						draggable="false"
+						class="max-h-full max-w-full select-none rounded-lg border border-gray-200 bg-gray-100 object-contain"
 					/>
 
 					{#if previous}
@@ -242,6 +253,7 @@
 						in de {archive.placeById.get(listKey.slice(7))?.name}
 					{/if}
 					<span class="ml-2 hidden lg:inline">&middot; gebruik &larr; en &rarr;</span>
+					<span class="ml-2 lg:hidden">&middot; veeg om te bladeren</span>
 				</p>
 			{/if}
 

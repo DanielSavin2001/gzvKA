@@ -3,19 +3,14 @@
 
 	import type { Archive } from '$lib/archive';
 	import { loadArchive, placesWithPhotos } from '$lib/archive';
-	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
-	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
 	import type { StoryIndex } from '$lib/stories';
 	import { historyStories, loadStoryIndex, readingMinutes } from '$lib/stories';
-	import { goto } from '$app/navigation';
-	import ArchiveMap from './components/ArchiveMap.svelte';
+	import MapExplorer from './components/MapExplorer.svelte';
 	import PhotoCard from './components/PhotoCard.svelte';
 	import SearchBox from './components/SearchBox.svelte';
 
 	let archive: Archive | null = null;
 	let storyIndex: StoryIndex | null = null;
-	let placed: Record<string, PlacedCoordinate> = {};
-	let geometry: Record<string, StreetGeometry> = {};
 	let error: string | null = null;
 
 	onMount(async () => {
@@ -30,10 +25,6 @@
 		} catch {
 			storyIndex = null; // the archive is the page; the writing is an extra on top of it
 		}
-
-		const [coordinates, streets] = await Promise.all([loadCoordinates(), loadStreetGeometry()]);
-		placed = coordinates.places;
-		geometry = streets;
 	});
 
 	$: streets = archive ? placesWithPhotos(archive, true) : [];
@@ -76,7 +67,7 @@
 	/>
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-4">
+<div class="mx-auto max-w-7xl px-4">
 	<section class="py-10 text-center sm:py-14">
 		<h1
 			class="mx-auto max-w-4xl text-3xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-4xl lg:text-5xl"
@@ -112,6 +103,15 @@
 		{/if}
 	</section>
 
+	<!--
+		The map is the front page. It loads its own data, so it sits outside the archive
+		check - and outside it the `id="kaart"` anchor exists in the prerendered HTML, which
+		is what the menu link points at.
+	-->
+	<div class="pb-8">
+		<MapExplorer />
+	</div>
+
 	{#if error}
 		<div class="my-8 rounded-lg border border-red-300 bg-red-50 p-5 text-red-900">
 			<p class="font-semibold">Het archief kon niet geladen worden</p>
@@ -120,35 +120,6 @@
 	{:else if !archive}
 		<div class="py-16 text-center text-gray-500">Bezig met laden van het archief ...</div>
 	{:else}
-		<section class="py-8">
-			<div class="flex flex-wrap items-end justify-between gap-3">
-				<div>
-					<h2 class="text-2xl font-bold text-gray-900">Op de kaart</h2>
-					<p class="mt-1 text-gray-600">
-						Elke plaats met foto's is een bol, hoe groter hoe meer foto's. Klik erop en je gaat er
-						meteen naartoe.
-					</p>
-				</div>
-				<a
-					class="rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900"
-					href="/kaart"
-				>
-					Kaart op volledig scherm
-				</a>
-			</div>
-
-			<div class="mt-4">
-				<ArchiveMap
-					{archive}
-					{placed}
-					{geometry}
-					showAllStreets
-					height="460px"
-					on:select={(event) => goto(`/straat/${event.detail.id}`)}
-				/>
-			</div>
-		</section>
-
 		<section class="py-8">
 			<h2 class="text-2xl font-bold text-gray-900">Straten van Kapellen</h2>
 			<p class="mt-1 text-gray-600">

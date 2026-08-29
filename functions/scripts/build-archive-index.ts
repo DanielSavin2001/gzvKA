@@ -42,6 +42,7 @@ function findRepoRoot(startDirectory: string): string {
 const REPO_ROOT = findRepoRoot(__dirname);
 const CORPUS_DIR = path.join(REPO_ROOT, 'src', 'lib', 'images', 'history-images');
 const GAZETTEER_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'kapellen-gazetteer.json');
+const CORRECTIONS_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'photo-corrections.json');
 const OUTPUT_FILE = path.join(REPO_ROOT, 'static', 'data', 'archive-index.json');
 
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
@@ -79,6 +80,34 @@ interface IndexedPlace {
 	isStreet: boolean;
 	/** Number of photographs matched to this place. */
 	count: number;
+}
+
+/**
+ * A person's correction to what the filename said about one photograph.
+ *
+ * Everything else in this index is derived by a machine from a filename, which is right
+ * about four photographs in five and quietly wrong about the rest. This is the one place a
+ * human overrules it, and the only place a claim about a photograph may be typed by hand.
+ * Each carries who made it, so a doubtful one can be asked about rather than guessed at.
+ */
+interface PhotoCorrection {
+	/** Replaces the matched places outright, rather than adding to them. */
+	places?: string[];
+	houseNumber?: number;
+	year?: string;
+	title?: string;
+	note?: string;
+	by?: string;
+	on?: string;
+}
+
+function readCorrections(): Record<string, PhotoCorrection> {
+	if (!fs.existsSync(CORRECTIONS_FILE)) return {};
+
+	const parsed = JSON.parse(fs.readFileSync(CORRECTIONS_FILE, 'utf8')) as {
+		corrections?: Record<string, PhotoCorrection>;
+	};
+	return parsed.corrections ?? {};
 }
 
 function listCorpusFiles(directory: string): string[] {
@@ -146,7 +175,22 @@ function main(): void {
 	const gazetteer = JSON.parse(fs.readFileSync(GAZETTEER_FILE, 'utf8')) as Gazetteer;
 	const index = buildIndex(gazetteer);
 	const files = listCorpusFiles(CORPUS_DIR);
+	const corrections = readCorrections();
+	const knownPlaceIds = new Set(gazetteer.entries.map((entry) => entry.id));
 
+	// A correction naming a place that does not exist would silently do nothing, which is
+	// the worst outcome: someone recorded a fact and the archive quietly dropped it.
+	for (const [photoId, correction] of Object.entries(corrections)) {
+		for (const placeId of correction.places ?? []) {
+			if (!knownPlaceIds.has(placeId)) {
+				throw new Error(
+					`photo-corrections.json: "${photoId}" names place "${placeId}", which is not in the gazetteer.`
+				);
+			}
+		}
+	}
+
+	const applied = new Set<string>();
 	const takenIds = new Set<string>();
 	const photos: IndexedPhoto[] = [];
 	const streetCounts = new Map<string, number>();
@@ -160,7 +204,11 @@ function main(): void {
 		const parts = splitFilename(fileName);
 		const context = splitPathContext(`src/lib/images/history-images/${relativePath}`);
 
-		const placeIds = result.matches.map((match) => match.entryId);
+		const id = photoId(relativePath, takenIds);
+		const correction = corrections[id];
+		if (correction) applied.add(id);
+
+		const placeIds = correction?.places ?? result.matches.map((match) => match.entryId);
 
 		// Count every place the photograph is matched to, not only its best street.
 		// Counting the best street alone left every castle, park and neighbourhood at zero
@@ -170,20 +218,22 @@ function main(): void {
 		}
 
 		const photo: IndexedPhoto = {
-			id: photoId(relativePath, takenIds),
+			id,
 			p: relativePath,
-			t: displayTitle(fileName, folderName),
+			t: correction?.title ?? displayTitle(fileName, folderName),
 			s: folderName,
 			st: placeIds
 		};
 
-		if (result.bestStreet?.houseNumber != null) photo.hn = result.bestStreet.houseNumber;
+		const houseNumber = correction?.houseNumber ?? result.bestStreet?.houseNumber;
+		if (houseNumber != null) photo.hn = houseNumber;
 		if (parts.contributor) photo.d = parts.contributor;
 		if (parts.dateOfAcquisition) photo.a = parts.dateOfAcquisition;
 		if (context.topicalOnly) photo.ev = true;
 
 		const yearFromFilename = fileName.match(/\b(18\d{2}|19\d{2}|20[0-1]\d)\b/);
-		if (yearFromFilename && !parts.dateOfAcquisition?.includes(yearFromFilename[1])) {
+		if (correction?.year) photo.y = correction.year;
+		else if (yearFromFilename && !parts.dateOfAcquisition?.includes(yearFromFilename[1])) {
 			photo.y = yearFromFilename[1];
 		}
 
@@ -239,6 +289,17 @@ function main(): void {
 	console.log(`Subjects                ${subjects.length}`);
 	console.log(`With a street           ${withStreet}`);
 	console.log(`With a donor            ${photos.filter((p) => p.d).length}`);
+	console.log(`Hand corrections        ${applied.size} applied`);
+
+	// A correction whose photograph id no longer exists does nothing at all, which is worse
+	// than an error: someone recorded a fact about the archive and the archive dropped it.
+	const stale = Object.keys(corrections).filter((id) => !applied.has(id));
+	if (stale.length > 0) {
+		throw new Error(
+			`photo-corrections.json names ${stale.length} photograph(s) that are not in the corpus:\n` +
+				stale.map((id) => `  ${id}`).join('\n')
+		);
+	}
 	console.log(`Index size              ${(bytes / 1024).toFixed(0)} KB raw`);
 	console.log(`\nWrote ${path.relative(REPO_ROOT, OUTPUT_FILE)}`);
 

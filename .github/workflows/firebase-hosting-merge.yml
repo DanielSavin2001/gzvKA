@@ -11,10 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        
+
       - name: Set up environment variables
         run: |
           echo "VITE_BASE_URL_GF=${{ secrets.VITE_BASE_URL_GF_PROD || secrets.VITE_BASE_URL_GF_PRD }}" >> $GITHUB_ENV
+
+          # The curator's page needs these three or it cannot even offer a sign-in button.
+          # They are not secrets - Firebase publishes them in every client app - but they
+          # are kept as repository secrets so the project can be pointed somewhere else
+          # without a commit. Unset, the page says so plainly rather than half-working.
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> $GITHUB_ENV
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> $GITHUB_ENV
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> $GITHUB_ENV
 
       # The web-sized images are generated rather than committed, so the deploy has to
       # produce them or the site ships with no photographs at all. Thumbnails only: they

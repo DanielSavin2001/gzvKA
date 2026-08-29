@@ -57,6 +57,13 @@ export interface StorySection {
 	parts: StoryPart[];
 }
 
+/** A file the old page offered for download - a brochure, an entry form. */
+export interface StoryDocument {
+	name: string;
+	url: string;
+	bytes: number;
+}
+
 export interface Story {
 	slug: string;
 	title: string;
@@ -64,7 +71,15 @@ export interface Story {
 	source: string;
 	kind: 'history' | 'contest' | 'nav';
 	places: string[];
+	documents?: StoryDocument[];
 	sections: StorySection[];
+}
+
+/** A file size a person can read at a glance. */
+export function formatBytes(bytes: number): string {
+	if (bytes >= 1e6) return `${(bytes / 1e6).toFixed(1)} MB`;
+	if (bytes >= 1e3) return `${Math.round(bytes / 1e3)} KB`;
+	return `${bytes} B`;
 }
 
 /** Where a photograph appears: the story, the section, and its position within it. */

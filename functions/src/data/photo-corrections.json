@@ -1,0 +1,13 @@
+{
+	"_comment": "Corrections to what the filename matcher worked out about a photograph. Everything else in the archive is derived from a filename by a machine; this file is the one place a person overrules it, and the only place a claim about a photograph may be entered by hand. Each correction records who made it, so a doubtful one can be asked about. Applied by `npm run archive:index`.",
+	"_format": "{ \"<photo-id>\": { \"places\": [\"gazetteer-id\", ...], \"houseNumber\": 144, \"note\": \"why\", \"by\": \"who\", \"on\": \"YYYY-MM-DD\" } }",
+	"corrections": {
+		"station-en-omgeving-station-en-nieuwstraat-heemkring-hoghescote-25-01-2018": {
+			"places": ["rubensheide"],
+			"houseNumber": 144,
+			"note": "Filed under \"Nieuwstraat\", which is a Stabroek street; Kapellen's Nieuwstraat is today the Lucien Bevernagestraat. The building in the postcard is Rubensheide 144, which fits the numbering on legacy-site/Rubensheide.htm (55, 120, 132, 134, 136, 142).",
+			"by": "Daniel Savin",
+			"on": "2026-08-29"
+		}
+	}
+}

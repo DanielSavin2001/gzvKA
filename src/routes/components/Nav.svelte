@@ -56,9 +56,6 @@
 			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/zoeken"
 				>Zoeken</a
 			>
-			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/kaart"
-				>Kaart</a
-			>
 			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/verhalen"
 				>Verhalen</a
 			>
@@ -168,11 +165,6 @@
 				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
 				href="/zoeken"
 				on:click={() => (open = false)}>Zoeken</a
-			>
-			<a
-				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
-				href="/kaart"
-				on:click={() => (open = false)}>Kaart</a
 			>
 			<a
 				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"

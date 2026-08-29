@@ -27,6 +27,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import type { Gazetteer, PlaceMatch } from '../../sharedModels/gazetteer';
+import { normalizeText } from '../../sharedModels/text';
 import { buildIndex, matchPlacesInText } from '../src/gazetteer/match';
 import { parseLegacyHtml } from '../src/legacy/parse';
 import { buildPhotoLookup, resolvePhoto, unambiguousFolders } from '../src/legacy/link';
@@ -52,6 +53,7 @@ const GAZETTEER_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'kapelle
 const ARCHIVE_INDEX = path.join(REPO_ROOT, 'static', 'data', 'archive-index.json');
 const DATA_DIR = path.join(REPO_ROOT, 'static', 'data');
 const STORY_DIR = path.join(DATA_DIR, 'verhalen');
+const DOCUMENT_DIR = path.join(REPO_ROOT, 'static', 'documenten');
 
 /**
  * A place named in a heading is only accepted well above the matcher's floor. A heading is
@@ -139,12 +141,20 @@ interface StoredSection {
 	parts: StoredPart[];
 }
 
+/** A file the old page offered for download, and where the site now serves it. */
+interface StoredDocument {
+	name: string;
+	url: string;
+	bytes: number;
+}
+
 interface StoredStory {
 	slug: string;
 	title: string;
 	source: string;
 	kind: StoryKind;
 	places: string[];
+	documents?: StoredDocument[];
 	sections: StoredSection[];
 }
 
@@ -170,6 +180,24 @@ interface PlaceStoryRef {
 	section: number;
 	heading?: string;
 	excerpt: string;
+}
+
+/**
+ * The documents this repository actually has, keyed loosely enough to survive the spacing
+ * differences between a link and a filename - the Fietszoektocht brochure is linked with one
+ * space and saved with two.
+ */
+function readDocuments(): Map<string, { name: string; bytes: number }> {
+	const byKey = new Map<string, { name: string; bytes: number }>();
+	if (!fs.existsSync(DOCUMENT_DIR)) return byKey;
+
+	for (const name of fs.readdirSync(DOCUMENT_DIR)) {
+		const key = normalizeText(name).replace(/[^a-z0-9]+/g, '');
+		if (key === '') continue;
+		byKey.set(key, { name, bytes: fs.statSync(path.join(DOCUMENT_DIR, name)).size });
+	}
+
+	return byKey;
 }
 
 function placesIn(text: string, index: ReturnType<typeof buildIndex>): string[] {
@@ -216,6 +244,9 @@ function main(): void {
 		.readdirSync(LEGACY_DIR)
 		.filter((name) => /\.html?$/i.test(name))
 		.sort();
+
+	const documentsAvailable = readDocuments();
+	const missingDocuments: string[] = [];
 
 	const stories: StoredStory[] = [];
 	const summaries: StorySummary[] = [];
@@ -313,12 +344,29 @@ function main(): void {
 
 		const kind = kindOf(slug);
 
+		const documents: StoredDocument[] = [];
+		for (const reference of page.documents) {
+			const key = normalizeText(reference.split('/').pop() ?? '').replace(/[^a-z0-9]+/g, '');
+			const found = documentsAvailable.get(key);
+
+			if (found) {
+				documents.push({
+					name: found.name,
+					url: `/documenten/${encodeURIComponent(found.name)}`,
+					bytes: found.bytes
+				});
+			} else if (!missingDocuments.includes(reference)) {
+				missingDocuments.push(reference);
+			}
+		}
+
 		const story: StoredStory = {
 			slug,
 			title: page.title,
 			source: page.sourceFile,
 			kind,
 			places: storyPlaces,
+			...(documents.length > 0 ? { documents } : {}),
 			sections
 		};
 		stories.push(story);
@@ -396,6 +444,13 @@ function main(): void {
 	fs.writeFileSync(path.join(DATA_DIR, 'story-photos.json'), JSON.stringify(byPhoto), 'utf8');
 
 	report(stories, summaries, byPlace, byPhoto, referenced, resolved, missing);
+
+	if (missingDocuments.length > 0) {
+		// A document the old site linked and this repository does not have. Worth naming: it
+		// is the same kind of gap as a missing photograph.
+		console.log(`\n${missingDocuments.length} linked document(s) are not in static/documenten:`);
+		for (const reference of missingDocuments) console.log(`  ${reference}`);
+	}
 }
 
 /** Keeps two source files that reduce to the same slug from overwriting each other. */
@@ -446,6 +501,12 @@ function report(
 			`${Object.keys(byPhoto).length} distinct`
 	);
 	console.log(`Places         ${byPlace.size} with something written about them`);
+	console.log(
+		`Documents      ${stories.reduce(
+			(sum, story) => sum + (story.documents?.length ?? 0),
+			0
+		)} attached`
+	);
 
 	if (missing.length > 0) {
 		// These are photographs the live site shows and this repository does not have. Worth

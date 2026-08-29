@@ -29,6 +29,8 @@
     >
         <FooterLink href="/">Over ons</FooterLink>
         <FooterLink href="/">Contact</FooterLink>
+        <!-- A door for two people rather than a feature, so it sits here and not in the menu. -->
+        <FooterLink href="/beheer">Beheer</FooterLink>
     </FooterLinkGroup>
 
 </Footer>
