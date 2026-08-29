@@ -2,3 +2,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * The map in dark mode.
+ *
+ * OpenStreetMap has no dark tiles, and a bright white rectangle in the middle of a dark
+ * page is the single worst thing about a half-done dark theme. Swapping in a third party's
+ * dark basemap would mean a new dependency and its own attribution; inverting the raster
+ * here costs nothing and keeps the tiles coming from the same place.
+ *
+ * `invert` alone would turn the blue streets orange, so the hue is rotated back by half a
+ * turn - the two together flip lightness and leave hue roughly where it was. This applies
+ * to the canvas only: the markers are HTML on top of it and keep their real colours.
+ */
+:global(.dark) .maplibregl-canvas {
+	filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+
+/* The attribution sits on the canvas' own background, so it needs the same treatment
+   undone - otherwise it reads as light text on light. */
+:global(.dark) .maplibregl-ctrl-attrib {
+	background: rgba(17, 24, 39, 0.8);
+	color: rgb(156, 163, 175);
+}
+
+:global(.dark) .maplibregl-ctrl-attrib a {
+	color: rgb(147, 197, 253);
+}

@@ -106,14 +106,18 @@
 	}
 </script>
 
-<section class="mt-4 rounded-lg border border-red-300 bg-red-50 p-4">
+<section
+	class="mt-4 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4"
+>
 	{#if sent}
-		<p class="font-semibold text-green-900">Bedankt &mdash; uw melding is doorgegeven.</p>
-		<p class="mt-1 text-sm text-green-900">
+		<p class="font-semibold text-green-900 dark:text-green-200">
+			Bedankt &mdash; uw melding is doorgegeven.
+		</p>
+		<p class="mt-1 text-sm text-green-900 dark:text-green-200">
 			Iemand van het archief kijkt ernaar. Tot dan blijft de plek staan zoals ze nu staat.
 		</p>
 	{:else}
-		<h3 class="flex items-center gap-2 font-bold text-red-900">
+		<h3 class="flex items-center gap-2 font-bold text-red-900 dark:text-red-200">
 			<span aria-hidden="true">&#9888;</span>
 			{#if isPerson}
 				Dit is geen plaats
@@ -128,7 +132,7 @@
 			{/if}
 		</h3>
 
-		<div class="mt-2 space-y-2 text-sm text-red-900">
+		<div class="mt-2 space-y-2 text-sm text-red-900 dark:text-red-200">
 			{#if isPerson}
 				<!--
 					This branch has to come first. Without it the page told a visitor that the
@@ -160,7 +164,7 @@
 			{/if}
 
 			{#if approximation.doubt}
-				<p class="rounded bg-white/70 p-2">
+				<p class="rounded bg-white dark:bg-gray-900/70 p-2">
 					<span class="font-semibold">Waarom we twijfelen:</span>
 					{approximation.doubt}
 				</p>
@@ -219,14 +223,14 @@
 		{:else}
 			<div class="mt-3 space-y-3">
 				{#if kind === 'coordinate'}
-					<div class="rounded-lg border border-red-200 bg-white p-3">
+					<div class="rounded-lg border border-red-200 bg-white dark:bg-gray-900 p-3">
 						{#if picked}
-							<p class="text-sm font-medium text-gray-900">
+							<p class="text-sm font-medium text-gray-900 dark:text-gray-100">
 								Aangeduid op {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
 							</p>
 							<button
 								type="button"
-								class="mt-1 text-sm font-medium text-blue-800 underline"
+								class="mt-1 text-sm font-medium text-blue-800 dark:text-blue-300 underline"
 								on:click={() => dispatch('pick')}
 							>
 								Opnieuw aanduiden
@@ -244,40 +248,46 @@
 				{/if}
 
 				<label class="block">
-					<span class="text-sm font-medium text-gray-800">
+					<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
 						{kind === 'coordinate' ? 'Hoe weet u dat? (mag u leeg laten)' : 'Wat weet u erover?'}
 					</span>
 					<textarea
 						bind:value={message}
 						rows="3"
 						placeholder="Bijvoorbeeld: het clubhuis van de korfbalclub staat op die plek."
-						class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+						class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm"
 					/>
 				</label>
 
 				<div class="grid gap-2 sm:grid-cols-2">
 					<label class="block">
-						<span class="text-sm font-medium text-gray-800">Uw naam</span>
+						<span class="text-sm font-medium text-gray-800 dark:text-gray-200">Uw naam</span>
 						<input
 							bind:value={name}
 							placeholder="Mag leeg blijven"
-							class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+							class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm"
 						/>
 					</label>
 					<label class="block">
-						<span class="text-sm font-medium text-gray-800">E-mail</span>
+						<span class="text-sm font-medium text-gray-800 dark:text-gray-200">E-mail</span>
 						<input
 							bind:value={email}
 							type="email"
 							placeholder="Alleen om iets te vragen"
-							class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+							class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm"
 						/>
-						<span class="mt-0.5 block text-xs text-gray-500">Komt niet op de website.</span>
+						<span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400"
+							>Komt niet op de website.</span
+						>
 					</label>
 				</div>
 
 				{#if error}
-					<p class="rounded bg-red-100 p-2 text-sm font-medium text-red-900">{error}</p>
+					<p
+						class="rounded bg-red-100 dark:bg-red-900 p-2 text-sm font-medium text-red-900 dark:text-red-200"
+					>
+						{error}
+					</p>
 				{/if}
 
 				<div class="flex gap-2">
@@ -291,7 +301,7 @@
 					</button>
 					<button
 						type="button"
-						class="rounded-lg border border-gray-400 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+						class="rounded-lg border border-gray-400 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
 						on:click={close}
 					>
 						Annuleren

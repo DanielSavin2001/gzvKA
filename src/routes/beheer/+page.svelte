@@ -217,14 +217,14 @@
 
 <div class="mx-auto max-w-6xl px-4 py-8">
 	<header class="flex flex-wrap items-center justify-between gap-3">
-		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Beheer</h1>
+		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">Beheer</h1>
 
 		{#if signedInAs}
 			<div class="flex items-center gap-3 text-sm">
-				<span class="text-gray-600">{signedInAs}</span>
+				<span class="text-gray-600 dark:text-gray-400">{signedInAs}</span>
 				<button
 					type="button"
-					class="rounded border border-gray-300 px-3 py-1.5 font-medium hover:bg-gray-100"
+					class="rounded border border-gray-300 dark:border-gray-700 px-3 py-1.5 font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
 					on:click={signOut}
 				>
 					Afmelden
@@ -234,17 +234,21 @@
 	</header>
 
 	{#if error}
-		<div class="mt-6 rounded-xl border border-red-300 bg-red-50 p-5 text-red-900">
+		<div
+			class="mt-6 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-5 text-red-900 dark:text-red-200"
+		>
 			<p class="font-semibold">{error}</p>
 		</div>
 	{/if}
 
 	{#if checking}
-		<p class="py-16 text-center text-gray-500">Bezig met aanmelden ...</p>
+		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met aanmelden ...</p>
 	{:else if !curator}
-		<div class="mt-8 rounded-xl border border-gray-300 bg-gray-50 p-8 text-center">
-			<h2 class="text-xl font-bold text-gray-900">Aanmelden</h2>
-			<p class="mx-auto mt-2 max-w-md text-gray-600">
+		<div
+			class="mt-8 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-8 text-center"
+		>
+			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Aanmelden</h2>
+			<p class="mx-auto mt-2 max-w-md text-gray-600 dark:text-gray-400">
 				Deze pagina is voor wie het archief beheert. Meld u aan met het Google-account dat op de
 				beheerderslijst staat.
 			</p>
@@ -258,13 +262,13 @@
 			</button>
 		</div>
 	{:else}
-		<nav class="mt-6 flex gap-2 border-b border-gray-200 pb-3">
+		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
 			{#each [['fotos', "Foto's"], ['correcties', 'Correcties op de kaart']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
 						? 'bg-gray-900 text-white'
-						: 'text-gray-700 hover:bg-gray-100'}"
+						: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 					on:click={() => {
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
@@ -282,7 +286,7 @@
 					type="button"
 					class="rounded-lg px-4 py-2 font-medium transition {showing === value
 						? 'bg-blue-800 text-white'
-						: 'border border-gray-300 text-gray-800 hover:bg-gray-100'}"
+						: 'border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 					on:click={() => {
 						showing = value;
 						refresh();
@@ -295,26 +299,32 @@
 
 		{#if desk === 'correcties'}
 			{#if loading}
-				<p class="py-16 text-center text-gray-500">Bezig met laden ...</p>
+				<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
 			{:else if reports.length === 0}
-				<p class="py-16 text-center text-gray-600">
+				<p class="py-16 text-center text-gray-600 dark:text-gray-400">
 					Geen meldingen. 24 plaatsen staan bij benadering op de kaart en wachten op iemand die het
 					beter weet.
 				</p>
 			{:else}
 				<ul class="mt-6 space-y-4">
 					{#each reports as report (report.id)}
-						<li class="rounded-xl border border-gray-300 bg-white p-4">
+						<li
+							class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
+						>
 							<div class="flex flex-wrap items-start justify-between gap-3">
 								<div class="min-w-0">
-									<h3 class="text-lg font-bold text-gray-900">{report.placeName}</h3>
-									<p class="font-medium text-gray-800">{claim(report)}</p>
+									<h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
+										{report.placeName}
+									</h3>
+									<p class="font-medium text-gray-800 dark:text-gray-200">{claim(report)}</p>
 									{#if report.message}
-										<p class="mt-2 rounded bg-amber-50 p-2 text-sm text-gray-800">
+										<p
+											class="mt-2 rounded bg-amber-50 dark:bg-amber-950 p-2 text-sm text-gray-800 dark:text-gray-200"
+										>
 											&ldquo;{report.message}&rdquo;
 										</p>
 									{/if}
-									<p class="mt-2 text-sm text-gray-500">
+									<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
 										Gemeld {new Date(report.submittedAt).toLocaleDateString('nl-BE')}
 										{#if report.contributor.name}door {report.contributor.name}{/if}
 										{#if report.contributor.email}&middot; {report.contributor.email}{/if}
@@ -323,7 +333,9 @@
 
 								<!-- What the map was claiming when they objected. Captured at the time,
 								     because the research may have been regenerated since. -->
-								<dl class="shrink-0 rounded bg-gray-50 p-3 text-sm text-gray-700">
+								<dl
+									class="shrink-0 rounded bg-gray-50 dark:bg-gray-800 p-3 text-sm text-gray-700 dark:text-gray-300"
+								>
 									<dt class="font-semibold">Stond als</dt>
 									<dd>{report.previous.display} &middot; klasse {report.previous.grade}</dd>
 									{#if report.previous.lat != null}
@@ -333,10 +345,10 @@
 								</dl>
 							</div>
 
-							<p class="mt-3 text-sm text-gray-600">
+							<p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
 								Goedkeuren noteert dat de melding klopt. De kaart verandert pas als
-								<code class="rounded bg-gray-100 px-1">plaatsen.geojson</code> wordt aangepast, zodat
-								de klasse en de twijfeltekst mee veranderen met het punt.
+								<code class="rounded bg-gray-100 dark:bg-gray-800 px-1">plaatsen.geojson</code> wordt
+								aangepast, zodat de klasse en de twijfeltekst mee veranderen met het punt.
 							</p>
 
 							<div class="mt-3 flex flex-wrap gap-2">
@@ -353,7 +365,7 @@
 								{#if report.status !== 'rejected'}
 									<button
 										type="button"
-										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 disabled:opacity-50"
 										disabled={reportBusy === report.id}
 										on:click={() => judge(report, 'rejected')}
 									>
@@ -366,39 +378,48 @@
 				</ul>
 			{/if}
 		{:else if loading}
-			<p class="py-16 text-center text-gray-500">Bezig met laden ...</p>
+			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
 		{:else if items.length === 0}
-			<p class="py-16 text-center text-gray-600">
+			<p class="py-16 text-center text-gray-600 dark:text-gray-400">
 				{showing === 'pending' ? 'Niets te bekijken. Alles is afgehandeld.' : 'Niets hier.'}
 			</p>
 		{:else}
 			<ul class="mt-6 space-y-6">
 				{#each items as item (item.id)}
 					{@const ready = editsFor(item)}
-					<li class="rounded-xl border border-gray-300 bg-white p-4 lg:flex lg:gap-6">
+					<li
+						class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 lg:flex lg:gap-6"
+					>
 						<div class="lg:w-80 lg:shrink-0">
 							<img
 								src={item.previewUrl}
 								alt={item.originalName}
-								class="w-full rounded-lg border border-gray-200 bg-gray-100 object-contain"
+								class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 object-contain"
 							/>
-							<p class="mt-2 truncate text-sm text-gray-500" title={item.originalName}>
+							<p
+								class="mt-2 truncate text-sm text-gray-500 dark:text-gray-400"
+								title={item.originalName}
+							>
 								{item.originalName} &middot; {readableSize(item.bytes)}
 							</p>
-							<p class="text-sm text-gray-500">
+							<p class="text-sm text-gray-500 dark:text-gray-400">
 								Ingestuurd {new Date(item.submittedAt).toLocaleDateString('nl-BE')}
 								{#if item.contributor.name}door {item.contributor.name}{/if}
 							</p>
 							{#if item.contributor.email}
-								<p class="text-sm text-gray-500">{item.contributor.email}</p>
+								<p class="text-sm text-gray-500 dark:text-gray-400">{item.contributor.email}</p>
 							{/if}
 							{#if item.contributor.note}
-								<p class="mt-2 rounded bg-amber-50 p-2 text-sm text-gray-800">
+								<p
+									class="mt-2 rounded bg-amber-50 dark:bg-amber-950 p-2 text-sm text-gray-800 dark:text-gray-200"
+								>
 									&ldquo;{item.contributor.note}&rdquo;
 								</p>
 							{/if}
 							{#if item.rejectionReason}
-								<p class="mt-2 rounded bg-red-50 p-2 text-sm text-red-900">
+								<p
+									class="mt-2 rounded bg-red-50 dark:bg-red-950 p-2 text-sm text-red-900 dark:text-red-200"
+								>
 									Afgewezen: {item.rejectionReason}
 								</p>
 							{/if}
@@ -406,44 +427,50 @@
 
 						<div class="mt-4 min-w-0 flex-1 lg:mt-0">
 							<label class="block">
-								<span class="text-sm font-medium text-gray-700">Titel</span>
+								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Titel</span>
 								<input
 									bind:value={edits[item.id].title}
-									class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+									class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 								/>
 							</label>
 
 							<div class="mt-3 grid gap-3 sm:grid-cols-3">
 								<label class="block">
-									<span class="text-sm font-medium text-gray-700">Huisnummer</span>
+									<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+										>Huisnummer</span
+									>
 									<input
 										type="number"
 										bind:value={edits[item.id].houseNumber}
-										class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 									/>
 								</label>
 								<label class="block">
-									<span class="text-sm font-medium text-gray-700">Jaartal</span>
+									<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Jaartal</span>
 									<input
 										bind:value={edits[item.id].year}
 										placeholder="1935"
-										class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 									/>
 								</label>
 								<label class="block">
-									<span class="text-sm font-medium text-gray-700">Ingezonden door</span>
+									<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+										>Ingezonden door</span
+									>
 									<input
 										bind:value={edits[item.id].donor}
-										class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 									/>
 								</label>
 							</div>
 
 							<div class="mt-3">
-								<p class="text-sm font-medium text-gray-700">
+								<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
 									Plaats
 									{#if ready.places && ready.places.length > 0}
-										<span class="font-normal text-gray-500">({ready.places.length} gekozen)</span>
+										<span class="font-normal text-gray-500 dark:text-gray-400"
+											>({ready.places.length} gekozen)</span
+										>
 									{/if}
 								</p>
 
@@ -464,7 +491,7 @@
 								{/if}
 
 								<select
-									class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2"
+									class="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 									on:change={(event) => {
 										if (event.currentTarget.value) togglePlace(item, event.currentTarget.value);
 										event.currentTarget.value = '';
@@ -492,7 +519,7 @@
 								{#if item.status !== 'rejected'}
 									<button
 										type="button"
-										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 disabled:opacity-50"
 										disabled={busy === item.id}
 										on:click={() => decide(item, 'rejected')}
 									>
@@ -503,7 +530,7 @@
 								{#if item.status !== 'pending'}
 									<button
 										type="button"
-										class="rounded-lg border border-gray-400 px-5 py-2.5 font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+										class="rounded-lg border border-gray-400 dark:border-gray-600 px-5 py-2.5 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50"
 										disabled={busy === item.id}
 										on:click={() => decide(item, 'pending')}
 									>

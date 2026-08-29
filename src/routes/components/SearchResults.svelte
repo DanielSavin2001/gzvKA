@@ -30,31 +30,33 @@
 {#if archive && trimmed !== ''}
 	<section class="mt-8" aria-label="Zoekresultaten">
 		{#if matchedPlaces.length > 0}
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Plaatsen</h2>
+			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+				Plaatsen
+			</h2>
 			<ul class="mt-2 flex flex-wrap gap-2">
 				{#each matchedPlaces.slice(0, 12) as place (place.id)}
 					<li>
 						<a
-							class="inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-900 hover:bg-blue-100"
+							class="inline-flex items-center gap-2 rounded-full border border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950 px-3 py-1.5 text-sm font-medium text-blue-900 dark:text-blue-200 hover:bg-blue-100"
 							href="/straat/{place.id}"
 						>
 							{place.name}
-							<span class="font-normal text-blue-700">{place.count}</span>
+							<span class="font-normal text-blue-700 dark:text-blue-300">{place.count}</span>
 						</a>
 					</li>
 				{/each}
 			</ul>
 		{/if}
 
-		<h2 class="mt-8 text-xl font-bold text-gray-900">
+		<h2 class="mt-8 text-xl font-bold text-gray-900 dark:text-gray-100">
 			{hits.length === 0
 				? 'Geen foto’s gevonden'
 				: `${hits.length}${hits.length === 400 ? '+' : ''} foto’s`}
-			<span class="font-normal text-gray-600">voor &ldquo;{trimmed}&rdquo;</span>
+			<span class="font-normal text-gray-600 dark:text-gray-400">voor &ldquo;{trimmed}&rdquo;</span>
 		</h2>
 
 		{#if hits.length === 0}
-			<p class="mt-3 text-gray-600">
+			<p class="mt-3 text-gray-600 dark:text-gray-400">
 				Probeer een straatnaam, een deel van een naam, of een jaartal. Het archief kent
 				{archive.places.filter((place) => place.count > 0).length} plaatsen.
 			</p>

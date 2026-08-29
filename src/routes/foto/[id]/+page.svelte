@@ -143,25 +143,35 @@
 
 <div class="mx-auto max-w-5xl px-4 py-8">
 	{#if error}
-		<div class="my-8 rounded-lg border border-red-300 bg-red-50 p-5 text-red-900">
+		<div
+			class="my-8 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-5 text-red-900 dark:text-red-200"
+		>
 			<p class="font-semibold">Het archief kon niet geladen worden</p>
 			<p class="mt-1 text-sm">{error}</p>
 		</div>
 	{:else if !archive}
-		<p class="py-16 text-center text-gray-500">Bezig met laden ...</p>
+		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
 	{:else if !photo}
 		<div class="py-16 text-center">
-			<h1 class="text-2xl font-bold text-gray-900">Deze foto kennen we niet</h1>
-			<a class="mt-2 inline-block text-blue-800 underline hover:no-underline" href="/">
+			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Deze foto kennen we niet</h1>
+			<a
+				class="mt-2 inline-block text-blue-800 dark:text-blue-300 underline hover:no-underline"
+				href="/"
+			>
 				Terug naar de startpagina
 			</a>
 		</div>
 	{:else}
-		<nav class="text-sm text-gray-600">
-			<a class="text-blue-800 underline hover:no-underline" href="/">Startpagina</a>
+		<nav class="text-sm text-gray-600 dark:text-gray-400">
+			<a class="text-blue-800 dark:text-blue-300 underline hover:no-underline" href="/"
+				>Startpagina</a
+			>
 			{#each places.filter((p) => p.isStreet).slice(0, 1) as street (street.id)}
 				<span class="mx-2">/</span>
-				<a class="text-blue-800 underline hover:no-underline" href="/straat/{street.id}">
+				<a
+					class="text-blue-800 dark:text-blue-300 underline hover:no-underline"
+					href="/straat/{street.id}"
+				>
 					{street.name}
 				</a>
 			{/each}
@@ -206,13 +216,13 @@
 						on:error={fallBackToThumbnail}
 						alt={photo.t}
 						draggable="false"
-						class="max-h-full max-w-full select-none rounded-lg border border-gray-200 bg-gray-100 object-contain"
+						class="max-h-full max-w-full select-none rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 object-contain"
 					/>
 
 					{#if previous}
 						<a
 							href="/foto/{previous.id}{neighbourQuery}"
-							class="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-2xl text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Vorige foto"
 						>
 							&#8592;
@@ -221,7 +231,7 @@
 					{#if next}
 						<a
 							href="/foto/{next.id}{neighbourQuery}"
-							class="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-2xl text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Volgende foto"
 						>
 							&#8594;
@@ -247,7 +257,7 @@
 			</div>
 
 			{#if siblings.length > 1 && position >= 0}
-				<p class="mt-3 text-center text-sm text-gray-500">
+				<p class="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
 					Foto {position + 1} van {siblings.length}
 					{#if listKey.startsWith('straat:') && archive.placeById.get(listKey.slice(7))}
 						in de {archive.placeById.get(listKey.slice(7))?.name}
@@ -258,15 +268,18 @@
 			{/if}
 
 			<figcaption class="mt-4">
-				<h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{photo.t}</h1>
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">{photo.t}</h1>
 
 				<dl class="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
 					{#if places.length > 0}
 						<div class="flex gap-2">
-							<dt class="w-36 shrink-0 font-semibold text-gray-700">Plaats</dt>
+							<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">Plaats</dt>
 							<dd class="flex flex-wrap gap-2">
 								{#each places as place (place.id)}
-									<a class="text-blue-800 underline hover:no-underline" href="/straat/{place.id}">
+									<a
+										class="text-blue-800 dark:text-blue-300 underline hover:no-underline"
+										href="/straat/{place.id}"
+									>
 										{place.name}{#if place.isStreet && photo.hn}&nbsp;{photo.hn}{/if}
 									</a>
 								{/each}
@@ -274,30 +287,36 @@
 						</div>
 					{/if}
 					<div class="flex gap-2">
-						<dt class="w-36 shrink-0 font-semibold text-gray-700">Onderwerp</dt>
-						<dd class="text-gray-900">{photo.s}</dd>
+						<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">Onderwerp</dt>
+						<dd class="text-gray-900 dark:text-gray-100">{photo.s}</dd>
 					</div>
 					{#if photo.y}
 						<div class="flex gap-2">
-							<dt class="w-36 shrink-0 font-semibold text-gray-700">Jaartal</dt>
-							<dd class="text-gray-900">{photo.y}</dd>
+							<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">Jaartal</dt>
+							<dd class="text-gray-900 dark:text-gray-100">{photo.y}</dd>
 						</div>
 					{/if}
 					{#if photo.d}
 						<div class="flex gap-2">
-							<dt class="w-36 shrink-0 font-semibold text-gray-700">Ingezonden door</dt>
-							<dd class="text-gray-900">{photo.d}</dd>
+							<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">
+								Ingezonden door
+							</dt>
+							<dd class="text-gray-900 dark:text-gray-100">{photo.d}</dd>
 						</div>
 					{/if}
 					{#if photo.a}
 						<div class="flex gap-2">
-							<dt class="w-36 shrink-0 font-semibold text-gray-700">Ontvangen op</dt>
-							<dd class="text-gray-900">{photo.a}</dd>
+							<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">
+								Ontvangen op
+							</dt>
+							<dd class="text-gray-900 dark:text-gray-100">{photo.a}</dd>
 						</div>
 					{/if}
 				</dl>
 
-				<p class="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+				<p
+					class="mt-6 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400"
+				>
 					Klopt er iets niet, of weet u meer over deze foto? Laat het ons weten &mdash; deze
 					gegevens zijn automatisch uit de bestandsnaam gehaald en niet altijd volledig.
 				</p>
@@ -305,21 +324,23 @@
 		</figure>
 
 		{#if context}
-			<section class="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+			<section
+				class="mt-10 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950 p-5 sm:p-6"
+			>
 				<p class="text-sm font-semibold uppercase tracking-wide text-amber-800">
 					Uit het archief van de oude website
 				</p>
 
 				{#if context.caption}
-					<p class="mt-2 text-lg font-medium text-gray-900">{context.caption}</p>
+					<p class="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">{context.caption}</p>
 				{/if}
 
 				{#if context.prose.length > 0}
 					{#each context.prose as paragraph, i (i)}
-						<p class="mt-3 leading-relaxed text-gray-800">{paragraph}</p>
+						<p class="mt-3 leading-relaxed text-gray-800 dark:text-gray-200">{paragraph}</p>
 					{/each}
 				{:else}
-					<p class="mt-2 text-gray-700">
+					<p class="mt-2 text-gray-700 dark:text-gray-300">
 						Deze foto stond op de pagina
 						<strong>{context.story.title}</strong>{#if context.section.heading}, onder het kopje
 							<strong>{context.section.heading}</strong>{/if}. Er stond geen tekst bij deze foto

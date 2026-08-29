@@ -383,8 +383,8 @@
 <section id="kaart" class="scroll-mt-20">
 	<header class="mb-4 flex flex-wrap items-end justify-between gap-3">
 		<div>
-			<h2 class="text-2xl font-bold text-gray-900">Kaart van Kapellen</h2>
-			<p class="mt-1 text-gray-600">
+			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Kaart van Kapellen</h2>
+			<p class="mt-1 text-gray-600 dark:text-gray-400">
 				{#if archive}
 					{onTheMap} van {allPlaces.length} plaatsen staan op de kaart. Klik een plaats om de foto's
 					te zien.
@@ -399,7 +399,7 @@
 				type="button"
 				class="rounded-lg border-2 px-4 py-2 font-semibold transition {placing
 					? 'border-orange-600 bg-orange-600 text-white'
-					: 'border-blue-800 text-blue-800 hover:bg-blue-50'}"
+					: 'border-blue-800 text-blue-800 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950'}"
 				on:click={() => {
 					placing = !placing;
 					closePanel();
@@ -411,7 +411,11 @@
 	</header>
 
 	{#if error}
-		<div class="mb-4 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900">{error}</div>
+		<div
+			class="mb-4 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4 text-red-900 dark:text-red-200"
+		>
+			{error}
+		</div>
 	{/if}
 
 	{#if placing && curating}
@@ -427,7 +431,9 @@
 			<p class="mt-1 text-sm text-orange-900">
 				Nog {unlocatedPlaces.length} te gaan. Niets wordt automatisch bewaard: als u klaar bent, download
 				het bestand en vervang er
-				<code class="rounded bg-white px-1">static/data/place-coordinates.json</code>
+				<code class="rounded bg-white dark:bg-gray-900 px-1"
+					>static/data/place-coordinates.json</code
+				>
 				mee.
 			</p>
 			<div class="mt-3 flex flex-wrap items-center gap-2">
@@ -457,15 +463,18 @@
 	{/if}
 
 	<div class="grid gap-4 lg:grid-cols-[1fr_22rem]">
-		<div class="overflow-hidden rounded-xl border border-gray-300">
+		<div class="overflow-hidden rounded-xl border border-gray-300 dark:border-gray-700">
 			{#if !webglAvailable}
 				<div
-					class="flex h-[32rem] items-center justify-center bg-gray-50 p-8 text-center lg:h-[38rem]"
+					class="flex h-[32rem] items-center justify-center bg-gray-50 dark:bg-gray-800 p-8 text-center lg:h-[38rem]"
 				>
-					<p class="max-w-md text-gray-600">
+					<p class="max-w-md text-gray-600 dark:text-gray-400">
 						Deze browser kan geen kaarten tonen (WebGL ontbreekt). Alle foto's blijven bereikbaar
-						via <a class="text-blue-800 underline" href="/">de lijst met straten</a> en
-						<a class="text-blue-800 underline" href="/">het zoekvak bovenaan</a>.
+						via <a class="text-blue-800 dark:text-blue-300 underline" href="/"
+							>de lijst met straten</a
+						>
+						en
+						<a class="text-blue-800 dark:text-blue-300 underline" href="/">het zoekvak bovenaan</a>.
 					</p>
 				</div>
 			{:else}
@@ -557,7 +566,7 @@
 						<Marker lngLat={[candidate.lng, candidate.lat]} asButton>
 							<button
 								type="button"
-								class="flex items-center justify-center rounded-full border-2 border-dashed border-red-600 bg-white/90 font-bold text-red-700 shadow-md transition hover:z-10 {selected?.id ===
+								class="flex items-center justify-center rounded-full border-2 border-dashed border-red-600 bg-white dark:bg-gray-900/90 font-bold text-red-700 dark:text-red-300 shadow-md transition hover:z-10 {selected?.id ===
 								place.id
 									? 'ring-4 ring-yellow-400'
 									: ''}"
@@ -573,16 +582,18 @@
 			{/if}
 		</div>
 
-		<aside class="rounded-xl border border-gray-300 bg-white p-4">
+		<aside
+			class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
+		>
 			{#if selected && archive}
 				<div class="flex items-start justify-between gap-2">
 					<div>
-						<h2 class="text-xl font-bold text-gray-900">{selected.name}</h2>
-						<p class="text-sm text-gray-600">{selectedPhotos.length} foto's</p>
+						<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{selected.name}</h2>
+						<p class="text-sm text-gray-600 dark:text-gray-400">{selectedPhotos.length} foto's</p>
 					</div>
 					<button
 						type="button"
-						class="text-gray-500 hover:text-gray-900"
+						class="text-gray-500 dark:text-gray-400 hover:text-gray-900"
 						on:click={() => closePanel()}
 						aria-label="Sluiten"
 					>
@@ -594,7 +605,7 @@
 					{#each selectedPhotos.slice(0, 40) as photo (photo.id)}
 						<a
 							href="/foto/{photo.id}"
-							class="block overflow-hidden rounded border border-gray-200 hover:border-blue-600"
+							class="block overflow-hidden rounded border border-gray-200 dark:border-gray-700 hover:border-blue-600"
 						>
 							<img
 								src={thumbUrl(archive, photo)}
@@ -632,25 +643,25 @@
 				{/if}
 
 				<a
-					class="mt-3 inline-block font-medium text-blue-800 underline hover:no-underline"
+					class="mt-3 inline-block font-medium text-blue-800 dark:text-blue-300 underline hover:no-underline"
 					href="/straat/{selected.id}"
 				>
 					Alle {selectedPhotos.length} foto's van {selected.name} &rarr;
 				</a>
 			{:else if locatedPlaces.length === 0}
-				<h2 class="text-lg font-bold text-gray-900">De kaart is nog leeg</h2>
-				<p class="mt-2 text-sm text-gray-600">
+				<h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">De kaart is nog leeg</h2>
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					Geen enkele foto in het archief heeft een co&ouml;rdinaat. Die kunnen niet uit de
 					bestandsnamen worden afgeleid en worden hier bewust niet geraden: een foute speld zet een
 					foto voorgoed in de verkeerde straat.
 				</p>
-				<p class="mt-2 text-sm text-gray-600">
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					Klik hierboven op <strong>Straten plaatsen</strong> en wijs de {allPlaces.length} plaatsen
 					&eacute;&eacute;n keer aan. Daarna staat het hele archief op de kaart.
 				</p>
 			{:else}
-				<h2 class="text-lg font-bold text-gray-900">Klik een plaats aan</h2>
-				<p class="mt-2 text-sm text-gray-600">
+				<h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Klik een plaats aan</h2>
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					De grootte van een bol toont hoeveel foto's er van die plaats zijn. Blauw is een straat of
 					plein, groen een wijk, kasteel of gebouw.
 				</p>
@@ -659,18 +670,20 @@
 						<li>
 							<button
 								type="button"
-								class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50"
+								class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50 dark:hover:bg-blue-950"
 								on:click={() => choose(place)}
 							>
-								<span>{place.name}</span><span class="text-gray-500">{place.count}</span>
+								<span>{place.name}</span><span class="text-gray-500 dark:text-gray-400"
+									>{place.count}</span
+								>
 							</button>
 						</li>
 					{/each}
 				</ul>
 
 				{#if offTheMap.length > 0}
-					<h3 class="mt-4 text-sm font-bold text-gray-900">Niet op de kaart</h3>
-					<p class="mt-1 text-xs text-gray-600">
+					<h3 class="mt-4 text-sm font-bold text-gray-900 dark:text-gray-100">Niet op de kaart</h3>
+					<p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
 						Nog niet teruggevonden, of net buiten Kapellen. Klik ze aan als u meer weet.
 					</p>
 					<ul class="mt-2 space-y-1 text-sm">
@@ -678,10 +691,12 @@
 							<li>
 								<button
 									type="button"
-									class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50"
+									class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50 dark:hover:bg-blue-950"
 									on:click={() => choose(place)}
 								>
-									<span>{place.name}</span><span class="text-gray-500">{place.count}</span>
+									<span>{place.name}</span><span class="text-gray-500 dark:text-gray-400"
+										>{place.count}</span
+									>
 								</button>
 							</li>
 						{/each}

@@ -191,7 +191,7 @@
 
 {#if !webglAvailable}
 	<div
-		class="flex items-center justify-center rounded-xl border border-gray-300 bg-gray-50 p-6 text-center text-gray-600"
+		class="flex items-center justify-center rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 text-center text-gray-600 dark:text-gray-400"
 		style="height: {height}"
 	>
 		<p>
@@ -200,7 +200,10 @@
 		</p>
 	</div>
 {:else}
-	<div class="overflow-hidden rounded-xl border border-gray-300" style="height: {height}">
+	<div
+		class="overflow-hidden rounded-xl border border-gray-300 dark:border-gray-700"
+		style="height: {height}"
+	>
 		<MapLibre
 			style={{ version: 8, sources: {}, layers: [] }}
 			center={centre}
@@ -295,7 +298,7 @@
 						type="button"
 						title="{place.name}: mogelijk hier - {candidate.label}"
 						on:click={() => dispatch('select', place)}
-						class="flex items-center justify-center rounded-full border-2 border-dashed border-red-600 bg-white/85 text-[11px] font-semibold text-red-700 shadow transition hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+						class="flex items-center justify-center rounded-full border-2 border-dashed border-red-600 bg-white dark:bg-gray-900/85 text-[11px] font-semibold text-red-700 dark:text-red-300 shadow transition hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
 						style="width: {markerSize(place.count)}px; height: {markerSize(place.count)}px"
 					>
 						?

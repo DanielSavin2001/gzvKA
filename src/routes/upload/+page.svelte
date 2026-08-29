@@ -103,36 +103,41 @@
 </svelte:head>
 
 <div class="mx-auto max-w-3xl px-4 py-8">
-	<nav class="text-sm text-gray-600">
-		<a class="text-blue-800 underline hover:no-underline" href="/">Startpagina</a>
+	<nav class="text-sm text-gray-600 dark:text-gray-400">
+		<a class="text-blue-800 dark:text-blue-300 underline hover:no-underline" href="/">Startpagina</a
+		>
 		<span class="mx-2">/</span>
 		<span>Foto insturen</span>
 	</nav>
 
 	<header class="mt-3">
-		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
 			Stuur uw foto in
 		</h1>
-		<p class="mt-3 text-lg text-gray-600">
+		<p class="mt-3 text-lg text-gray-600 dark:text-gray-400">
 			Hebt u een oude foto van Kapellen &mdash; uw straat, uw school, het café op de hoek? Stuur ze
 			in. U hoeft geen account te maken en u hoeft niets in te vullen behalve de foto zelf.
 		</p>
 	</header>
 
 	{#if sent > 0}
-		<div class="mt-6 rounded-xl border border-green-300 bg-green-50 p-5">
-			<p class="text-lg font-bold text-green-900">
+		<div
+			class="mt-6 rounded-xl border border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-950 p-5"
+		>
+			<p class="text-lg font-bold text-green-900 dark:text-green-200">
 				Bedankt &mdash; {sent}
 				{sent === 1 ? 'foto is' : "foto's zijn"} ontvangen.
 			</p>
-			<p class="mt-1 text-green-900">
+			<p class="mt-1 text-green-900 dark:text-green-200">
 				Iemand van het archief bekijkt ze en zet ze dan online. Dat kan een paar dagen duren.
 			</p>
 		</div>
 	{/if}
 
 	{#if error}
-		<div class="mt-6 rounded-xl border border-red-300 bg-red-50 p-5 text-red-900">
+		<div
+			class="mt-6 rounded-xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-5 text-red-900 dark:text-red-200"
+		>
 			<p class="font-semibold">Insturen is niet gelukt</p>
 			<p class="mt-1 text-sm">{error}</p>
 		</div>
@@ -141,14 +146,14 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		class="mt-6 rounded-xl border-2 border-dashed p-8 text-center transition {dragging
-			? 'border-blue-600 bg-blue-50'
-			: 'border-gray-300 bg-gray-50'}"
+			? 'border-blue-600 bg-blue-50 dark:bg-blue-950'
+			: 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}"
 		on:dragover|preventDefault={() => (dragging = true)}
 		on:dragleave={() => (dragging = false)}
 		on:drop={onDrop}
 	>
-		<p class="text-lg font-semibold text-gray-900">Sleep uw foto's hierheen</p>
-		<p class="mt-1 text-gray-600">of</p>
+		<p class="text-lg font-semibold text-gray-900 dark:text-gray-100">Sleep uw foto's hierheen</p>
+		<p class="mt-1 text-gray-600 dark:text-gray-400">of</p>
 
 		<label
 			class="mt-3 inline-block cursor-pointer rounded-lg bg-blue-800 px-5 py-2.5 font-semibold text-white hover:bg-blue-900"
@@ -163,7 +168,7 @@
 			/>
 		</label>
 
-		<p class="mt-3 text-sm text-gray-500">
+		<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
 			JPEG, PNG, GIF of WebP &middot; max {Math.round(MAX_SUBMISSION_BYTES / 1024 / 1024)} MB per foto
 		</p>
 	</div>
@@ -171,7 +176,9 @@
 	{#if files.length > 0}
 		<ul class="mt-6 space-y-3">
 			{#each files as file, index (file.name + index)}
-				<li class="flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-3">
+				<li
+					class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3"
+				>
 					<img
 						src={preview(file)}
 						alt=""
@@ -179,17 +186,19 @@
 						on:load={releasePreview}
 					/>
 					<div class="min-w-0 flex-1">
-						<p class="truncate font-medium text-gray-900">{file.name}</p>
-						<p class="text-sm text-gray-500">{readableSize(file.size)}</p>
+						<p class="truncate font-medium text-gray-900 dark:text-gray-100">{file.name}</p>
+						<p class="text-sm text-gray-500 dark:text-gray-400">{readableSize(file.size)}</p>
 						{#if file.size > MAX_SUBMISSION_BYTES}
-							<p class="text-sm font-medium text-red-700">Te groot om in te sturen.</p>
+							<p class="text-sm font-medium text-red-700 dark:text-red-300">
+								Te groot om in te sturen.
+							</p>
 						{:else if !ALLOWED_CONTENT_TYPES.includes(file.type)}
-							<p class="text-sm font-medium text-red-700">Dit is geen foto.</p>
+							<p class="text-sm font-medium text-red-700 dark:text-red-300">Dit is geen foto.</p>
 						{/if}
 					</div>
 					<button
 						type="button"
-						class="shrink-0 rounded px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100"
+						class="shrink-0 rounded px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
 						on:click={() => remove(index)}
 					>
 						Verwijderen
@@ -200,38 +209,42 @@
 	{/if}
 
 	<div class="mt-8 space-y-4">
-		<h2 class="text-xl font-bold text-gray-900">Wilt u er iets bij vertellen?</h2>
-		<p class="-mt-2 text-gray-600">Alles hieronder mag u leeg laten.</p>
+		<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+			Wilt u er iets bij vertellen?
+		</h2>
+		<p class="-mt-2 text-gray-600 dark:text-gray-400">Alles hieronder mag u leeg laten.</p>
 
 		<div class="grid gap-4 sm:grid-cols-2">
 			<label class="block">
-				<span class="text-sm font-medium text-gray-700">Uw naam</span>
+				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Uw naam</span>
 				<input
 					bind:value={name}
 					placeholder="Zo vermelden we u bij de foto"
-					class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+					class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 				/>
 			</label>
 
 			<label class="block">
-				<span class="text-sm font-medium text-gray-700">E-mail</span>
+				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">E-mail</span>
 				<input
 					bind:value={email}
 					type="email"
 					placeholder="Alleen om iets te kunnen vragen"
-					class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+					class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 				/>
-				<span class="mt-1 block text-xs text-gray-500">Komt niet op de website.</span>
+				<span class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
+					>Komt niet op de website.</span
+				>
 			</label>
 		</div>
 
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700">Wat staat erop?</span>
+			<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Wat staat erop?</span>
 			<textarea
 				bind:value={note}
 				rows="4"
 				placeholder="Welke straat, welk jaar, wie staat erop ... alles helpt."
-				class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+				class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
 			/>
 		</label>
 	</div>
@@ -252,7 +265,9 @@
 		{/if}
 	</button>
 
-	<p class="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+	<p
+		class="mt-4 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400"
+	>
 		Uw foto komt eerst bij het archief terecht en wordt pas op de website gezet nadat iemand ze
 		bekeken heeft. Stuur alleen foto's in die u zelf mag delen.
 	</p>
