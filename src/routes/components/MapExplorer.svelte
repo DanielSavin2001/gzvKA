@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
+		FillLayer,
 		GeoJSON,
 		LineLayer,
 		MapLibre,
@@ -23,12 +24,27 @@
 		locate,
 		roundCoordinate
 	} from '$lib/coordinates';
+	import type { Approximation, Candidate } from '$lib/approximations';
+	import { circleCollection, isDrawable, loadApproximations } from '$lib/approximations';
+	import type { CorrectionKind } from '../../../sharedModels/correction';
+	import PlaceUncertainty from './PlaceUncertainty.svelte';
 
 	let archive: Archive | null = null;
 	let placed: Record<string, PlacedCoordinate> = {};
 	/** Street centrelines from the official register, used where nobody has placed a pin. */
 	let geometry: Record<string, StreetGeometry> = {};
+	/** Places researched by hand, each carrying how sure that research was. */
+	let approximations: Record<string, Approximation> = {};
 	let error: string | null = null;
+
+	/** A visitor correcting a place: what they picked, and how the send is going. */
+	let picking = false;
+	let picked: { lat: number; lng: number } | null = null;
+	let sendingCorrection = false;
+	let correctionSent = false;
+	let correctionError: string | null = null;
+
+	const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
 
 	/** The place whose photographs are shown in the panel. */
 	let selected: ArchivePlace | null = null;
@@ -66,14 +82,16 @@
 		}
 
 		try {
-			const [loadedArchive, coordinates, streets] = await Promise.all([
+			const [loadedArchive, coordinates, streets, researched] = await Promise.all([
 				loadArchive(),
 				loadCoordinates(),
-				loadStreetGeometry()
+				loadStreetGeometry(),
+				loadApproximations()
 			]);
 			archive = loadedArchive;
 			placed = coordinates.places;
 			geometry = streets;
+			approximations = researched;
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		}
@@ -84,20 +102,81 @@
 		? archive.places.filter((place) => place.count > 0).sort((a, b) => b.count - a.count)
 		: [];
 
-	// A place counts as located when anyone knows where it is - a curator's pin, or the
-	// official street register. Before the register existed this was hand-placement only,
-	// and the map opened empty because nobody had done a full sitting yet.
-	$: locatedPlaces = allPlaces.filter((place) => locate(place.id, placed, geometry));
-	$: unlocatedPlaces = allPlaces.filter((place) => !locate(place.id, placed, geometry));
+	/**
+	 * A place counts as located when anyone knows where it is: a curator's pin, the official
+	 * street register, or the research. The research is the newest of the three and the only
+	 * one that can be wrong by hundreds of metres, so it is kept distinguishable rather than
+	 * merged in - `research` below is what decides how each marker is drawn.
+	 *
+	 * A curator's pin outranks the research, and when there is one the approximation is
+	 * dropped along with its circle and its warning. That is the point of a correction: it
+	 * replaces the guess rather than sitting beside it.
+	 */
+	function research(placeId: string): Approximation | undefined {
+		if (placed[placeId]) return undefined;
+		return approximations[placeId];
+	}
+
+	/** Off the map on purpose: outside Kapellen, or never found. */
+	function belongsOnMap(place: ArchivePlace): boolean {
+		const found = approximations[place.id];
+		if (!found || placed[place.id]) return true;
+		return isDrawable(found);
+	}
+
+	$: locatedPlaces = allPlaces.filter(
+		(place) =>
+			belongsOnMap(place) &&
+			research(place.id)?.display !== 'kandidaten' &&
+			locate(place.id, placed, geometry, approximations)
+	);
+
+	$: unlocatedPlaces = allPlaces.filter(
+		(place) => !locate(place.id, placed, geometry, approximations)
+	);
+
+	/**
+	 * Places with two genuinely different possible locations, drawn as two hollow pins.
+	 *
+	 * Domein Middelbeek's candidates are 2.3 km apart. A circle holding both would cover
+	 * half the municipality and imply the answer is in the middle, which is the one place it
+	 * is not.
+	 */
+	$: candidatePins = allPlaces
+		.filter((place) => belongsOnMap(place) && research(place.id)?.display === 'kandidaten')
+		.flatMap((place) =>
+			(research(place.id)?.candidates ?? []).map((candidate: Candidate, index: number) => ({
+				place,
+				candidate,
+				index
+			}))
+		);
+
+	/** The circles of doubt, as real geometry so they keep their size on the ground. */
+	$: circles = circleCollection(
+		locatedPlaces
+			.map((place) => research(place.id))
+			.filter((entry): entry is Approximation => entry !== undefined)
+	);
+
+	/**
+	 * How many places a visitor can actually find. The candidate places are on the map as a
+	 * pair of hollow pins each, so counting only `locatedPlaces` would report the map as
+	 * emptier than it is.
+	 */
+	$: onTheMap = locatedPlaces.length + new Set(candidatePins.map((pin) => pin.place.id)).size;
+
+	/** The research behind the open place, if it was researched rather than looked up. */
+	$: selectedResearch = selected ? research(selected.id) : undefined;
 
 	/** The street the next map click will locate. */
 	$: nextToPlace = placing ? unlocatedPlaces[0] ?? null : null;
 
 	$: selectedPhotos = selected && archive ? archive.photosByPlace.get(selected.id) ?? [] : [];
 
-	/** Where a marker goes: a curator's pin if there is one, else the register midpoint. */
+	/** Where a marker goes: a curator's pin if there is one, else the register, else research. */
 	function markerAt(placeId: string): [number, number] {
-		const at = locate(placeId, placed, geometry);
+		const at = locate(placeId, placed, geometry, approximations);
 		return at ? [at.lng, at.lat] : KAPELLEN_CENTRE;
 	}
 
@@ -114,6 +193,22 @@
 		}))
 	};
 
+	/**
+	 * The hover text. It names where the pin came from, because "how do you know" is the
+	 * first thing a reader who thinks it is wrong will want answered.
+	 */
+	function markerTitle(place: ArchivePlace, found: Approximation | undefined): string {
+		const photos = `${place.name} - ${place.count} foto's`;
+
+		if (found?.display === 'benadering') {
+			return `${photos} (bij benadering, \u00b1 ${found.radius} m - klik om te corrigeren)`;
+		}
+		if (found?.display === 'punt_met_twijfel') return `${photos} (ligging niet zeker)`;
+		if (found) return `${photos} (ligging opgezocht)`;
+
+		return photos;
+	}
+
 	function markerSize(count: number): number {
 		// Area roughly proportional to the number of photographs, so a street with 150 reads
 		// as bigger than one with 3 without swamping the map.
@@ -121,6 +216,22 @@
 	}
 
 	function onMapClick(event: CustomEvent<{ lngLat: { lng: number; lat: number } }>): void {
+		const clicked = event.detail.lngLat;
+
+		// A visitor pointing at the right spot for a place they know. This runs before the
+		// curator's tool because a visitor never has the curator's tool switched on.
+		if (picking) {
+			if (!isWithinKapellen(clicked.lat, clicked.lng)) {
+				correctionError = 'Dat punt ligt buiten Kapellen.';
+				return;
+			}
+
+			picked = { lat: roundCoordinate(clicked.lat), lng: roundCoordinate(clicked.lng) };
+			picking = false;
+			correctionError = null;
+			return;
+		}
+
 		if (!curating || !placing || !nextToPlace) return;
 
 		const { lng, lat } = event.detail.lngLat;
@@ -142,6 +253,56 @@
 				on: new Date().toISOString().slice(0, 10)
 			}
 		};
+	}
+
+	/** Clears the correction form when the visitor moves to another place. */
+	function resetCorrection(): void {
+		picking = false;
+		picked = null;
+		sendingCorrection = false;
+		correctionSent = false;
+		correctionError = null;
+	}
+
+	function choose(place: ArchivePlace): void {
+		selected = place;
+		resetCorrection();
+	}
+
+	async function sendCorrection(
+		event: CustomEvent<{
+			kind: CorrectionKind;
+			lat?: number;
+			lng?: number;
+			candidateLabel?: string;
+			message: string;
+			name: string;
+			email: string;
+		}>
+	): Promise<void> {
+		if (!selected || sendingCorrection) return;
+
+		sendingCorrection = true;
+		correctionError = null;
+
+		try {
+			const response = await fetch(`${FUNCTIONS_BASE}submitCorrection`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ...event.detail, placeId: selected.id })
+			});
+
+			if (!response.ok) {
+				throw new Error((await response.text()) || 'Versturen is niet gelukt.');
+			}
+
+			correctionSent = true;
+			picked = null;
+		} catch (e) {
+			correctionError = e instanceof Error ? e.message : String(e);
+		} finally {
+			sendingCorrection = false;
+		}
 	}
 
 	function undoLast(): void {
@@ -178,8 +339,8 @@
 			<h2 class="text-2xl font-bold text-gray-900">Kaart van Kapellen</h2>
 			<p class="mt-1 text-gray-600">
 				{#if archive}
-					{locatedPlaces.length} van {allPlaces.length} plaatsen staan op de kaart. Klik een plaats om
-					de foto's te zien.
+					{onTheMap} van {allPlaces.length} plaatsen staan op de kaart. Klik een plaats om de foto's
+					te zien.
 				{:else}
 					Bezig met laden ...
 				{/if}
@@ -289,20 +450,75 @@
 						</GeoJSON>
 					{/if}
 
+					{#if circles.features.length > 0}
+						<!-- Drawn before the markers so a pin is never buried under a fill. The
+						     circle is real geometry in metres, so it keeps meaning the same
+						     distance however far the reader zooms out. -->
+						<GeoJSON id="benaderingen" data={circles}>
+							<FillLayer
+								id="benadering-vlak"
+								paint={{ 'fill-color': '#dc2626', 'fill-opacity': 0.09 }}
+							/>
+							<LineLayer
+								id="benadering-rand"
+								paint={{
+									'line-color': '#dc2626',
+									'line-width': 2,
+									'line-opacity': 0.75,
+									'line-dasharray': [3, 2]
+								}}
+							/>
+						</GeoJSON>
+					{/if}
+
 					{#each locatedPlaces as place (place.id)}
+						{@const found = research(place.id)}
 						<Marker lngLat={markerAt(place.id)} asButton>
+							<div class="relative">
+								<button
+									type="button"
+									class="flex items-center justify-center rounded-full border-2 font-bold text-white shadow-md transition hover:z-10 {found?.display ===
+									'benadering'
+										? 'border-dashed border-red-200 bg-red-700'
+										: place.isStreet
+										? 'border-white bg-blue-700'
+										: 'border-white bg-emerald-700'} {selected?.id === place.id
+										? 'ring-4 ring-yellow-400'
+										: ''}"
+									style="width:{markerSize(place.count)}px;height:{markerSize(
+										place.count
+									)}px;font-size:{place.count > 99 ? 11 : 13}px"
+									title={markerTitle(place, found)}
+									on:click|stopPropagation={() => choose(place)}
+								>
+									{place.count}
+								</button>
+
+								{#if found?.display === 'benadering'}
+									<!-- The circle alone is not enough: zoomed out, a wide one reads as
+									     a shaded area rather than as doubt about this pin. -->
+									<span
+										class="pointer-events-none absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-white bg-red-600 text-[10px] font-bold leading-none text-white"
+										aria-hidden="true">!</span
+									>
+								{/if}
+							</div>
+						</Marker>
+					{/each}
+
+					{#each candidatePins as { place, candidate, index } (place.id + index)}
+						<Marker lngLat={[candidate.lng, candidate.lat]} asButton>
 							<button
 								type="button"
-								class="flex items-center justify-center rounded-full border-2 border-white font-bold text-white shadow-md transition hover:z-10 {place.isStreet
-									? 'bg-blue-700'
-									: 'bg-emerald-700'} {selected?.id === place.id ? 'ring-4 ring-yellow-400' : ''}"
-								style="width:{markerSize(place.count)}px;height:{markerSize(
-									place.count
-								)}px;font-size:{place.count > 99 ? 11 : 13}px"
-								title="{place.name} - {place.count} foto's"
-								on:click|stopPropagation={() => (selected = place)}
+								class="flex items-center justify-center rounded-full border-2 border-dashed border-red-600 bg-white/90 font-bold text-red-700 shadow-md transition hover:z-10 {selected?.id ===
+								place.id
+									? 'ring-4 ring-yellow-400'
+									: ''}"
+								style="width:{markerSize(place.count)}px;height:{markerSize(place.count)}px"
+								title="{place.name}: mogelijk hier - {candidate.label}"
+								on:click|stopPropagation={() => choose(place)}
 							>
-								{place.count}
+								?
 							</button>
 						</Marker>
 					{/each}
@@ -343,6 +559,23 @@
 					{/each}
 				</div>
 
+				{#if selectedResearch?.correctable}
+					<PlaceUncertainty
+						approximation={selectedResearch}
+						bind:picked
+						{picking}
+						sending={sendingCorrection}
+						sent={correctionSent}
+						error={correctionError}
+						on:pick={() => {
+							picking = true;
+							correctionError = null;
+						}}
+						on:cancel={resetCorrection}
+						on:submit={sendCorrection}
+					/>
+				{/if}
+
 				<a
 					class="mt-3 inline-block font-medium text-blue-800 underline hover:no-underline"
 					href="/straat/{selected.id}"
@@ -372,7 +605,7 @@
 							<button
 								type="button"
 								class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50"
-								on:click={() => (selected = place)}
+								on:click={() => choose(place)}
 							>
 								<span>{place.name}</span><span class="text-gray-500">{place.count}</span>
 							</button>

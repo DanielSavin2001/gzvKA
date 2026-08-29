@@ -8,6 +8,7 @@
     "archive:index": "npm run build && node lib/functions/scripts/build-archive-index.js",
     "stories": "npm run build && node lib/functions/scripts/build-stories.js",
     "streets": "npm run build && node lib/functions/scripts/build-street-geometry.js",
+    "plaatsen": "npm run build && node lib/functions/scripts/build-place-approximations.js",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
@@ -20,7 +21,8 @@
     "watch": "concurrently \"npm run compile -- --watch\" \"nodemon --watch ./lib/ --exec npm run debug\""
   },
   "engines": {
-    "node": "18"
+    "_comment": "Node 18 was decommissioned by Google on 2025-10-30 and deploys are refused outright. 22 rather than 20 because Node 20 reached end-of-life in April 2026 and is next in the queue.",
+    "node": "22"
   },
   "main": "lib/functions/src/index.js",
   "dependencies": {

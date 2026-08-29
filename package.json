@@ -8,6 +8,7 @@
 		"archive:index": "npm --prefix functions run archive:index",
 		"stories": "npm --prefix functions run stories",
 		"streets": "npm --prefix functions run streets",
+		"plaatsen": "npm --prefix functions run plaatsen",
 		"thumbs": "node scripts/build-thumbnails.mjs",
 		"deploy": "vite build && firebase deploy --only hosting",
 		"preview": "vite preview",
