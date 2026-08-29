@@ -1,0 +1,5 @@
+{
+	"_comment": "Coordinates for places in the Kapellen gazetteer, WGS84. Every entry here was placed by a person clicking the map at /kaart - none are derived, guessed or copied from memory, because a wrong pin puts a photograph on the wrong street permanently. Add to this file by using the 'Straten plaatsen' mode on /kaart and replacing this file with the one it gives you.",
+	"_format": "{ \"<gazetteer-id>\": { \"lat\": 51.3, \"lng\": 4.4, \"by\": \"who placed it\", \"on\": \"YYYY-MM-DD\" } }",
+	"places": {}
+}

@@ -21,17 +21,25 @@
 		}
 	});
 
-	function top(kind: (place: ArchivePlace) => boolean, limit: number): ArchivePlace[] {
-		if (!archive) return [];
-		return archive.places
+	function top(
+		loaded: Archive | null,
+		kind: (place: ArchivePlace) => boolean,
+		limit: number
+	): ArchivePlace[] {
+		if (!loaded) return [];
+		return loaded.places
 			.filter((place) => place.count > 0 && kind(place))
 			.sort((a, b) => b.count - a.count)
 			.slice(0, limit);
 	}
 
-	$: streets = top((place) => place.isStreet, 10);
-	$: castles = top((place) => place.kind === 'castle-estate', 10);
-	$: areas = top((place) => place.kind === 'area', 8);
+	// `archive` has to appear in the reactive statement itself. Svelte 3 works out a
+	// statement's dependencies from the identifiers written in it, so `top(...)` alone -
+	// with `archive` read only inside the function body - never re-ran when the archive
+	// finished loading, and all three menus stayed permanently empty.
+	$: streets = top(archive, (place) => place.isStreet, 10);
+	$: castles = top(archive, (place) => place.kind === 'castle-estate', 10);
+	$: areas = top(archive, (place) => place.kind === 'area', 8);
 </script>
 
 <header class="sticky top-0 z-40 w-full border-b border-gray-200 bg-white">
@@ -47,6 +55,9 @@
 			>
 			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/zoeken"
 				>Zoeken</a
+			>
+			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/kaart"
+				>Kaart</a
 			>
 
 			<div class="group relative">
@@ -154,6 +165,11 @@
 				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
 				href="/zoeken"
 				on:click={() => (open = false)}>Zoeken</a
+			>
+			<a
+				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
+				href="/kaart"
+				on:click={() => (open = false)}>Kaart</a
 			>
 			<a
 				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
