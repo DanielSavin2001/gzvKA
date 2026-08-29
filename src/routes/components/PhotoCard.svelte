@@ -6,6 +6,12 @@
 	export let photo: ArchivePhoto;
 	/** Show the subject folder under the title. Off on a page that is already one subject. */
 	export let showSubject = true;
+	/**
+	 * Which list this card belongs to, carried to the photograph so its previous/next
+	 * arrows step through the same photographs in the same order the visitor is looking at.
+	 * `straat:<id>`, `onderwerp:<name>`, or empty for none.
+	 */
+	export let list = '';
 
 	$: places = photo.st
 		.map((id) => archive.placeById.get(id))
@@ -22,7 +28,7 @@
 
 <a
 	class="group block overflow-hidden rounded-lg border border-gray-200 bg-white transition hover:border-gray-400 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-	href="/foto/{photo.id}"
+	href="/foto/{photo.id}{list ? `?lijst=${encodeURIComponent(list)}` : ''}"
 >
 	<div class="aspect-[4/3] overflow-hidden bg-gray-100">
 		<img

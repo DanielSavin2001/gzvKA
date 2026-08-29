@@ -138,7 +138,27 @@ archive rather than merely impressive:
   reconciliation gate, and anything uncertain waits for a volunteer to approve it.
 - The filename is passed as explicitly *untrusted* context, because it usually is.
 
-### Phase 4 — the map
+### Phase 4 — the map (done, in this branch)
+
+Daniel supplied the official street register for Kapellen and Stabroek: 444 street names
+with their real OpenStreetMap centrelines. `npm run streets` joins it to the gazetteer by
+exact name, which placed **39 of the 47 streets that have photographs** with no hand
+placement at all. The map at `/kaart` opened empty before this; it now opens with the
+archive on it.
+
+The 8 it could not place are the interesting ones, listed in
+`docs/streets-not-in-register.md`: Loopgravenpad (162 photographs), Oude Baan, Stationsplein,
+IJzerenweglaan, Blokjesweg, Denneburgdreef, Kazerneplein, Putsesteenweg. A street the modern
+register has never heard of is evidence that it was renamed or built over — which is part of
+the answer to "did these streets exist back then". Denneburgdreef is a different case: the
+register spells it *Dennenburgdreef*, so that one is likely a spelling difference rather than
+a lost street.
+
+Expanding the gazetteer to all 444 register names was measured and rejected: only 6 of them
+appear in archive filenames at all, across 23 photographs. The gazetteer already covers what
+the archive references, so the register's value here is geometry, not coverage.
+
+### Phase 4 (original plan) — the map
 
 - Fill coordinates from OpenStreetMap for the confirmed streets, via a checked-in Overpass
   query so it is reproducible and refreshable.

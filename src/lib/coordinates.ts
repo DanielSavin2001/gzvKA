@@ -41,7 +41,25 @@ export function isWithinKapellen(lat: number, lng: number): boolean {
 	);
 }
 
+/** A street's real centreline, from the official register. */
+export interface StreetGeometry {
+	name: string;
+	municipality: string;
+	lat: number;
+	lng: number;
+	/** Simplified centreline(s) as [lng, lat] pairs, ready to draw. */
+	lines: [number, number][][];
+	/** Metres. */
+	length?: number;
+}
+
+export interface StreetGeometryFile {
+	version: number;
+	streets: Record<string, StreetGeometry>;
+}
+
 let cached: PlaceCoordinates | null = null;
+let geometryCache: Record<string, StreetGeometry> | null = null;
 
 /** Loads the placed coordinates. Missing or unreadable means "none placed yet", not an error. */
 export async function loadCoordinates(fetcher: typeof fetch = fetch): Promise<PlaceCoordinates> {
@@ -57,6 +75,51 @@ export async function loadCoordinates(fetcher: typeof fetch = fetch): Promise<Pl
 	} catch {
 		return { places: {} };
 	}
+}
+
+/**
+ * Loads the street centrelines derived from the official register by `npm run streets`.
+ *
+ * Missing means "no geometry", never an error: the map still works from hand-placed
+ * coordinates alone, which is how it worked before the register existed.
+ */
+export async function loadStreetGeometry(
+	fetcher: typeof fetch = fetch
+): Promise<Record<string, StreetGeometry>> {
+	if (geometryCache) return geometryCache;
+
+	try {
+		const response = await fetcher('/data/street-geometry.json');
+		if (!response.ok) return {};
+
+		const parsed = (await response.json()) as Partial<StreetGeometryFile>;
+		geometryCache = parsed.streets ?? {};
+		return geometryCache;
+	} catch {
+		return {};
+	}
+}
+
+/**
+ * Where a place is, best source first.
+ *
+ * A coordinate a person clicked always beats one derived from the register. The register is
+ * authoritative about where the Dorpsstraat runs, but a curator who moved a place did so
+ * for a reason - the castle sits back from the road, the photograph is of the far end - and
+ * that judgement is worth more than a centreline midpoint.
+ */
+export function locate(
+	placeId: string,
+	placedCoordinates: Record<string, PlacedCoordinate>,
+	geometry: Record<string, StreetGeometry>
+): { lat: number; lng: number; source: 'placed' | 'register' } | null {
+	const byHand = placedCoordinates[placeId];
+	if (byHand) return { lat: byHand.lat, lng: byHand.lng, source: 'placed' };
+
+	const derived = geometry[placeId];
+	if (derived) return { lat: derived.lat, lng: derived.lng, source: 'register' };
+
+	return null;
 }
 
 /** Rounds to about a metre - more precision than that is false precision from a map click. */

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
+		GeoJSON,
+		LineLayer,
 		MapLibre,
 		MapEvents,
 		Marker,
@@ -12,16 +14,20 @@
 
 	import type { Archive, ArchivePhoto, ArchivePlace } from '$lib/archive';
 	import { loadArchive, thumbUrl } from '$lib/archive';
-	import type { PlacedCoordinate } from '$lib/coordinates';
+	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import {
 		isWithinKapellen,
 		KAPELLEN_CENTRE,
 		loadCoordinates,
+		loadStreetGeometry,
+		locate,
 		roundCoordinate
 	} from '$lib/coordinates';
 
 	let archive: Archive | null = null;
 	let placed: Record<string, PlacedCoordinate> = {};
+	/** Street centrelines from the official register, used where nobody has placed a pin. */
+	let geometry: Record<string, StreetGeometry> = {};
 	let error: string | null = null;
 
 	/** The place whose photographs are shown in the panel. */
@@ -47,9 +53,14 @@
 		}
 
 		try {
-			const [loadedArchive, coordinates] = await Promise.all([loadArchive(), loadCoordinates()]);
+			const [loadedArchive, coordinates, streets] = await Promise.all([
+				loadArchive(),
+				loadCoordinates(),
+				loadStreetGeometry()
+			]);
 			archive = loadedArchive;
 			placed = coordinates.places;
+			geometry = streets;
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		}
@@ -60,13 +71,35 @@
 		? archive.places.filter((place) => place.count > 0).sort((a, b) => b.count - a.count)
 		: [];
 
-	$: locatedPlaces = allPlaces.filter((place) => placed[place.id]);
-	$: unlocatedPlaces = allPlaces.filter((place) => !placed[place.id]);
+	// A place counts as located when anyone knows where it is - a curator's pin, or the
+	// official street register. Before the register existed this was hand-placement only,
+	// and the map opened empty because nobody had done a full sitting yet.
+	$: locatedPlaces = allPlaces.filter((place) => locate(place.id, placed, geometry));
+	$: unlocatedPlaces = allPlaces.filter((place) => !locate(place.id, placed, geometry));
 
 	/** The street the next map click will locate. */
 	$: nextToPlace = placing ? unlocatedPlaces[0] ?? null : null;
 
 	$: selectedPhotos = selected && archive ? archive.photosByPlace.get(selected.id) ?? [] : [];
+
+	/** Where a marker goes: a curator's pin if there is one, else the register midpoint. */
+	function markerAt(placeId: string): [number, number] {
+		const at = locate(placeId, placed, geometry);
+		return at ? [at.lng, at.lat] : KAPELLEN_CENTRE;
+	}
+
+	/**
+	 * The street centrelines, drawn under the markers. Without them the map is a scatter of
+	 * numbered bubbles on a beige rectangle; with them it reads as Kapellen.
+	 */
+	$: streetLines = {
+		type: 'FeatureCollection' as const,
+		features: Object.values(geometry).map((street) => ({
+			type: 'Feature' as const,
+			properties: { name: street.name },
+			geometry: { type: 'MultiLineString' as const, coordinates: street.lines }
+		}))
+	};
 
 	function markerSize(count: number): number {
 		// Area roughly proportional to the number of photographs, so a street with 150 reads
@@ -235,8 +268,18 @@
 						<RasterLayer paint={{}} />
 					</RasterTileSource>
 
+					{#if streetLines.features.length > 0}
+						<GeoJSON id="straten" data={streetLines}>
+							<LineLayer
+								id="straten-lijn"
+								paint={{ 'line-color': '#1d4ed8', 'line-width': 3, 'line-opacity': 0.45 }}
+								layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+							/>
+						</GeoJSON>
+					{/if}
+
 					{#each locatedPlaces as place (place.id)}
-						<Marker lngLat={[placed[place.id].lng, placed[place.id].lat]} asButton>
+						<Marker lngLat={markerAt(place.id)} asButton>
 							<button
 								type="button"
 								class="flex items-center justify-center rounded-full border-2 border-white font-bold text-white shadow-md transition hover:z-10 {place.isStreet

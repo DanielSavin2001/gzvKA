@@ -36,6 +36,7 @@ The upload zone and the older subject pages talk to Cloud Functions. For those, 
 ```bash
 npm run archive:index   # rebuild the photo index after adding or renaming photos
 npm run stories         # rebuild the stories after editing legacy-site/ (run the index first)
+npm run streets         # rebuild street positions from the official register
 ```
 
 ```bash
@@ -147,3 +148,24 @@ The 1,572 references that do not resolve are photographs that exist on the live 
 were never added to `src/lib/images/history-images/`. They are listed in
 `docs/legacy-missing-photos.txt`, which is the clearest measure of what is still only on the
 old server.
+
+## Where the places are
+
+Every street on the map is positioned from the official street register in
+`functions/src/data/streets/` — the real centreline of all 444 streets in Kapellen and
+Stabroek, with their names. `npm run streets` joins that to the gazetteer by exact name and
+writes `static/data/street-geometry.json`, which is what the map draws.
+
+Two rules hold:
+
+- **A coordinate a person placed always wins.** `static/data/place-coordinates.json` is
+  never written by a script. The "Straten plaatsen" tool on `/kaart` is still how a castle
+  or a wijk gets a position, since the register only knows streets.
+- **A name is matched exactly or not at all.** No fuzzy matching against the register: a
+  street pinned to the wrong road stays wrong for years without anyone noticing. 28 street
+  names exist in both municipalities — Dorpsstraat, Kerkstraat, Antwerpsesteenweg — and
+  Kapellen's copy always wins, because merging them put Kapellen's Dorpsstraat halfway to
+  Hoevenen.
+
+`docs/streets-not-in-register.md` lists the gazetteer streets today's register has never
+heard of. That is the archive's own evidence about which street names are historical.
