@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive, ArchivePhoto } from '$lib/archive';
-	import { detailUrl, loadArchive } from '$lib/archive';
+	import { detailUrl, loadArchive, thumbUrl } from '$lib/archive';
 
 	export let data: { id: string };
 
@@ -25,6 +25,21 @@
 				.map((id) => archive?.placeById.get(id))
 				.filter((place): place is NonNullable<typeof place> => place !== undefined)
 		: [];
+
+	/**
+	 * Deploys carry the thumbnails only, because both sizes together come to 443 MB and
+	 * hosting keeps every version. When the larger file is not there, show the thumbnail
+	 * rather than a broken image - the photograph is still the point.
+	 */
+	function fallBackToThumbnail(event: Event): void {
+		const image = event.currentTarget as HTMLImageElement;
+		if (!archive || !photo) return;
+
+		const thumb = thumbUrl(archive, photo);
+		if (image.src.endsWith(thumb)) return; // already the fallback; let it fail visibly
+
+		image.src = thumb;
+	}
 </script>
 
 <svelte:head>
@@ -60,6 +75,7 @@
 		<figure class="mt-4">
 			<img
 				src={detailUrl(archive, photo)}
+				on:error={fallBackToThumbnail}
 				alt={photo.t}
 				class="mx-auto max-h-[70vh] w-auto rounded-lg border border-gray-200 bg-gray-100 object-contain"
 			/>

@@ -35,10 +35,20 @@ const OUTPUT_DIR = path.join(REPO_ROOT, 'static', 'foto');
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
 
 /** Browse grid: small enough that a page of 60 is a couple of megabytes. */
-const THUMB = { suffix: '.thumb.webp', longEdge: 480, quality: 74 };
+const THUMB = { name: 'thumb', suffix: '.thumb.webp', longEdge: 480, quality: 74 };
 
 /** Detail view: large enough to read a shop sign, small enough to load instantly. */
-const DETAIL = { suffix: '.web.webp', longEdge: 1400, quality: 82 };
+const DETAIL = { name: 'detail', suffix: '.web.webp', longEdge: 1400, quality: 82 };
+
+/**
+ * Which sizes to produce. `--only=thumb` is what the deploy uses: the thumbnails come to
+ * 78 MB where both sizes come to 443 MB, and a hosting deploy pays for every version it
+ * keeps. The detail page falls back to the thumbnail when the larger file is absent, so a
+ * thumbnails-only deploy shows every photograph - just not at full size.
+ */
+const onlyArgument = process.argv.find((arg) => arg.startsWith('--only='))?.split('=')[1];
+const VARIANTS =
+	onlyArgument === 'thumb' ? [THUMB] : onlyArgument === 'detail' ? [DETAIL] : [THUMB, DETAIL];
 
 async function listCorpusFiles(directory) {
 	const found = [];
@@ -72,7 +82,7 @@ async function convertOne(sourcePath) {
 	let written = 0;
 	let skipped = 0;
 
-	for (const variant of [THUMB, DETAIL]) {
+	for (const variant of VARIANTS) {
 		const outputPath = outputBase + variant.suffix;
 
 		if (await isUpToDate(sourcePath, outputPath)) {
@@ -107,7 +117,8 @@ async function main() {
 
 	const files = await listCorpusFiles(CORPUS_DIR);
 	console.log(
-		`Converting ${files.length} photographs into ${path.relative(REPO_ROOT, OUTPUT_DIR)}`
+		`Converting ${files.length} photographs into ${path.relative(REPO_ROOT, OUTPUT_DIR)} ` +
+			`(${VARIANTS.map((v) => v.name).join(' + ')})`
 	);
 
 	// sharp releases the event loop while libvips works, so a small pool saturates the CPU
