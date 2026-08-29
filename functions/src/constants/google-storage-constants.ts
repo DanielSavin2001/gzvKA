@@ -46,8 +46,18 @@ export function resetSettingsCache(): void {
 	cache = {};
 }
 
+/**
+ * The default bucket of the `gzvka-12a9f` project, as the Firebase console reports it.
+ *
+ * The fallback here used to read `gzvka.appspot.com`, which is not a bucket this project
+ * has - it is the project id with its suffix missing. That was harmless only for as long
+ * as `functions.config()` supplied the real name, and `functions.config()` is on its way
+ * out of Firebase. The day it returns nothing, every read and write would have gone to a
+ * bucket that does not exist, and the error - a 404 on a photograph - would have pointed
+ * at the upload code rather than at a constant.
+ */
 export const getBucketName = (): string =>
-	cached('bucket', 'GZVKA_BUCKET_NAME', 'bucket_name', 'gzvka.appspot.com');
+	cached('bucket', 'GZVKA_BUCKET_NAME', 'bucket_name', 'gzvka-12a9f.appspot.com');
 
 export const getSubjectsCollectionName = (): string =>
 	cached('subjects', 'GZVKA_SUBJECTS_COLLECTION', 'subjects_collection_name', 'subjects');
