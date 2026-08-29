@@ -27,10 +27,10 @@
 </script>
 
 <a
-	class="group block overflow-hidden rounded-lg border border-gray-200 bg-white transition hover:border-gray-400 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+	class="group block overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 	href="/foto/{photo.id}{list ? `?lijst=${encodeURIComponent(list)}` : ''}"
 >
-	<div class="aspect-[4/3] overflow-hidden bg-gray-100">
+	<div class="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800">
 		<img
 			src={thumbUrl(archive, photo)}
 			{alt}
@@ -41,11 +41,13 @@
 	</div>
 
 	<div class="p-3">
-		<h3 class="text-base font-semibold leading-snug text-gray-900">{photo.t}</h3>
+		<h3 class="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100">{photo.t}</h3>
 
-		<p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
+		<p
+			class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600 dark:text-gray-400"
+		>
 			{#if street}
-				<span class="font-medium text-blue-800">
+				<span class="font-medium text-blue-800 dark:text-blue-300">
 					{street.name}{#if photo.hn}&nbsp;{photo.hn}{/if}
 				</span>
 			{/if}
@@ -55,7 +57,7 @@
 		</p>
 
 		{#if showSubject}
-			<p class="mt-1 truncate text-xs text-gray-500">{photo.s}</p>
+			<p class="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{photo.s}</p>
 		{/if}
 	</div>
 </a>

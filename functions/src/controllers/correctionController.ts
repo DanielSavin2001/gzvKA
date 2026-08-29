@@ -9,6 +9,7 @@ import { NotAuthorised, requireAdmin } from '../services/admin-auth';
 import * as corrections from '../services/correctionService';
 import { callerKey, countRequest, TooMany } from '../services/throttle';
 import { validateCors } from '../utils/cors-helper';
+import { isMissingIndex, missingIndexMessage } from '../utils/firestore-errors';
 import * as researched from '../data/place-approximations.json';
 
 /**
@@ -36,6 +37,11 @@ function fail(response: Response, error: unknown): Response {
 	if (error instanceof CorrectionError) {
 		logger.warn('Rejected: ', error.message);
 		return response.status(400).send(error.message);
+	}
+
+	if (isMissingIndex(error)) {
+		logger.error('Missing Firestore index: ', error);
+		return response.status(500).send(missingIndexMessage(error));
 	}
 
 	logger.error('Correction endpoint failed: ', error);

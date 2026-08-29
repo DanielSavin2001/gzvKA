@@ -70,17 +70,19 @@
 			{#if section.kicker || section.heading}
 				<header class="mx-auto max-w-3xl">
 					{#if section.kicker}
-						<p class="mt-8 text-sm font-semibold uppercase tracking-wide text-blue-800">
+						<p
+							class="mt-8 text-sm font-semibold uppercase tracking-wide text-blue-800 dark:text-blue-300"
+						>
 							{section.kicker}
 						</p>
 					{/if}
 					{#if section.heading}
 						{#if headingLevel === 'h2'}
-							<h2 class="mt-2 text-2xl font-bold tracking-tight text-gray-900">
+							<h2 class="mt-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
 								{section.heading}
 							</h2>
 						{:else}
-							<h3 class="mt-2 text-xl font-bold tracking-tight text-gray-900">
+							<h3 class="mt-2 text-xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
 								{section.heading}
 							</h3>
 						{/if}
@@ -93,9 +95,13 @@
 					<div class="mx-auto max-w-3xl">
 						{#each block.parts as part, i (i)}
 							{#if part.credit}
-								<p class="mt-4 text-right text-sm font-semibold text-gray-700">&mdash; {part.t}</p>
+								<p class="mt-4 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+									&mdash; {part.t}
+								</p>
 							{:else}
-								<p class="mt-4 text-lg leading-relaxed text-gray-800">{part.t}</p>
+								<p class="mt-4 text-lg leading-relaxed text-gray-800 dark:text-gray-200">
+									{part.t}
+								</p>
 							{/if}
 						{/each}
 					</div>
@@ -115,18 +121,20 @@
 										alt={part.c ?? photo.t}
 										loading="lazy"
 										decoding="async"
-										class="mx-auto max-h-[60vh] w-auto rounded-lg border border-gray-200 bg-gray-100"
+										class="mx-auto max-h-[60vh] w-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800"
 									/>
 								</button>
 							{:else}
 								<div
-									class="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500"
+									class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
 								>
 									Deze foto staat nog niet in het archief.
 								</div>
 							{/if}
 							{#if part.c}
-								<figcaption class="mt-2 text-center text-sm italic text-gray-600">
+								<figcaption
+									class="mt-2 text-center text-sm italic text-gray-600 dark:text-gray-400"
+								>
 									{part.c}
 								</figcaption>
 							{/if}
@@ -142,7 +150,9 @@
 										class="group text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 										on:click={() => dispatch('open', photoOffsets.get(photo.id) ?? 0)}
 									>
-										<div class="aspect-[4/3] overflow-hidden rounded-lg bg-gray-100">
+										<div
+											class="aspect-[4/3] overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+										>
 											<img
 												src={thumbUrl(archive, photo)}
 												alt={part.c ?? photo.t}
@@ -155,13 +165,15 @@
 											The caption keeps its space whether or not there is one, so the rows
 											of a 167-photograph grid line up instead of stepping.
 										-->
-										<p class="mt-1 line-clamp-2 min-h-[2rem] text-xs leading-snug text-gray-600">
+										<p
+											class="mt-1 line-clamp-2 min-h-[2rem] text-xs leading-snug text-gray-600 dark:text-gray-400"
+										>
 											{part.c ?? ''}
 										</p>
 									</button>
 								{:else}
 									<div
-										class="flex aspect-[4/3] items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-2 text-center text-xs text-gray-500"
+										class="flex aspect-[4/3] items-center justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2 text-center text-xs text-gray-500 dark:text-gray-400"
 									>
 										Nog niet in het archief
 									</div>

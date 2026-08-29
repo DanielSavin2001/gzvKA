@@ -11,6 +11,7 @@
  */
 
 import { normalizeText, slugify } from '../../sharedModels/text';
+import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
 
 /** One photograph. The keys are short because the file holds 2948 of them. */
 export interface ArchivePhoto {
@@ -33,6 +34,11 @@ export interface ArchivePhoto {
 	a?: string;
 	/** Prize-draw photography, browsed by event rather than by place. */
 	ev?: boolean;
+	/**
+	 * A curator's description. Never present in the generated index - no filename can hold a
+	 * sentence - and laid over it by `loadPhotoEdits` when somebody has written one.
+	 */
+	desc?: string;
 }
 
 /** A place in Kapellen, with how many photographs it has. */
@@ -93,7 +99,15 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 		}
 
 		const index = (await response.json()) as ArchiveIndex;
-		cached = buildArchive(index);
+
+		// A curator's corrections are laid over the generated index before anything else
+		// sees it, so every page, the search and the map all agree about a photograph
+		// without each having to remember to ask. Failing to fetch them is not an error:
+		// `loadPhotoEdits` returns nothing and the archive is exactly what it always was.
+		const edits = await loadPhotoEdits(fetcher);
+		const photos = index.photos.map((photo) => applyPhotoEdit(photo, edits[photo.id]));
+
+		cached = buildArchive({ ...index, photos });
 		return cached;
 	})();
 

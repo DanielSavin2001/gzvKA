@@ -7,6 +7,7 @@ import { NotAuthorised, requireAdmin } from '../services/admin-auth';
 import * as submissions from '../services/submissionService';
 import { collectFiles, UploadValidationError } from '../services/upload/multipart';
 import { validateCors } from '../utils/cors-helper';
+import { isMissingIndex, missingIndexMessage } from '../utils/firestore-errors';
 
 /**
  * The endpoints behind contributing a photograph and deciding what happens to it.
@@ -26,6 +27,11 @@ function fail(response: Response, error: unknown): Response {
 	if (error instanceof SubmissionError || error instanceof UploadValidationError) {
 		logger.warn('Rejected: ', error.message);
 		return response.status(400).send(error.message);
+	}
+
+	if (isMissingIndex(error)) {
+		logger.error('Missing Firestore index: ', error);
+		return response.status(500).send(missingIndexMessage(error));
 	}
 
 	logger.error('Submission endpoint failed: ', error);

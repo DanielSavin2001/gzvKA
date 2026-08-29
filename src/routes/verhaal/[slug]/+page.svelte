@@ -135,27 +135,36 @@
 {/if}
 
 <div class="mx-auto max-w-6xl px-4 py-8">
-	<nav class="text-sm text-gray-600">
-		<a class="text-blue-800 underline hover:no-underline" href="/">Startpagina</a>
+	<nav class="text-sm text-gray-600 dark:text-gray-400">
+		<a class="text-blue-800 dark:text-blue-300 underline hover:no-underline" href="/">Startpagina</a
+		>
 		<span class="mx-2">/</span>
-		<a class="text-blue-800 underline hover:no-underline" href="/verhalen">Verhalen</a>
+		<a class="text-blue-800 dark:text-blue-300 underline hover:no-underline" href="/verhalen"
+			>Verhalen</a
+		>
 	</nav>
 
 	{#if error}
-		<div class="my-8 rounded-lg border border-red-300 bg-red-50 p-5 text-red-900">
+		<div
+			class="my-8 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-5 text-red-900 dark:text-red-200"
+		>
 			<p class="font-semibold">{error}</p>
 			<a class="mt-2 inline-block underline hover:no-underline" href="/verhalen">
 				Bekijk alle verhalen
 			</a>
 		</div>
 	{:else if !story}
-		<p class="py-16 text-center text-gray-500">Bezig met laden ...</p>
+		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
 	{:else}
-		<header class="mt-3 border-b border-gray-200 pb-6">
-			<h1 class="max-w-4xl text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+		<header class="mt-3 border-b border-gray-200 dark:border-gray-700 pb-6">
+			<h1
+				class="max-w-4xl text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl"
+			>
 				{story.title}
 			</h1>
-			<p class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
+			<p
+				class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600 dark:text-gray-400"
+			>
 				{#if prose > 0}
 					<span>{readingMinutes(prose)} min lezen</span>
 				{/if}
@@ -172,7 +181,7 @@
 					{#each places as place (place.id)}
 						<li>
 							<a
-								class="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-800 transition hover:border-blue-700 hover:bg-blue-50"
+								class="inline-flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-700 px-3 py-1 text-sm text-gray-800 dark:text-gray-200 transition hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
 								href="/straat/{place.id}"
 							>
 								{place.name}
@@ -184,20 +193,22 @@
 		</header>
 
 		{#if story.documents && story.documents.length > 0}
-			<section class="mt-6 max-w-3xl rounded-xl border border-gray-300 bg-gray-50 p-5">
-				<h2 class="text-lg font-bold text-gray-900">
+			<section
+				class="mt-6 max-w-3xl rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-5"
+			>
+				<h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">
 					{story.documents.length === 1 ? 'Document bij deze pagina' : 'Documenten bij deze pagina'}
 				</h2>
 				<ul class="mt-3 space-y-2">
 					{#each story.documents as document (document.url)}
 						<li>
 							<a
-								class="inline-flex items-center gap-2 font-medium text-blue-800 underline hover:no-underline"
+								class="inline-flex items-center gap-2 font-medium text-blue-800 dark:text-blue-300 underline hover:no-underline"
 								href={document.url}
 								download
 							>
 								{document.name}
-								<span class="text-sm font-normal text-gray-500"
+								<span class="text-sm font-normal text-gray-500 dark:text-gray-400"
 									>({formatBytes(document.bytes)})</span
 								>
 							</a>
@@ -215,7 +226,9 @@
 					one, where there is no room for a column.
 				-->
 				<nav class="mb-6 lg:sticky lg:top-24 lg:mb-0 lg:w-60 lg:shrink-0" aria-label="Inhoud">
-					<p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Inhoud</p>
+					<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+						Inhoud
+					</p>
 
 					<ul class="mt-2 max-h-72 space-y-0.5 overflow-y-auto lg:max-h-[70vh]">
 						{#each contents as entry (entry.index)}
@@ -224,12 +237,14 @@
 									href="#deel-{entry.index}"
 									class="block rounded px-2 py-1.5 text-sm leading-snug transition {activeSection ===
 									entry.index
-										? 'bg-blue-50 font-semibold text-blue-900'
-										: 'text-gray-700 hover:bg-gray-100'}"
+										? 'bg-blue-50 dark:bg-blue-950 font-semibold text-blue-900 dark:text-blue-200'
+										: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 								>
 									{entry.heading}
 									{#if entry.kicker}
-										<span class="block text-xs font-normal text-gray-500">{entry.kicker}</span>
+										<span class="block text-xs font-normal text-gray-500 dark:text-gray-400"
+											>{entry.kicker}</span
+										>
 									{/if}
 								</a>
 							</li>

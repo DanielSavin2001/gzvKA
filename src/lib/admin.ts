@@ -12,6 +12,7 @@
  */
 
 import type { PlaceCorrection } from '../../sharedModels/correction';
+import type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
 import type { Submission } from '../../sharedModels/submission';
 
 /** A submission with a link a curator can actually open while it is still private. */
@@ -164,5 +165,29 @@ export function judgeCorrection(decision: {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(decision)
+	});
+}
+
+/**
+ * Correcting a photograph that is already in the archive.
+ *
+ * Unlike a submission, this takes effect at once - the site fetches the edits and lays them
+ * over the generated index, so a wrong street is right for the next visitor rather than for
+ * the next deploy.
+ */
+export function savePhotoEdit(photoId: string, fields: PhotoFields): Promise<PhotoEdit> {
+	return call<PhotoEdit>('savePhotoEdit', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ photoId, ...fields })
+	});
+}
+
+/** Drops the correction, so the photograph goes back to what the index says. */
+export function revertPhotoEdit(photoId: string): Promise<{ id: string }> {
+	return call<{ id: string }>('deletePhotoEdit', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ photoId })
 	});
 }

@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive, ArchivePlace } from '$lib/archive';
+	import ThemeToggle from './ThemeToggle.svelte';
 	import { loadArchive } from '$lib/archive';
 	import logo_no_background from '$lib/images/logo/svg/logo-no-background.svg';
+	import logo_white from '$lib/images/logo/svg/logo-white-transparent.svg';
 	import flag_of_kapellen from '$lib/images/logo/kapellen-flag/Flag_of_Kapellen,_Belgium.svg';
 
 	let archive: Archive | null = null;
@@ -42,43 +44,58 @@
 	$: areas = top(archive, (place) => place.kind === 'area', 8);
 </script>
 
-<header class="sticky top-0 z-40 w-full border-b border-gray-200 bg-white">
+<header
+	class="sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+>
 	<div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-2">
 		<a href="/" class="flex shrink-0 items-center gap-3" aria-label="Naar de startpagina">
-			<img src={logo_no_background} class="h-12 w-auto sm:h-16" alt="gzvKA" />
+			<!--
+				Two files rather than one. The wordmark is dark blue, which vanishes on a dark
+				header - and a CSS filter that inverts it would take the yellow with it. Both
+				are in the page and CSS picks; the second costs a few kilobytes once.
+			-->
+			<img src={logo_no_background} class="h-12 w-auto sm:h-16 dark:hidden" alt="gzvKA" />
+			<img src={logo_white} class="hidden h-12 w-auto sm:h-16 dark:block" alt="gzvKA" />
 			<img src={flag_of_kapellen} class="hidden h-10 w-auto sm:block" alt="Vlag van Kapellen" />
 		</a>
 
 		<nav class="ml-auto hidden items-center gap-1 lg:flex" aria-label="Hoofdmenu">
-			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/"
-				>Startpagina</a
+			<a
+				class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				href="/">Startpagina</a
 			>
-			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/zoeken"
-				>Zoeken</a
-			>
-			<a class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100" href="/verhalen"
-				>Verhalen</a
+			<a
+				class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				href="/verhalen">Verhalen</a
 			>
 
 			<div class="group relative">
-				<button type="button" class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100">
+				<button
+					type="button"
+					class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				>
 					Straten
 				</button>
 				<ul
-					class="invisible absolute right-0 z-50 w-64 rounded-lg border border-gray-200 bg-white py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+					class="invisible absolute right-0 z-50 w-64 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
 				>
 					{#each streets as street (street.id)}
 						<li>
 							<a
-								class="flex items-center justify-between px-4 py-2 text-gray-800 hover:bg-blue-50"
+								class="flex items-center justify-between px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-950"
 								href="/straat/{street.id}"
 							>
-								<span>{street.name}</span><span class="text-sm text-gray-500">{street.count}</span>
+								<span>{street.name}</span><span class="text-sm text-gray-500 dark:text-gray-400"
+									>{street.count}</span
+								>
 							</a>
 						</li>
 					{/each}
-					<li class="mt-1 border-t border-gray-200">
-						<a class="block px-4 py-2 font-medium text-blue-800 hover:bg-blue-50" href="/">
+					<li class="mt-1 border-t border-gray-200 dark:border-gray-700">
+						<a
+							class="block px-4 py-2 font-medium text-blue-800 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950"
+							href="/"
+						>
 							Alle straten &rarr;
 						</a>
 					</li>
@@ -86,19 +103,24 @@
 			</div>
 
 			<div class="group relative">
-				<button type="button" class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100">
+				<button
+					type="button"
+					class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				>
 					Kastelen
 				</button>
 				<ul
-					class="invisible absolute right-0 z-50 w-72 rounded-lg border border-gray-200 bg-white py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+					class="invisible absolute right-0 z-50 w-72 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
 				>
 					{#each castles as castle (castle.id)}
 						<li>
 							<a
-								class="flex items-center justify-between px-4 py-2 text-gray-800 hover:bg-blue-50"
+								class="flex items-center justify-between px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-950"
 								href="/straat/{castle.id}"
 							>
-								<span>{castle.name}</span><span class="text-sm text-gray-500">{castle.count}</span>
+								<span>{castle.name}</span><span class="text-sm text-gray-500 dark:text-gray-400"
+									>{castle.count}</span
+								>
 							</a>
 						</li>
 					{/each}
@@ -106,19 +128,24 @@
 			</div>
 
 			<div class="group relative">
-				<button type="button" class="rounded px-3 py-2 font-medium text-gray-800 hover:bg-gray-100">
+				<button
+					type="button"
+					class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				>
 					Wijken
 				</button>
 				<ul
-					class="invisible absolute right-0 z-50 w-64 rounded-lg border border-gray-200 bg-white py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+					class="invisible absolute right-0 z-50 w-64 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-1 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
 				>
 					{#each areas as area (area.id)}
 						<li>
 							<a
-								class="flex items-center justify-between px-4 py-2 text-gray-800 hover:bg-blue-50"
+								class="flex items-center justify-between px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-950"
 								href="/straat/{area.id}"
 							>
-								<span>{area.name}</span><span class="text-sm text-gray-500">{area.count}</span>
+								<span>{area.name}</span><span class="text-sm text-gray-500 dark:text-gray-400"
+									>{area.count}</span
+								>
 							</a>
 						</li>
 					{/each}
@@ -131,11 +158,13 @@
 			>
 				Foto insturen
 			</a>
+
+			<div class="ml-2"><ThemeToggle /></div>
 		</nav>
 
 		<button
 			type="button"
-			class="ml-auto rounded p-2 text-gray-800 hover:bg-gray-100 lg:hidden"
+			class="ml-auto rounded p-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden"
 			aria-expanded={open}
 			aria-controls="mobiel-menu"
 			on:click={() => (open = !open)}
@@ -155,37 +184,43 @@
 	</div>
 
 	{#if open}
-		<nav id="mobiel-menu" class="border-t border-gray-200 px-4 py-2 lg:hidden" aria-label="Menu">
+		<nav
+			id="mobiel-menu"
+			class="border-t border-gray-200 px-4 py-2 lg:hidden dark:border-gray-700"
+			aria-label="Menu"
+		>
+			<div class="py-2"><ThemeToggle /></div>
+
 			<a
-				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
+				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 				href="/"
 				on:click={() => (open = false)}>Startpagina</a
 			>
 			<a
-				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
-				href="/zoeken"
-				on:click={() => (open = false)}>Zoeken</a
-			>
-			<a
-				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
+				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 				href="/verhalen"
 				on:click={() => (open = false)}>Verhalen</a
 			>
 			<a
-				class="block rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100"
+				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 				href="/upload"
 				on:click={() => (open = false)}>Foto insturen</a
 			>
 
 			{#if streets.length > 0}
-				<p class="mt-3 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Straten</p>
+				<p
+					class="mt-3 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+				>
+					Straten
+				</p>
 				{#each streets.slice(0, 6) as street (street.id)}
 					<a
-						class="block rounded px-2 py-2 text-gray-800 hover:bg-gray-100"
+						class="block rounded px-2 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 						href="/straat/{street.id}"
 						on:click={() => (open = false)}
 					>
-						{street.name} <span class="text-sm text-gray-500">{street.count}</span>
+						{street.name}
+						<span class="text-sm text-gray-500 dark:text-gray-400">{street.count}</span>
 					</a>
 				{/each}
 			{/if}
