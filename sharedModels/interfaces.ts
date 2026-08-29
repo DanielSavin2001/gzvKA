@@ -55,7 +55,11 @@ export interface DocumentReference {
 export interface FileDataFields {
     filename: string,
     encoding: string,
-    mimetype: string,
+    // busboy 1.x spells this `mimeType`. It was declared `mimetype` here, and because the
+    // busboy callback was annotated with this interface the mismatch type-checked happily
+    // while the value was always undefined - so every uploaded image reached Cloud Storage
+    // with no content type at all.
+    mimeType: string,
 }
 
 export interface FileData {
