@@ -7,8 +7,11 @@ import {
 	extractHouseNumber,
 	GazetteerIndex,
 	matchImagePath,
-	matchPlacesInText
+	matchPlacesInText,
+	maxEdits
 } from './match';
+import { damerauLevenshtein, diceCoefficient } from './distance';
+import { corePlace, streetSuffixFamily } from './normalize';
 import { splitFilename, splitPathContext } from './segment';
 
 const gazetteer = JSON.parse(
@@ -349,5 +352,66 @@ describe('the gazetteer data itself', () => {
 	it('has unique ids', () => {
 		const ids = gazetteer.entries.map((e) => e.id);
 		expect(new Set(ids).size).toBe(ids.length);
+	});
+
+	it('has no two distinct places reachable from one another by fuzzy matching', () => {
+		// The safety invariant for the whole gazetteer. If adding an entry ever makes one
+		// real place a near-miss for another, a typo in a filename would silently attribute
+		// a photograph to the wrong street or castle - so this fails loudly instead.
+		// Kapellen's estate names are what make it necessary: Zilverhof/Vijverhof and
+		// Ravenhof/Rozenhof are two edits apart and all share the "hof" suffix family, so
+		// neither the family gate nor the length gate separates them - only the edit budget.
+		const forms = gazetteer.entries.flatMap((entry) =>
+			[entry.name, ...entry.aliases].map((form) => ({
+				id: entry.id,
+				form,
+				core: corePlace(form),
+				fuzzy: entry.fuzzy
+			}))
+		);
+
+		const collisions: string[] = [];
+
+		for (const a of forms) {
+			if (a.core.length < 5) continue;
+
+			for (const b of forms) {
+				if (a.id === b.id || !b.fuzzy) continue;
+				if (Math.abs(a.core.length - b.core.length) > 3) continue;
+				if (streetSuffixFamily(a.core) !== streetSuffixFamily(b.core)) continue;
+				if (diceCoefficient(a.core, b.core) < 0.55) continue;
+
+				const budget = maxEdits(a.core.length);
+				if (damerauLevenshtein(a.core, b.core, budget) <= budget) {
+					collisions.push(`"${a.form}" (${a.id}) can reach "${b.form}" (${b.id})`);
+				}
+			}
+		}
+
+		expect(collisions).toEqual([]);
+	});
+
+	it('still reaches the correct street from the multi-edit misspellings in the archive', () => {
+		// These are catalogued as aliases, so they resolve exactly rather than through the
+		// fuzzy stage. Tightening the edit budget must not have cost us any of them.
+		expect(idsIn(`${CORPUS}/x/Kalmhousesteenweg - zn - zd.jpg`)).toContain('kalmthoutsesteenweg');
+		expect(idsIn(`${CORPUS}/x/Doprsstraat 12 - zn - zd.jpg`)).toContain('dorpsstraat');
+		expect(idsIn(`${CORPUS}/x/Hoogboomsesteenweg - zn - zd.jpg`)).toContain('hoogboomsteenweg');
+		expect(idsIn(`${CORPUS}/x/IJjzerenweglaan - zn - zd.jpg`)).toContain('ijzerenweglaan');
+	});
+
+	it('still tolerates a single-character typo in the stem of a name', () => {
+		// One edit in the stem is the case fuzzy matching exists for: an uncatalogued slip.
+		expect(idsIn(`${CORPUS}/x/Stationstraat - zn - zd.jpg`)).toContain('stationsstraat');
+		expect(idsIn(`${CORPUS}/x/Hoevonsebaan - zn - zd.jpg`)).toContain('hoevensebaan');
+	});
+
+	it('does not resolve a typo that falls in the suffix itself', () => {
+		// A known and accepted limitation. "Hoevensebaam" has no recognised suffix at all,
+		// so it has no family, and the family gate refuses it. Relaxing that gate to catch
+		// this would be the same relaxation that lets Mastenbos reach Mastenhof and
+		// Zilverhof reach Vijverhof, which is a far worse trade in a heritage archive:
+		// an unresolved name is a gap, a wrongly resolved one is a false record.
+		expect(idsIn(`${CORPUS}/x/Hoevensebaam - zn - zd.jpg`)).not.toContain('hoevensebaan');
 	});
 });

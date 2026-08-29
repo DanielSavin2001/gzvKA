@@ -133,11 +133,27 @@ export function buildIndex(gazetteer: Gazetteer): GazetteerIndex {
 	};
 }
 
-/** The edit budget for a window of the given length. */
+/**
+ * The edit budget for a window of the given length.
+ *
+ * Deliberately tight, because Kapellen's place names crowd together. A budget of two at
+ * nine characters lets "Zilverhof" reach "Vijverhof" and "Ravenhof" reach "Rozenhof" -
+ * different estates, all sharing the `hof` family, so the suffix gate cannot separate
+ * them either. Attributing a photograph to the wrong castle is exactly the silent
+ * corruption this pipeline exists to avoid.
+ *
+ * One edit covers the real variation: every misspelling observed in the archive is a
+ * single slip apart from its correct form, with the sole exception of the long
+ * `-steenweg` names, which is why longer windows get two. The multi-edit misspellings we
+ * already know about ("Kalmhousesteenweg", "Doprsstraat") are recorded as aliases and so
+ * resolve exactly, never through this stage - fuzzy matching only has to catch typos
+ * nobody has catalogued yet, and it should be timid about it.
+ *
+ * `gazetteerHasNoFuzzyCollisions` in the tests holds this honest: it fails if any future
+ * entry makes two distinct places reachable from one another.
+ */
 export function maxEdits(length: number): number {
-	if (length <= 6) return 1;
-	if (length <= 14) return 2;
-	return 3;
+	return length <= 15 ? 1 : 2;
 }
 
 /** Options for a match run. */
