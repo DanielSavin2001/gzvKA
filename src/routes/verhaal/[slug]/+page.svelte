@@ -4,7 +4,7 @@
 	import type { Archive } from '$lib/archive';
 	import { loadArchive } from '$lib/archive';
 	import type { Story } from '$lib/stories';
-	import { loadStory, readingMinutes } from '$lib/stories';
+	import { formatBytes, loadStory, readingMinutes } from '$lib/stories';
 	import StoryBody from '../../components/StoryBody.svelte';
 
 	export let data: { slug: string };
@@ -107,6 +107,30 @@
 				</ul>
 			{/if}
 		</header>
+
+		{#if story.documents && story.documents.length > 0}
+			<section class="mt-6 rounded-xl border border-gray-300 bg-gray-50 p-5">
+				<h2 class="text-lg font-bold text-gray-900">
+					{story.documents.length === 1 ? 'Document bij deze pagina' : 'Documenten bij deze pagina'}
+				</h2>
+				<ul class="mt-3 space-y-2">
+					{#each story.documents as document (document.url)}
+						<li>
+							<a
+								class="inline-flex items-center gap-2 font-medium text-blue-800 underline hover:no-underline"
+								href={document.url}
+								download
+							>
+								{document.name}
+								<span class="text-sm font-normal text-gray-500"
+									>({formatBytes(document.bytes)})</span
+								>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 
 		<article class="pb-12">
 			<StoryBody {archive} sections={story.sections} />

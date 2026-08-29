@@ -227,6 +227,34 @@ provenance is part of the record.
 
 ---
 
+## The rest of the website, folded in
+
+Daniel downloaded every photograph from the live gzvka.be — 3,745 files — and 1,556 of them
+had never been in this repository. They are now merged, placed by the page of the old site
+that shows each one.
+
+| | before | after |
+| --- | --- | --- |
+| Photographs in the archive | 2,948 | **4,504** |
+| Old-site references that resolve | 59.0% | **99.9%** |
+| Photographs with a street | 864 | **1,304** |
+| Photographs joined to a story | 2,183 | **3,712** |
+| Places with something written about them | 94 | **97** |
+
+Four references still do not resolve: `UnderConstruction.png`, which is website furniture,
+and three images the old pages linked by absolute URL that were not in the download.
+
+17 new subjects came in with them — Kasteel Oude Gracht, Klein Bos, Kasteel Pannenhuys,
+Kapellenbos, Ertbrandbos and a dozen more — each a page of the old site that had no
+photographs in this repository at all.
+
+The archive also holds no GIFs any more. 28 files were GIFs wearing a `.png` name and 29
+more disagreed with their extension in other ways; they are now what they say they are. This
+does not make them look better — GIF threw the colour away when the file was made, and only
+a fresh scan can bring it back — but it does mean no tool downstream will be misled.
+
+---
+
 ## Corrections made by hand
 
 Two street names were wrong, both found by Daniel looking at the site and both confirmed

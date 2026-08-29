@@ -13,12 +13,12 @@ npm run thumbs       # make web-sized copies of the photos (a few minutes, once)
 npm run start        # http://localhost:5173
 ```
 
-That is the whole archive: all 2948 photographs, searchable, browsable by street, with the
+That is the whole archive: all 4504 photographs, searchable, browsable by street, with the
 writing from the old website beside them. The photo index and the stories are generated from
 the images and pages in this repository and committed, so it works on a fresh clone with
 nothing configured.
 
-`npm run thumbs` converts the 937 MB of originals into web-sized copies under
+`npm run thumbs` converts the originals into web-sized copies under
 `static/foto/` (about 440 MB, not committed). It is safe to re-run - it skips anything
 already converted. Without it the pages work but the images are missing.
 
@@ -42,7 +42,7 @@ npm run streets         # rebuild street positions from the official register
 ```bash
 cd functions
 npm install
-npx jest                     # 204 tests, no credentials needed
+npx jest                     # 209 tests, no credentials needed
 npm run gazetteer:build      # rebuild the Kapellen place list
 npm run corpus:report        # what the filenames alone yield
 npm run map:labels           # street names recovered from the town map PDF
@@ -194,3 +194,42 @@ Two things the build refuses rather than ignores: a correction naming a place th
 the gazetteer, and a correction naming a photograph that is not in the corpus. Either would
 mean somebody recorded a fact and the archive silently dropped it, which is worse than a
 build failure.
+
+## Folding in the rest of the website
+
+The repository originally held 2,948 photographs; the live gzvka.be showed 1,556 more that
+had never been added to it. Those arrived as a flat download in
+`src/lib/Legacy-website-images/` and were merged by:
+
+```bash
+node scripts/merge-legacy-images.mjs           # report what it would do
+node scripts/merge-legacy-images.mjs --apply   # do it
+```
+
+It decides where each photograph goes from **the page of the old site that shows it** —
+`legacy-site/` holds all 101 pages, so a photograph's subject folder is evidence rather than
+a guess. Where a page's photographs are already filed, its folder is learned from them;
+where a page had none, a folder named after that page is created. 17 subjects came into the
+archive that way, among them Kasteel Oude Gracht, Klein Bos, Kapellenbos and Ertbrandbos.
+
+Anything no page references is **left in the download folder and reported** rather than
+filed on a guess. After the merge, 99.9% of the old site's photograph references resolve to
+a file in this repository, up from 59%.
+
+Twenty of the downloaded names arrived as UTF-8 read as Latin-1 — `CafÃ© De Vrede`,
+`75 jaar BelgiÃ«` — and are repaired on the way in. Left alone they would never have matched
+the page that references them.
+
+## Formats
+
+```bash
+node scripts/fix-image-formats.mjs --apply
+```
+
+57 files were named for one format and held another. They displayed correctly only because
+the thumbnail build reads magic bytes rather than trusting the name — but every other tool
+trusts the name. GIFs are re-encoded to PNG, which is lossless for a palette image and means
+the archive holds no GIFs; everything else is renamed, leaving the bytes untouched, because
+re-encoding a PNG to JPEG to satisfy its filename would throw away quality to fix a name.
+
+A photograph's id ignores its extension, so none of this changes a URL.
