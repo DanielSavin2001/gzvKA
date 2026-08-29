@@ -18,6 +18,22 @@ export { applyPhotoEdit } from '../../sharedModels/photo-edit';
 
 const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
 
+/**
+ * How long to wait for the overlay before going without it.
+ *
+ * This is fetched during the build now, not only in a browser: the photo pages are
+ * prerendered, and their titles come from the archive, which is the archive a curator has
+ * corrected. A build that reaches for a service is a build that can hang on one, and
+ * `fetch` waits on a blackholed host until the operating system gives up - which on a CI
+ * runner means the job burns its whole allowance and then fails with a timeout that says
+ * nothing about why.
+ *
+ * Ten seconds is long enough for a cold Cloud Function and short enough that nobody
+ * notices. Past it the archive is exactly what the generated index says, which is what it
+ * was before the editor existed.
+ */
+const TIMEOUT_MS = 10_000;
+
 let cache: Record<string, PhotoEdit> | null = null;
 
 export async function loadPhotoEdits(
@@ -30,7 +46,9 @@ export async function loadPhotoEdits(
 	if (!FUNCTIONS_BASE) return {};
 
 	try {
-		const response = await fetcher(`${FUNCTIONS_BASE}photoEdits`);
+		const response = await fetcher(`${FUNCTIONS_BASE}photoEdits`, {
+			signal: AbortSignal.timeout(TIMEOUT_MS)
+		});
 		if (!response.ok) return {};
 
 		const parsed = (await response.json()) as Partial<PhotoEditFile>;
