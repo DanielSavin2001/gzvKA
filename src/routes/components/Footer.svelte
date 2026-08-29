@@ -32,8 +32,8 @@
 	<FooterLinkGroup
 		ulClass="flex flex-wrap items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0"
 	>
-		<FooterLink href="/">Over ons</FooterLink>
-		<FooterLink href="/">Contact</FooterLink>
+		<FooterLink href="/over-ons">Over ons</FooterLink>
+		<FooterLink href="/contact">Contact</FooterLink>
 		<!-- A door for two people rather than a feature, so it sits here and not in the menu. -->
 		<FooterLink href="/beheer">Beheer</FooterLink>
 	</FooterLinkGroup>
