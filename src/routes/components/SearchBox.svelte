@@ -1,7 +1,11 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
+
 	import { goto } from '$app/navigation';
 	import type { Archive, ArchivePlace } from '$lib/archive';
 	import { suggestPlaces } from '$lib/archive';
+
+	const dispatch = createEventDispatcher<{ search: string }>();
 
 	export let archive: Archive | null = null;
 	export let value = '';
@@ -15,12 +19,19 @@
 	$: suggestions = archive && value.trim() !== '' ? suggestPlaces(archive, value) : [];
 	$: if (suggestions.length === 0) highlighted = -1;
 
+	/**
+	 * Hands the query to whoever is showing the results.
+	 *
+	 * The box used to navigate to a page of its own, so the search on the home page could
+	 * only take you elsewhere to see what it found. The results are shown where the question
+	 * was asked now, and the page listening decides what to do with it.
+	 */
 	function submit(): void {
 		const query = value.trim();
 		if (query === '') return;
 
 		open = false;
-		goto(`/zoeken?q=${encodeURIComponent(query)}`);
+		dispatch('search', query);
 	}
 
 	function choose(place: ArchivePlace): void {

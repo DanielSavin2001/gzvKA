@@ -8,12 +8,21 @@
 	import MapExplorer from './components/MapExplorer.svelte';
 	import PhotoCard from './components/PhotoCard.svelte';
 	import SearchBox from './components/SearchBox.svelte';
+	import SearchResults from './components/SearchResults.svelte';
 
 	let archive: Archive | null = null;
 	let storyIndex: StoryIndex | null = null;
 	let error: string | null = null;
 
+	/** What is being searched for. Empty means the page shows itself rather than results. */
+	let query = '';
+
 	onMount(async () => {
+		// A shared link still works: /?q=kapelsestraat opens on that search. Read from
+		// `window` rather than the page store, because this page is prerendered and
+		// SvelteKit rightly refuses to let a prerendered page depend on a query string.
+		query = new URLSearchParams(window.location.search).get('q') ?? '';
+
 		try {
 			archive = await loadArchive();
 		} catch (e) {
@@ -26,6 +35,23 @@
 			storyIndex = null; // the archive is the page; the writing is an extra on top of it
 		}
 	});
+
+	/**
+	 * Keeps the address bar in step without navigating.
+	 *
+	 * `history.replaceState` rather than `goto`, so the page never re-runs its load and the
+	 * prerendered home page keeps no dependency on the query string - which is what made
+	 * search a separate route in the first place.
+	 */
+	function searchFor(term: string): void {
+		query = term;
+
+		const url = new URL(window.location.href);
+		if (term) url.searchParams.set('q', term);
+		else url.searchParams.delete('q');
+
+		history.replaceState(history.state, '', url);
+	}
 
 	$: streets = archive ? placesWithPhotos(archive, true) : [];
 	$: areas = archive
@@ -84,7 +110,7 @@
 		</p>
 
 		<div class="mx-auto mt-8 max-w-2xl">
-			<SearchBox {archive} />
+			<SearchBox {archive} bind:value={query} on:search={(event) => searchFor(event.detail)} />
 		</div>
 
 		{#if archive}
@@ -103,16 +129,23 @@
 		{/if}
 	</section>
 
-	<!--
-		The map is the front page. It loads its own data, so it sits outside the archive
-		check - and outside it the `id="kaart"` anchor exists in the prerendered HTML, which
-		is what the menu link points at.
-	-->
-	<div class="pb-8">
-		<MapExplorer />
-	</div>
+	<SearchResults {archive} {query} />
 
-	{#if error}
+	{#if !query.trim()}
+		<!--
+			The map is the front page. It loads its own data, so it sits outside the archive
+			check - and outside it the `id="kaart"` anchor exists in the prerendered HTML,
+			which is what the menu link points at. Prerendering runs with no query, so the
+			anchor is in the static HTML whatever this condition does at runtime.
+		-->
+		<div class="pb-8">
+			<MapExplorer />
+		</div>
+	{/if}
+
+	{#if query.trim()}
+		<!-- Searching: the answer is above, and the browse lists would only bury it. -->
+	{:else if error}
 		<div class="my-8 rounded-lg border border-red-300 bg-red-50 p-5 text-red-900">
 			<p class="font-semibold">Het archief kon niet geladen worden</p>
 			<p class="mt-1 text-sm">{error}</p>

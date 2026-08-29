@@ -465,7 +465,7 @@
 					<p class="max-w-md text-gray-600">
 						Deze browser kan geen kaarten tonen (WebGL ontbreekt). Alle foto's blijven bereikbaar
 						via <a class="text-blue-800 underline" href="/">de lijst met straten</a> en
-						<a class="text-blue-800 underline" href="/zoeken">de zoekpagina</a>.
+						<a class="text-blue-800 underline" href="/">het zoekvak bovenaan</a>.
 					</p>
 				</div>
 			{:else}
