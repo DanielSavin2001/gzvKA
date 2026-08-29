@@ -16,6 +16,11 @@
 		whoAmI
 	} from '$lib/admin';
 	import type { PlaceCorrection } from '../../../sharedModels/correction';
+	import type { ArchivePhoto } from '$lib/archive';
+	import { searchPhotos, thumbUrl } from '$lib/archive';
+	import type { PhotoEdit } from '$lib/photo-edits';
+	import { forgetPhotoEdits, loadPhotoEdits } from '$lib/photo-edits';
+	import PhotoEditor from '../components/PhotoEditor.svelte';
 
 	/**
 	 * The curator's desk.
@@ -37,10 +42,39 @@
 
 	let showing: 'pending' | 'approved' | 'rejected' = 'pending';
 
-	/** Which desk the curator is at: photographs waiting, or places said to be misplaced. */
-	let desk: 'fotos' | 'correcties' = 'fotos';
+	/**
+	 * Which desk the curator is at.
+	 *
+	 * `archief` is the one that was missing: the queue only ever handled photographs coming
+	 * *in*, and the 4,504 already here - every field of them read out of a filename - had no
+	 * way to be corrected at all.
+	 */
+	let desk: 'fotos' | 'archief' | 'correcties' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
+
+	/** Finding a photograph among 4,504 of them. */
+	let photoQuery = '';
+	let openPhoto: ArchivePhoto | null = null;
+	let photoEdits: Record<string, PhotoEdit> = {};
+
+	$: photoHits =
+		archive && photoQuery.trim().length >= 2 ? searchPhotos(archive, photoQuery).slice(0, 60) : [];
+
+	async function openArchiveDesk(): Promise<void> {
+		desk = 'archief';
+		openPhoto = null;
+		error = null;
+
+		// Fetched fresh rather than from the cache the site holds, so a curator sees their
+		// own last edit rather than whatever was loaded when the page opened.
+		forgetPhotoEdits();
+		try {
+			photoEdits = await loadPhotoEdits();
+		} catch {
+			photoEdits = {};
+		}
+	}
 
 	const tabs: ['pending' | 'approved' | 'rejected', string][] = [
 		['pending', 'Te bekijken'],
@@ -263,13 +297,17 @@
 		</div>
 	{:else}
 		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', "Foto's"], ['correcties', 'Correcties op de kaart']] as [value, label] (value)}
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['correcties', 'Correcties op de kaart']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
 						? 'bg-gray-900 text-white'
 						: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 					on:click={() => {
+						if (value === 'archief') {
+							openArchiveDesk();
+							return;
+						}
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
 						refresh();
@@ -280,7 +318,7 @@
 			{/each}
 		</nav>
 
-		<nav class="mt-6 flex gap-2">
+		<nav class="mt-6 flex gap-2" class:hidden={desk === 'archief'}>
 			{#each tabs as [value, label] (value)}
 				<button
 					type="button"
@@ -297,7 +335,94 @@
 			{/each}
 		</nav>
 
-		{#if desk === 'correcties'}
+		{#if desk === 'archief'}
+			<section class="mt-6">
+				<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+					Een foto uit het archief aanpassen
+				</h2>
+				<p class="mt-1 text-gray-600 dark:text-gray-400">
+					Alles wat het archief van deze foto's weet, komt uit de bestandsnaam. Een titel die krom
+					loopt, een verkeerde straat, een jaartal dat nergens in stond &mdash; dat zet u hier
+					recht. Wijzigingen zijn meteen zichtbaar op de site.
+				</p>
+
+				<label class="mt-4 block">
+					<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Zoek een foto</span>
+					<input
+						bind:value={photoQuery}
+						placeholder="Straat, titel, jaartal, wie ze gaf ..."
+						class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+					/>
+				</label>
+
+				{#if !archive}
+					<p class="py-10 text-center text-gray-500 dark:text-gray-400">
+						Bezig met laden van het archief ...
+					</p>
+				{:else if openPhoto}
+					<div class="mt-5 rounded-xl border border-gray-300 p-4 dark:border-gray-700">
+						<button
+							type="button"
+							class="mb-4 text-sm font-medium text-blue-800 underline hover:no-underline dark:text-blue-300"
+							on:click={() => (openPhoto = null)}
+						>
+							&larr; Terug naar de resultaten
+						</button>
+
+						{#key openPhoto.id}
+							<PhotoEditor {archive} photo={openPhoto} existing={photoEdits[openPhoto.id]} />
+						{/key}
+					</div>
+				{:else if photoQuery.trim().length < 2}
+					<p class="py-10 text-center text-gray-600 dark:text-gray-400">
+						Typ iets om te zoeken in {archive.imageCount.toLocaleString('nl-BE')} foto's.
+					</p>
+				{:else if photoHits.length === 0}
+					<p class="py-10 text-center text-gray-600 dark:text-gray-400">
+						Niets gevonden voor &ldquo;{photoQuery}&rdquo;.
+					</p>
+				{:else}
+					<ul class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+						{#each photoHits as hit (hit.photo.id)}
+							<li>
+								<button
+									type="button"
+									class="w-full overflow-hidden rounded-lg border border-gray-200 text-left transition hover:border-blue-600 dark:border-gray-700"
+									on:click={() => (openPhoto = hit.photo)}
+								>
+									<img
+										src={thumbUrl(archive, hit.photo)}
+										alt={hit.photo.t}
+										loading="lazy"
+										class="aspect-[4/3] w-full bg-gray-100 object-cover dark:bg-gray-800"
+									/>
+									<span
+										class="block truncate px-2 py-1 text-sm text-gray-900 dark:text-gray-100"
+										title={hit.photo.t}
+									>
+										{hit.photo.t}
+									</span>
+									{#if photoEdits[hit.photo.id]}
+										<span
+											class="block px-2 pb-1 text-xs font-medium text-amber-700 dark:text-amber-400"
+										>
+											aangepast
+										</span>
+									{/if}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</section>
+
+			<!-- Existing folder names, so a curator reuses one rather than inventing a variant. -->
+			<datalist id="beheer-categorieen">
+				{#each archive?.subjects ?? [] as subject (subject.slug)}
+					<option value={subject.name} />
+				{/each}
+			</datalist>
+		{:else if desk === 'correcties'}
 			{#if loading}
 				<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
 			{:else if reports.length === 0}

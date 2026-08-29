@@ -1,4 +1,4 @@
-import * as controllers from "./controllers"
+import * as controllers from './controllers';
 
 /**
  * Functions related to the Data Controller
@@ -16,7 +16,6 @@ export const getGeoJson = controllers.dataController.getGeoJson;
 export const createGeoJson = controllers.dataController.createGeoJson;
 export const createGeoJsonJob = controllers.dataController.createGeoJsonJob;
 
-
 /**
  * Functions related to the Subject Controller
  *
@@ -30,27 +29,25 @@ export const createGeoJsonJob = controllers.dataController.createGeoJsonJob;
  * @function createSubject
  *
  */
-export const getAllSubjects = controllers.subjectController.getAllSubjects
-export const getSubject = controllers.subjectController.getSubject
-export const createSubject = controllers.subjectController.createSubject
-
+export const getAllSubjects = controllers.subjectController.getAllSubjects;
+export const getSubject = controllers.subjectController.getSubject;
+export const createSubject = controllers.subjectController.createSubject;
 
 /**
  * Functions related to the Image Controller
  *
  * Handles the uploading of images related to subjects.
- * @function uploadImages 
+ * @function uploadImages
  *
  * Retrieves all Images of a subject from the database.
- * @function getImageDocuments 
- * 
+ * @function getImageDocuments
+ *
  * Retrieves Image from Google Storage by imgURL
  * @function retrieveImage
  */
-export const uploadImages = controllers.imageController.uploadImages
-export const getImageDocuments = controllers.imageController.getImageDocuments
-export const retrieveImage = controllers.imageController.retrieveImage
-
+export const uploadImages = controllers.imageController.uploadImages;
+export const getImageDocuments = controllers.imageController.getImageDocuments;
+export const retrieveImage = controllers.imageController.retrieveImage;
 
 /**
  * Functions behind contributing a photograph and curating what arrives.
@@ -74,3 +71,7 @@ export const whoAmI = controllers.submissionController.whoAmI;
 export const submitCorrection = controllers.correctionController.submitCorrection;
 export const listCorrections = controllers.correctionController.listCorrections;
 export const reviewCorrection = controllers.correctionController.reviewCorrection;
+
+export const photoEdits = controllers.photoEditController.photoEdits;
+export const savePhotoEdit = controllers.photoEditController.savePhotoEdit;
+export const deletePhotoEdit = controllers.photoEditController.deletePhotoEdit;

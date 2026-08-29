@@ -51,6 +51,9 @@
 	let photo: ArchivePhoto | undefined;
 	$: photo = archive?.photoById.get(data.id);
 
+	/** Set only by a curator; the generated index has no such field. */
+	$: description = (photo as (typeof photo & { desc?: string }) | undefined)?.desc ?? '';
+
 	$: places = photo
 		? photo.st
 				.map((id) => archive?.placeById.get(id))
@@ -269,6 +272,15 @@
 
 			<figcaption class="mt-4">
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">{photo.t}</h1>
+
+				{#if description}
+					<!--
+						The one thing no filename could ever carry, so nothing here ever had one
+						until a curator wrote it. Above the table rather than inside it: it is
+						prose, not a field.
+					-->
+					<p class="mt-3 whitespace-pre-line text-gray-700 dark:text-gray-300">{description}</p>
+				{/if}
 
 				<dl class="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
 					{#if places.length > 0}
