@@ -248,23 +248,58 @@ rebuild to wait for.
 
 ### What has to be set up once
 
-None of this can be done from the repository; it needs the Firebase console.
+None of this can be done from the repository; it needs the Firebase console. The order
+matters — each step below is blocked by the one above it.
 
-1. **Enable Google sign-in.** Firebase console → Authentication → Sign-in method → Google.
-2. **Add yourself as a curator.** Firestore → create a collection `admins` → add a document
-   whose **ID is your email address, lower-cased** (the contents do not matter; `{ }` is
-   fine). Adding another curator later is one more document.
-3. **Publish the rules**, which are in this repository:
+1. **Register a web app.** Project settings → _Your apps_ → the `</>` icon. A Firebase
+   project starts with no apps at all, and until one exists there is **no API key and no
+   auth domain**, so there is nothing to put in step 6 and sign-in cannot work. Name it
+   anything; do _not_ tick "Firebase Hosting" (hosting is already configured here).
+
+2. **Move to the Blaze plan.** Cloud Functions cannot be deployed on Spark — deployment
+   goes through Cloud Build and Artifact Registry, which Spark does not include — and on
+   projects created since late 2024 the default Cloud Storage bucket needs Blaze too.
+   Without it, `/upload` has nowhere to send a photograph and `/beheer` has nothing to
+   read. Blaze is pay-as-you-go on top of a free tier this archive sits well inside
+   (2M function calls and 5 GB of storage a month), but it does want a card, so set a
+   budget alert while you are there. **Authentication itself is free on Spark** — only
+   the functions and the bucket force the upgrade.
+
+3. **Enable Google sign-in.** Authentication → Sign-in method → Google → Enable. Two
+   fields in that panel block _Save_ until they are filled:
+
+   - **Public-facing name** defaults to something like `project-590536267591`. This is
+     the name Google shows on the consent screen — "Sign in to …" — so make it
+     `gzvKA fotoarchief`.
+   - **Support email** must be picked from the dropdown; it is empty by default and is
+     what the red _"Please select an email address"_ is complaining about.
+
+   The web client ID and secret fill themselves in once you save.
+
+4. **Authorise the domains you will sign in from.** Authentication → Settings →
+   Authorized domains. `gzvka-12a9f.web.app` and `gzvka-12a9f.firebaseapp.com` are added
+   for you, but `gzvka.com` is not, and neither is a PR preview channel like
+   `gzvka-12a9f--pr40-….web.app`. There is no wildcard: a domain that is not on this list
+   fails the sign-in popup with `auth/unauthorized-domain`.
+
+5. **Add yourself as a curator.** Firestore → create a collection `admins` → add a
+   document whose **ID is your email address, lower-cased** (the contents do not matter;
+   `{ }` is fine). Adding another curator later is one more document.
+
+6. **Publish the rules and the functions**, both of which are in this repository:
+
    ```bash
    firebase deploy --only firestore:rules,storage:rules
+   firebase deploy --only functions
    ```
-4. **Deploy the functions**: `firebase deploy --only functions`.
-5. **Set the client values** — `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
-   `VITE_FIREBASE_PROJECT_ID` — in `.env` locally and as GitHub secrets for the deploy.
-   They come from Project settings → General → Your apps. They are not secrets; Firebase
-   publishes them in every client app.
 
-Without step 5 the page says so instead of failing in a confusing way.
+7. **Set the client values** — `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
+   `VITE_FIREBASE_PROJECT_ID`, and `VITE_BASE_URL_GF` for the functions — in `.env`
+   locally and as GitHub secrets for the deploy. The first three come from the web app
+   registered in step 1: Project settings → General → Your apps. They are not secrets;
+   Firebase publishes them in every client app.
+
+Without step 7 the page says so instead of failing in a confusing way.
 
 ### How the security actually works
 
