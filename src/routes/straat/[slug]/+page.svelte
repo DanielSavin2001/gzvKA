@@ -3,11 +3,14 @@
 
 	import type { Archive, ArchivePhoto, ArchivePlace } from '$lib/archive';
 	import { loadArchive } from '$lib/archive';
+	import type { StoryIndex } from '$lib/stories';
+	import { loadStoryIndex, storiesForPlace } from '$lib/stories';
 	import PhotoCard from '../../components/PhotoCard.svelte';
 
 	export let data: { slug: string };
 
 	let archive: Archive | null = null;
+	let storyIndex: StoryIndex | null = null;
 	let error: string | null = null;
 
 	onMount(async () => {
@@ -15,6 +18,14 @@
 			archive = await loadArchive();
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
+		}
+
+		// The photographs are the page; what the old site wrote about this place is a
+		// bonus on top of them, so its absence is never an error.
+		try {
+			storyIndex = await loadStoryIndex();
+		} catch {
+			storyIndex = null;
 		}
 	});
 
@@ -32,6 +43,8 @@
 	});
 
 	$: withNumbers = sorted.filter((photo) => photo.hn != null);
+
+	$: stories = storiesForPlace(storyIndex, data.slug);
 </script>
 
 <svelte:head>
@@ -70,6 +83,31 @@
 				{#if withNumbers.length > 0}&middot; {withNumbers.length} met huisnummer{/if}
 			</p>
 		</header>
+
+		{#if stories.length > 0}
+			<section class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+				<h2 class="text-lg font-bold text-gray-900">Wat hierover geschreven is</h2>
+
+				<ul class="mt-3 space-y-4">
+					{#each stories as story (story.slug + story.section)}
+						<li>
+							<a
+								class="group block rounded-lg p-2 -m-2 transition hover:bg-amber-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+								href="/verhaal/{story.slug}{story.section >= 0 ? `#deel-${story.section}` : ''}"
+							>
+								<p class="font-semibold text-gray-900 group-hover:underline">
+									{story.heading ?? story.title}
+								</p>
+								<p class="mt-1 text-sm leading-relaxed text-gray-700">{story.excerpt}</p>
+								{#if story.heading}
+									<p class="mt-1 text-xs text-gray-500">uit: {story.title}</p>
+								{/if}
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 
 		{#if sorted.length === 0}
 			<p class="py-12 text-gray-600">Nog geen foto's aan deze plaats gekoppeld.</p>

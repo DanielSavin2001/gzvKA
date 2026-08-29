@@ -3,11 +3,18 @@
 
 	import type { Archive, ArchivePhoto } from '$lib/archive';
 	import { detailUrl, loadArchive, thumbUrl } from '$lib/archive';
+	import type { Story } from '$lib/stories';
+	import { loadStory, loadStoryPhotos } from '$lib/stories';
+	import StoryBody from '../../components/StoryBody.svelte';
 
 	export let data: { id: string };
 
 	let archive: Archive | null = null;
 	let error: string | null = null;
+
+	/** The piece of writing this photograph appeared in, when the old site had one. */
+	let story: Story | null = null;
+	let storySection = -1;
 
 	onMount(async () => {
 		try {
@@ -16,6 +23,31 @@
 			error = e instanceof Error ? e.message : String(e);
 		}
 	});
+
+	// A photograph can be opened from another without the page remounting, so the story
+	// follows the id rather than being fetched once on mount.
+	$: loadStoryFor(data.id);
+
+	async function loadStoryFor(id: string): Promise<void> {
+		story = null;
+		storySection = -1;
+
+		try {
+			const map = await loadStoryPhotos();
+			const reference = map[id];
+			if (!reference) return;
+
+			const loaded = await loadStory(reference.slug);
+			// Guard against a slower fetch for a photograph the reader has already left.
+			if (data.id !== id) return;
+
+			story = loaded;
+			storySection = reference.section;
+		} catch {
+			// The photograph and its details are the page; the story is an extra.
+			story = null;
+		}
+	}
 
 	let photo: ArchivePhoto | undefined;
 	$: photo = archive?.photoById.get(data.id);
@@ -125,5 +157,29 @@
 				</p>
 			</figcaption>
 		</figure>
+
+		{#if story && storySection >= 0}
+			<section class="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+				<p class="text-sm font-semibold uppercase tracking-wide text-amber-800">
+					Bij deze foto hoort een verhaal
+				</p>
+
+				<div class="mt-1">
+					<StoryBody
+						sections={story.sections}
+						only={storySection}
+						showImages={false}
+						headingLevel="h3"
+					/>
+				</div>
+
+				<a
+					class="mt-5 inline-block rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900"
+					href="/verhaal/{story.slug}#deel-{storySection}"
+				>
+					Lees &ldquo;{story.title}&rdquo;
+				</a>
+			</section>
+		{/if}
 	{/if}
 </div>

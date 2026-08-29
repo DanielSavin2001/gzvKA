@@ -19,3 +19,11 @@ functions/src/data/kapellen-gazetteer.json
 
 # Generated review file - rebuild with `npm run map:labels` in functions/.
 functions/src/data/map-label-candidates.json
+
+# Generated archive data - rebuild with `npm run archive:index` and `npm run stories`.
+static/data/
+
+# The old gzvka.be, saved exactly as it was served. Reformatting the source of the
+# text migration would destroy the evidence it exists to preserve.
+legacy-site/
+docs/legacy-missing-photos.txt

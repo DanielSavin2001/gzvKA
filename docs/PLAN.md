@@ -148,16 +148,47 @@ archive rather than merely impressive:
 - Corners work too — the archive already writes them (`Chr. Pallemansstraat-Heidestraat`)
   and the matcher already recognises them.
 
-### Phase 5 — the texts
+### Phase 5 — the texts (done, in this branch)
+
+The 101 pages you extracted from gzvka.be are committed under `legacy-site/` and read by
+`npm run stories`. That recovered **290,216 characters of writing across 441 sections**, and
+joined **2,266 of the 3,838 photograph references** to files that are actually in this
+repository — the join key is the filename, which was never changed between the old site and
+the `history-images` folder.
+
+What it produced:
+
+- `/verhalen` — 85 pieces of local history, plus the association's own competition pages
+  kept separately.
+- `/verhaal/<slug>` — one story, with its photographs in the places the old page put them,
+  each linking through to the archive entry.
+- **94 places** now carry what was written about them, shown above the photographs on
+  `/straat/<slug>`. The matcher works on headings rather than on running prose, so a story
+  only lands on a street's page when that street is actually named in the heading above it,
+  or when at least three of the section's photographs are filed under it.
+- A photograph that appeared in a story now shows the passage it came from, on `/foto/<id>`.
+
+Two things fell out of the corpus that were not planned for. Vicky Staal's memoir heads
+every piece with the place and year it is set in — "Nieuwe Wijk, 1983", "Irishof, 1986-1987"
+— so those 100 pieces are self-indexed by place and date, and the dating is now carried
+through. And the build reports **1,572 photographs that the live site shows and this
+repository does not have** (`docs/legacy-missing-photos.txt`); that list is the clearest
+measure of what is still only on the old server.
+
+Nothing is paraphrased or generated. Every sentence on the site appears verbatim in the
+page named in that story's footer, which is why the source HTML is committed rather than
+only the extracted JSON.
+
+#### Still to migrate
+
 
 The historical writing does not all live on gzvka.be. `varia-text/` in this repository
 already holds migratable material, and it is the better place to start because it needs no
 network access at all:
 
-- `PANCRAS - Rudi Staute.docx` — a five-part serialised history of Café De Pancras. The
-  archive already has a `Café Pancras` subject folder, the gazetteer already has the place,
-  and `Nav.svelte` already has a dead menu item called *De mythe van de "Pancras"*. It is
-  an end-to-end test of the whole text pipeline that happens to also be the flagship story.
+- `PANCRAS - Rudi Staute.docx` — now largely redundant: the same serialised history came
+  through from `legacy-site/Pancras.htm` and is live at `/verhaal/pancras`. Worth a read
+  only to see whether the document carries parts the website never published.
 - Press clippings with a machine-readable provenance header (`<publication> – <date> – <url>`).
 - The Fietszoektocht 2014 material, which joins to photographs *deterministically*: the
   question number is in the filename (`FZ Louwke Poep 2.jpg`) and the brochure supplies the
@@ -166,13 +197,13 @@ network access at all:
 - The `.xlsx` standings files are lists of 146–154 named private individuals. **Do not
   import them.**
 
-For gzvka.be itself: the scraper is built and tested against fixtures, and run from your
-own machine rather than from CI, so the site is fetched politely and the raw HTML is
-archived to disk once and parsed offline afterwards.
+No scraper was needed for gzvka.be in the end: you saved the pages yourself, which is
+better than fetching them — the corpus is frozen, committed, and re-readable offline.
 
-Historical text is usually about a *place*, not about one photograph, so it is modelled as
-a story linked to a subject and a street, carrying its source URL, its author and its
-attribution — this is a heritage archive and provenance is part of the record.
+Historical text is usually about a *place*, not about one photograph, which is how it is
+modelled: a story linked to places, carrying its source page, its author's signature where
+the page had one, and the year where the page named one. This is a heritage archive and
+provenance is part of the record.
 
 ---
 

@@ -3,10 +3,13 @@
 
 	import type { Archive } from '$lib/archive';
 	import { loadArchive, placesWithPhotos } from '$lib/archive';
+	import type { StoryIndex } from '$lib/stories';
+	import { historyStories, loadStoryIndex, readingMinutes } from '$lib/stories';
 	import PhotoCard from './components/PhotoCard.svelte';
 	import SearchBox from './components/SearchBox.svelte';
 
 	let archive: Archive | null = null;
+	let storyIndex: StoryIndex | null = null;
 	let error: string | null = null;
 
 	onMount(async () => {
@@ -14,6 +17,12 @@
 			archive = await loadArchive();
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
+		}
+
+		try {
+			storyIndex = await loadStoryIndex();
+		} catch {
+			storyIndex = null; // the archive is the page; the writing is an extra on top of it
 		}
 	});
 
@@ -28,6 +37,9 @@
 	 * whole archive look like one street party.
 	 */
 	$: featured = archive ? pickVaried(archive, 12) : [];
+
+	// The longest pieces first: those are the ones worth putting in front of a visitor.
+	$: stories = historyStories(storyIndex).slice(0, 4);
 
 	function pickVaried(loaded: Archive, wanted: number) {
 		const seenSubjects = new Set<string>();
@@ -163,6 +175,41 @@
 				{/each}
 			</ul>
 		</section>
+
+		{#if stories.length > 0}
+			<section class="py-8">
+				<div class="flex flex-wrap items-end justify-between gap-3">
+					<div>
+						<h2 class="text-2xl font-bold text-gray-900">Verhalen bij de foto's</h2>
+						<p class="mt-1 text-gray-600">
+							De teksten van de oude website: de geschiedenis van de kastelen, de caf&eacute;s en de
+							straten, en de herinneringen van wie er opgroeide.
+						</p>
+					</div>
+					<a
+						class="rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-800 hover:border-blue-700 hover:bg-blue-50"
+						href="/verhalen"
+					>
+						Alle verhalen
+					</a>
+				</div>
+
+				<ul class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+					{#each stories as story (story.slug)}
+						<li>
+							<a
+								class="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 text-left transition hover:border-blue-600 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+								href="/verhaal/{story.slug}"
+							>
+								<h3 class="text-lg font-bold leading-snug text-gray-900">{story.title}</h3>
+								<p class="mt-2 flex-1 text-sm leading-relaxed text-gray-600">{story.excerpt}</p>
+								<p class="mt-3 text-xs text-gray-500">{readingMinutes(story.prose)} min lezen</p>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 
 		<section class="py-8">
 			<h2 class="text-2xl font-bold text-gray-900">Een greep uit het archief</h2>
