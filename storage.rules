@@ -1,10 +1,27 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+/**
+ * Two doors, and only one of them is open.
+ *
+ * `archief/` holds photographs a curator has approved. Those are the archive - they are
+ * meant to be seen, linked to and cached, so anyone may read them.
+ *
+ * `inzendingen/` holds what has been sent in and not yet looked at. Nobody may read it
+ * directly: a curator sees those through a short-lived signed URL that the functions issue
+ * after checking who is asking. Someone's family photograph should not be public because
+ * they pressed send.
+ *
+ * Nothing may be written from a browser at all. Uploads go through the `submitPhoto`
+ * function, which is where the size limit, the format check and the moderation queue live -
+ * none of which can be enforced by a client that writes to the bucket itself.
+ */
 service firebase.storage {
   match /b/{bucket}/o {
+    match /archief/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

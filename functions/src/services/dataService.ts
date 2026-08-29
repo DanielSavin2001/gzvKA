@@ -6,7 +6,7 @@ import {getAllSubjects} from "./subjectService";
 import {convertImageDocumentsToGeoJSONFeatureCollection} from "../utils/converter";
 import {isNotNullOrEmpty} from "../utils/string-helper";
 import {GeoJSONFeatureCollection, ImageDocument, Subject} from "../../../sharedModels/interfaces";
-import {MAP_DATA_GEOJSON_NAME} from "../constants/google-storage-constants";
+import {getMapDataGeoJsonName} from "../constants/google-storage-constants";
 
 export async function getMapData(fileName: string): Promise<Buffer> {
 
@@ -28,7 +28,7 @@ export async function createAllMapData(): Promise<void> {
 async function generateAllGeoJsonFiles(imageDocuments: ImageDocument[]): Promise<Map<string, GeoJSONFeatureCollection>> {
 
     const geoJsonFilesToUpload: Map<string, GeoJSONFeatureCollection> = new Map<string, GeoJSONFeatureCollection>();
-    geoJsonFilesToUpload.set(MAP_DATA_GEOJSON_NAME, convertImageDocumentsToGeoJSONFeatureCollection(imageDocuments));
+    geoJsonFilesToUpload.set(getMapDataGeoJsonName(), convertImageDocumentsToGeoJSONFeatureCollection(imageDocuments));
 
     const categorizedImageDocumentsCollection: Map<string, ImageDocument[]> = new Map<string, ImageDocument[]>();
 

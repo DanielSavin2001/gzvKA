@@ -1,228 +1,259 @@
 <script lang="ts">
-    import {Button, Fileupload, Input, Label, Listgroup, ListgroupItem, Modal, Spinner, Textarea} from 'flowbite-svelte';
-    import {onMount} from "svelte";
-    import {showErrorToast, showSuccessToast} from "../../services/toaster-service";
-    import {throwError} from "svelte-preprocess/dist/modules/errors";
-    import {MapMarker, Subject} from "../../../sharedModels/interfaces";
-    import {createSubject, getAllSubjects, uploadImages} from "../../services/google-functions-service";
-    import uploadHeroImage from '$lib/images/upload-hero.jpg';
-    import {DefaultMarker, MapEvents, MapLibre, RasterLayer, RasterTileSource} from "svelte-maplibre";
+	import { MAX_SUBMISSION_BYTES, ALLOWED_CONTENT_TYPES } from '../../../sharedModels/submission';
 
-    let retrievedSubjects: Subject[];
-    let files: FileList;
-    let showCreationModal = false;
-    let startedCreation = false;
-    let currentSubject: Subject | null = null;
-    let uploading = false;
-    let loading = true;
-    let marker: MapMarker | null = null;
+	/**
+	 * Sending a photograph in.
+	 *
+	 * No account, no login, nothing to fill in but the picture itself. Everything else is
+	 * optional, because the photographs worth having most often come from people who will
+	 * not fill in a form - and a name, a year or a street is a bonus, not a toll.
+	 *
+	 * Nothing appears on the site until someone has looked at it, and the page says so
+	 * plainly rather than implying the photograph is live.
+	 */
 
-    function addMarker(e: any) {
-        marker = {lngLat: e.detail.lngLat};
-    }
+	const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
 
-    onMount(async () => {
-        try {
-            const response = await getAllSubjects();
-            if (response.ok) retrievedSubjects = await response.json();
-            else throwError(response.statusText)
-        } catch (error) {
-            showErrorToast("Page load failed", `It looks like something went wrong! Please contact the admins. ${error}`)
-        } finally {
-            loading = false;
-        }
-    });
+	let files: File[] = [];
+	let name = '';
+	let email = '';
+	let note = '';
 
-    async function handleSubmitCreationSubject(event: Event) {
-        event.preventDefault();
-        startedCreation = true;
+	let dragging = false;
+	let sending = false;
+	let sent = 0;
+	let error: string | null = null;
 
-        const form = event.target as HTMLFormElement;
-        const formData = new FormData(form);
+	$: tooBig = files.filter((file) => file.size > MAX_SUBMISSION_BYTES);
+	$: wrongType = files.filter((file) => !ALLOWED_CONTENT_TYPES.includes(file.type));
+	$: sendable = files.length > 0 && tooBig.length === 0 && wrongType.length === 0;
 
-        const subjectName = formData.get('subjectName') as string;
-        const subjectExplanation = formData.get('subjectExplanation') as string;
+	function add(incoming: FileList | null): void {
+		if (!incoming) return;
+		error = null;
+		sent = 0;
+		files = [...files, ...Array.from(incoming)];
+	}
 
-        try {
-            const responseCreation = await createSubject({name: subjectName, explanation: subjectExplanation})
-            if (responseCreation.ok) retrievedSubjects = await (await getAllSubjects()).json();
-            else throwError(responseCreation.statusText)
+	function remove(index: number): void {
+		files = files.filter((_, i) => i !== index);
+	}
 
-            showCreationModal = false // Can not be in finally statement, when the creation fails we would like to save the current progress.
-            showSuccessToast("Subject created successfully", `Subject with the name "${subjectName}" was created.`)
-        } catch (error) {
-            showErrorToast("Subject creation failed", `${error}`)
-        } finally {
-            startedCreation = false // Needs to be in finally statement to reset the disabled state of the creation button.
-        }
-    }
+	function onDrop(event: DragEvent): void {
+		event.preventDefault();
+		dragging = false;
+		add(event.dataTransfer?.files ?? null);
+	}
 
-    function handleSubjectSelect(event: Event) {
-        const selectElement = event.target as HTMLSelectElement;
-        const selectedIndex = selectElement.selectedIndex;
-        if (!currentSubject) currentSubject = retrievedSubjects[selectedIndex - 1];
-        else currentSubject = retrievedSubjects[selectedIndex]
-    }
+	function readableSize(bytes: number): string {
+		return bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.round(bytes / 1e3)} KB`;
+	}
 
-    function removeFile(index: number) {
-        const newFiles = Array.from(files).filter((_, i) => i !== index);
-        files = new DataTransfer().files;
-        const dt = new DataTransfer();
-        newFiles.forEach(file => dt.items.add(file));
-        files = dt.files;
-    }
+	/** A thumbnail straight from the file, so a contributor sees what they picked. */
+	function preview(file: File): string {
+		return URL.createObjectURL(file);
+	}
 
-    async function handleUpload() {
-        if (!currentSubject || !files || files.length === 0) return;
+	/** Releases the object URL once the browser has the picture; otherwise they accumulate. */
+	function releasePreview(event: Event): void {
+		const image = event.currentTarget as HTMLImageElement;
+		URL.revokeObjectURL(image.src);
+	}
 
-        uploading = true;
+	async function send(): Promise<void> {
+		if (!sendable || sending) return;
 
-        try {
-            const response = await uploadImages(currentSubject.id, Array.from(files), marker);
-            files = new DataTransfer().files;
+		sending = true;
+		error = null;
 
-            if (response.ok) {
-                showSuccessToast("Upload successful", "Your images have been uploaded.");
-            } else {
-                throwError(response.statusText);
-            }
-        } catch (error) {
-            showErrorToast("Upload failed", `It looks like something went wrong! Please contact the admins. ${error}`);
-        } finally {
-            uploading = false;
-        }
-    }
+		try {
+			const body = new FormData();
+			for (const file of files) body.append('foto', file, file.name);
 
+			const query = new URLSearchParams();
+			if (name.trim()) query.set('name', name.trim());
+			if (email.trim()) query.set('email', email.trim());
+			if (note.trim()) query.set('note', note.trim());
 
+			const response = await fetch(`${FUNCTIONS_BASE}submitPhoto?${query}`, {
+				method: 'POST',
+				body
+			});
+
+			if (!response.ok) throw new Error((await response.text()) || 'Insturen is niet gelukt.');
+
+			const result = (await response.json()) as { accepted: number };
+			sent = result.accepted;
+			files = [];
+			note = '';
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		} finally {
+			sending = false;
+		}
+	}
 </script>
 
-<h1 class="text-center text-4xl my-4">Upload zone</h1>
+<svelte:head>
+	<title>Foto insturen | gzvKA fotoarchief</title>
+	<meta
+		name="description"
+		content="Stuur uw oude foto's van Kapellen in. Iedereen kan meedoen, een account is niet nodig."
+	/>
+</svelte:head>
 
-<img src="{uploadHeroImage}" class="rounded-3xl w-6/12 mx-auto mt-3" style="max-width: 30em" alt="">
+<div class="mx-auto max-w-3xl px-4 py-8">
+	<nav class="text-sm text-gray-600">
+		<a class="text-blue-800 underline hover:no-underline" href="/">Startpagina</a>
+		<span class="mx-2">/</span>
+		<span>Foto insturen</span>
+	</nav>
 
-<div class="px-2 mx-auto mt-5" style="max-width: 50em">
-    <Label class="pb-2 text-xl" for="">1. Select subject</Label>
+	<header class="mt-3">
+		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+			Stuur uw foto in
+		</h1>
+		<p class="mt-3 text-lg text-gray-600">
+			Hebt u een oude foto van Kapellen &mdash; uw straat, uw school, het café op de hoek? Stuur ze
+			in. U hoeft geen account te maken en u hoeft niets in te vullen behalve de foto zelf.
+		</p>
+	</header>
 
-    {#if loading}
-        <Spinner class="me-3" size="6" color="blue"/>
-        Loading subjects...
-    {:else }
-        <select name="" id="" class="rounded-xl w-full" on:change={handleSubjectSelect}>
-            {#if !retrievedSubjects || retrievedSubjects.length === 0}
-                <ListgroupItem>No retrievedSubjects</ListgroupItem>
-            {:else}
-                {#if !currentSubject}
-                    <option value="">
-                        Select a value
-                    </option>
-                {/if}
-                {#each retrievedSubjects as subject, index}
-                    <option value="{index}">
-                        {subject.name}
-                    </option>
-                {/each}
-            {/if}
-        </select>
+	{#if sent > 0}
+		<div class="mt-6 rounded-xl border border-green-300 bg-green-50 p-5">
+			<p class="text-lg font-bold text-green-900">
+				Bedankt &mdash; {sent}
+				{sent === 1 ? 'foto is' : "foto's zijn"} ontvangen.
+			</p>
+			<p class="mt-1 text-green-900">
+				Iemand van het archief bekijkt ze en zet ze dan online. Dat kan een paar dagen duren.
+			</p>
+		</div>
+	{/if}
 
-        <div class="py-2">
-            <p class="text-gray-600 pb-2">Can't find a relevant subject?</p>
-            <Button pill outline on:click={() => (showCreationModal = true)}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" {...$$props}>
-                    <path fill="currentColor"
-                          d="M5 19V5zm0 2q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v7.525q0 .425-.288.7T20 13.5t-.712-.288T19 12.5V5H5v14h6q.425 0 .713.288T12 20t-.288.713T11 21zm3-4q.425 0 .713-.288T9 16t-.288-.712T8 15t-.712.288T7 16t.288.713T8 17m0-4q.425 0 .713-.288T9 12t-.288-.712T8 11t-.712.288T7 12t.288.713T8 13m0-4q.425 0 .713-.288T9 8t-.288-.712T8 7t-.712.288T7 8t.288.713T8 9m8 4q.425 0 .713-.288T17 12t-.288-.712T16 11h-4q-.425 0-.712.288T11 12t.288.713T12 13zm0-4q.425 0 .713-.288T17 8t-.288-.712T16 7h-4q-.425 0-.712.288T11 8t.288.713T12 9zm-5 7q0 .425.288.713T12 17h.05q.425 0 .713-.288T13.05 16t-.288-.712T12.05 15H12q-.425 0-.712.288T11 16m6 4h-2q-.425 0-.712-.288T14 19t.288-.712T15 18h2v-2q0-.425.288-.712T18 15t.713.288T19 16v2h2q.425 0 .713.288T22 19t-.288.713T21 20h-2v2q0 .425-.288.713T18 23t-.712-.288T17 22z"/>
-                </svg>
-                &nbsp; Create Subject
-            </Button>
-            <Modal bind:open={showCreationModal} size="xs" autoclose={false} class="w-full">
-                <form class="flex flex-col space-y-6" on:submit={handleSubmitCreationSubject}>
-                    <h3 class="text-xl font-medium text-gray-900 dark:text-white">Create new Subject</h3>
-                    <Label class="space-y-2">
-                        <span>Name <span class="text-red-500">*</span></span>
-                        <Input type="text" name="subjectName" placeholder="street name, event, ..." required/>
-                    </Label>
-                    <Label class="space-y-2">
-                        <span>Explanation</span>
-                        <Textarea rows="4" name="subjectExplanation"/>
-                    </Label>
-                    <Button type="submit" class="w-full" disabled={startedCreation}>
-                        {#if startedCreation}
-                            <Spinner class="me-3" size="4" color="white"/>
-                            Creating subject...
-                        {:else}
-                            <svg xmlns="http://www.w3.org/2000/svg" width="1.5em" height="1.5em" viewBox="0 0 24 24" {...$$props}>
-                                <path fill="currentColor"
-                                      d="M5 19V5zm0 2q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v7.525q0 .425-.288.7T20 13.5t-.712-.288T19 12.5V5H5v14h6q.425 0 .713.288T12 20t-.288.713T11 21zm3-4q.425 0 .713-.288T9 16t-.288-.712T8 15t-.712.288T7 16t.288.713T8 17m0-4q.425 0 .713-.288T9 12t-.288-.712T8 11t-.712.288T7 12t.288.713T8 13m0-4q.425 0 .713-.288T9 8t-.288-.712T8 7t-.712.288T7 8t.288.713T8 9m8 4q.425 0 .713-.288T17 12t-.288-.712T16 11h-4q-.425 0-.712.288T11 12t.288.713T12 13zm0-4q.425 0 .713-.288T17 8t-.288-.712T16 7h-4q-.425 0-.712.288T11 8t.288.713T12 9zm-5 7q0 .425.288.713T12 17h.05q.425 0 .713-.288T13.05 16t-.288-.712T12.05 15H12q-.425 0-.712.288T11 16m6 4h-2q-.425 0-.712-.288T14 19t.288-.712T15 18h2v-2q0-.425.288-.712T18 15t.713.288T19 16v2h2q.425 0 .713.288T22 19t-.288.713T21 20h-2v2q0 .425-.288.713T18 23t-.712-.288T17 22z"/>
-                            </svg>
-                            &nbsp; Create Subject
-                        {/if}
-                    </Button>
-                </form>
-            </Modal>
-        </div>
-    {/if}
+	{#if error}
+		<div class="mt-6 rounded-xl border border-red-300 bg-red-50 p-5 text-red-900">
+			<p class="font-semibold">Insturen is niet gelukt</p>
+			<p class="mt-1 text-sm">{error}</p>
+		</div>
+	{/if}
 
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div
+		class="mt-6 rounded-xl border-2 border-dashed p-8 text-center transition {dragging
+			? 'border-blue-600 bg-blue-50'
+			: 'border-gray-300 bg-gray-50'}"
+		on:dragover|preventDefault={() => (dragging = true)}
+		on:dragleave={() => (dragging = false)}
+		on:drop={onDrop}
+	>
+		<p class="text-lg font-semibold text-gray-900">Sleep uw foto's hierheen</p>
+		<p class="mt-1 text-gray-600">of</p>
 
-    <br>
-    <Label class="pb-2 text-xl" for="multiple_files">2. Upload images for: <b class="text-2xl">{currentSubject ? currentSubject?.name : "No subject selected"}</b></Label>
-    <Fileupload id="multiple_files" multiple bind:files/>
-    <Listgroup class="mt-2">
+		<label
+			class="mt-3 inline-block cursor-pointer rounded-lg bg-blue-800 px-5 py-2.5 font-semibold text-white hover:bg-blue-900"
+		>
+			Kies foto's
+			<input
+				type="file"
+				accept={ALLOWED_CONTENT_TYPES.join(',')}
+				multiple
+				class="sr-only"
+				on:change={(event) => add(event.currentTarget.files)}
+			/>
+		</label>
 
-        {#if !files || files.length === 0}
-            <ListgroupItem>No files</ListgroupItem>
-        {:else}
-            {#each Array.from(files) as item, index}
-                <ListgroupItem>
-                    <div class="flex justify-between">
-                        <span>{index + 1}. {item.name}</span>
-                        <Button type="button" color="red" pill class="ml-4" on:click={() => removeFile(index)}>
-                            DELETE
-                        </Button>
-                    </div>
-                </ListgroupItem>
-            {/each}
-        {/if}
-    </Listgroup>
+		<p class="mt-3 text-sm text-gray-500">
+			JPEG, PNG, GIF of WebP &middot; max {Math.round(MAX_SUBMISSION_BYTES / 1024 / 1024)} MB per foto
+		</p>
+	</div>
 
-    <br>
-    <Label class="pb-2 text-xl" for="">3. Select the approximate coordinates for all the pictures (optional)</Label>
-    {#if marker}
-        <p><b>Selected Coordinate (WGS84)</b>: {marker.lngLat.lat}, {marker.lngLat.lng}</p>
-    {:else}
-        <p>No location is yet selected.</p>
-    {/if}
-    <br>
-    <MapLibre
-            center={[4.4295289921711, 51.312513921524356]}
-            zoom={11}
-            class="relative max-h-70 w-full sm:aspect-video sm:max-h-full"
-            standardControls
-            style={{
-                version: 8,
-                pitch: 52,
-                sources: {},
-                layers: [],
-            }}>
-        <MapEvents on:click={addMarker}/>
-        {#if marker}
-            <DefaultMarker lngLat={marker.lngLat}/>
-        {/if}
-        <RasterTileSource tiles={['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png']} tileSize={256}>
-            <RasterLayer paint={{}}/>
-        </RasterTileSource>
-    </MapLibre>
+	{#if files.length > 0}
+		<ul class="mt-6 space-y-3">
+			{#each files as file, index (file.name + index)}
+				<li class="flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-3">
+					<img
+						src={preview(file)}
+						alt=""
+						class="h-16 w-16 shrink-0 rounded object-cover"
+						on:load={releasePreview}
+					/>
+					<div class="min-w-0 flex-1">
+						<p class="truncate font-medium text-gray-900">{file.name}</p>
+						<p class="text-sm text-gray-500">{readableSize(file.size)}</p>
+						{#if file.size > MAX_SUBMISSION_BYTES}
+							<p class="text-sm font-medium text-red-700">Te groot om in te sturen.</p>
+						{:else if !ALLOWED_CONTENT_TYPES.includes(file.type)}
+							<p class="text-sm font-medium text-red-700">Dit is geen foto.</p>
+						{/if}
+					</div>
+					<button
+						type="button"
+						class="shrink-0 rounded px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100"
+						on:click={() => remove(index)}
+					>
+						Verwijderen
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 
-    <div class="flex justify-center mt-5">
-        <Button on:click={handleUpload} type="button" color="green" pill class="" disabled="{!currentSubject || files===undefined || files.length === 0}">
-            {#if uploading}
-                <Spinner class="me-3" size="4" color="white"/>
-                Uploading...
-            {:else}
-                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" {...$$props}>
-                    <path fill="currentColor"
-                          d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
-                </svg>
-                &nbsp; Upload Images
-            {/if}
-        </Button>
-    </div>
+	<div class="mt-8 space-y-4">
+		<h2 class="text-xl font-bold text-gray-900">Wilt u er iets bij vertellen?</h2>
+		<p class="-mt-2 text-gray-600">Alles hieronder mag u leeg laten.</p>
+
+		<div class="grid gap-4 sm:grid-cols-2">
+			<label class="block">
+				<span class="text-sm font-medium text-gray-700">Uw naam</span>
+				<input
+					bind:value={name}
+					placeholder="Zo vermelden we u bij de foto"
+					class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+				/>
+			</label>
+
+			<label class="block">
+				<span class="text-sm font-medium text-gray-700">E-mail</span>
+				<input
+					bind:value={email}
+					type="email"
+					placeholder="Alleen om iets te kunnen vragen"
+					class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+				/>
+				<span class="mt-1 block text-xs text-gray-500">Komt niet op de website.</span>
+			</label>
+		</div>
+
+		<label class="block">
+			<span class="text-sm font-medium text-gray-700">Wat staat erop?</span>
+			<textarea
+				bind:value={note}
+				rows="4"
+				placeholder="Welke straat, welk jaar, wie staat erop ... alles helpt."
+				class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+			/>
+		</label>
+	</div>
+
+	<button
+		type="button"
+		class="mt-6 w-full rounded-lg bg-blue-800 px-6 py-3 text-lg font-semibold text-white transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:bg-gray-400"
+		disabled={!sendable || sending}
+		on:click={send}
+	>
+		{#if sending}
+			Bezig met versturen ...
+		{:else if files.length === 0}
+			Kies eerst een foto
+		{:else}
+			Stuur {files.length}
+			{files.length === 1 ? 'foto' : "foto's"} in
+		{/if}
+	</button>
+
+	<p class="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+		Uw foto komt eerst bij het archief terecht en wordt pas op de website gezet nadat iemand ze
+		bekeken heeft. Stuur alleen foto's in die u zelf mag delen.
+	</p>
 </div>

@@ -44,6 +44,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"firebase": "^10.14.1",
 		"svelte-maplibre": "^0.9.8",
 		"svelte-toasts": "^1.1.2"
 	}

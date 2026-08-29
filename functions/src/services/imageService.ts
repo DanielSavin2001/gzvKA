@@ -7,7 +7,7 @@ import {extractDatesFromText, getFileExtension, removeFileExtension} from "../ut
 import {resolveStoredFormat} from "../utils/image-format";
 import {collectFiles} from "./upload/multipart";
 import {FileData, ImageDocument, ImageDocumentFS, MapMarker} from "../../../sharedModels/interfaces";
-import {BUCKET_NAME, IMAGES_COLLECTION_NAME} from "../constants/google-storage-constants";
+import {getBucketName, getImagesCollectionName} from "../constants/google-storage-constants";
 
 
 /**
@@ -69,20 +69,20 @@ async function storeImage(file: FileData, subjectId: string, coordinates: MapMar
     });
 
     // Set the URL of the uploaded image in Firestore document
-    const imgURL = `https://storage.googleapis.com/${BUCKET_NAME}/${fileName}`;
+    const imgURL = `https://storage.googleapis.com/${getBucketName()}/${fileName}`;
     await documentRef.update({imgURL});
 
     logger.log(`Uploaded file to Google Storage and updated Firestore document: ${fileName}`);
 }
 
 async function createImage(image: ImageDocumentFS): Promise<DocumentReference> {
-    return await firestore.collection(IMAGES_COLLECTION_NAME).add(image);
+    return await firestore.collection(getImagesCollectionName()).add(image);
 }
 
 export async function getAllImages(): Promise<ImageDocument[]> {
 
     const documentRefs = await firestore
-        .collection(IMAGES_COLLECTION_NAME).get();
+        .collection(getImagesCollectionName()).get();
 
     return documentRefs.docs.map(doc => {
         return {
@@ -94,7 +94,7 @@ export async function getAllImages(): Promise<ImageDocument[]> {
 
 export async function getImageDocuments(subjectId: string): Promise<ImageDocument[]> {
     const documentRefs = await firestore
-        .collection(IMAGES_COLLECTION_NAME).where("subjectId", "==", subjectId).get();
+        .collection(getImagesCollectionName()).where("subjectId", "==", subjectId).get();
 
     return documentRefs.docs.map(doc => {
         return {

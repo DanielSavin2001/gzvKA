@@ -1,5 +1,18 @@
 rules_version = '2';
 
+/**
+ * The archive's data is reached through Cloud Functions, never straight from a browser.
+ *
+ * Those functions use the Admin SDK, which bypasses these rules by design, so denying
+ * everything here is not a gap - it is the whole policy. A submission holds a contributor's
+ * email address and a curator's decisions; neither should be one guessed URL away, and a
+ * rule that tried to allow "just the safe fields" would be a rule someone eventually gets
+ * wrong.
+ *
+ * The `admins` collection is edited in the Firebase console. It is deliberately unreadable
+ * from a browser: who curates this archive is not a public fact, and the check that matters
+ * happens server-side in functions/src/services/admin-auth.ts.
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {

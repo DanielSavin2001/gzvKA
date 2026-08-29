@@ -233,3 +233,54 @@ the archive holds no GIFs; everything else is renamed, leaving the bytes untouch
 re-encoding a PNG to JPEG to satisfy its filename would throw away quality to fix a name.
 
 A photograph's id ignores its extension, so none of this changes a URL.
+
+## Contributing a photograph, and curating what arrives
+
+Anyone can send a photograph in at `/upload` — no account, nothing required but the picture
+itself. Asking a seventy-year-old to register before they can contribute a photograph of
+their own street is how an archive stays empty. Nothing appears on the site until a curator
+has looked at it, which is the other half of the same decision.
+
+Curators work at `/beheer`: sign in with Google, then approve, reject, retitle, place on a
+street, set a house number, a year and a donor. Approving publishes immediately — the photo
+is served from Cloud Storage and merged into the archive in the browser, so there is no
+rebuild to wait for.
+
+### What has to be set up once
+
+None of this can be done from the repository; it needs the Firebase console.
+
+1. **Enable Google sign-in.** Firebase console → Authentication → Sign-in method → Google.
+2. **Add yourself as a curator.** Firestore → create a collection `admins` → add a document
+   whose **ID is your email address, lower-cased** (the contents do not matter; `{ }` is
+   fine). Adding another curator later is one more document.
+3. **Publish the rules**, which are in this repository:
+   ```bash
+   firebase deploy --only firestore:rules,storage:rules
+   ```
+4. **Deploy the functions**: `firebase deploy --only functions`.
+5. **Set the client values** — `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
+   `VITE_FIREBASE_PROJECT_ID` — in `.env` locally and as GitHub secrets for the deploy.
+   They come from Project settings → General → Your apps. They are not secrets; Firebase
+   publishes them in every client app.
+
+Without step 5 the page says so instead of failing in a confusing way.
+
+### How the security actually works
+
+The check that matters is on the server, in `functions/src/services/admin-auth.ts`. It
+verifies the Google ID token's signature, audience and expiry, requires the address to be
+one Google itself verified, and only then looks it up in `admins`. Hiding a button in the
+interface protects nothing; this is what does.
+
+Both `firestore.rules` and `storage.rules` deny browsers everything, with one exception:
+`archief/` in Cloud Storage is publicly readable, because that is where approved
+photographs live and they are meant to be seen. Pending submissions are not readable by
+anyone — a curator views them through a signed URL that expires in an hour.
+
+**Not verified end to end.** There are no Firebase credentials in the environment this was
+written in, so the sign-in, the token check, the queue and the storage moves have not been
+run against a real project. The logic that can be tested without Firebase is
+(24 tests in `functions/src/services/submission.test.ts`, covering validation, the state
+machine, the field allowlist and the rule that a contributor's email never reaches the
+website). Please try one photograph through the whole path before announcing it.
