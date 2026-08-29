@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { isCountable, setConsent, storedConsent } from '$lib/analytics';
+	import { consentPrompt, isCountable, setConsent, storedConsent } from '$lib/analytics';
 
 	/**
 	 * Asking before counting.
@@ -13,17 +13,32 @@
 	 * Both buttons are the same size and neither is styled to be the easy one. A "reject"
 	 * that is a grey link beside a large green "accept" is a dark pattern, and this archive
 	 * does not need one - nobody is selling anything.
+	 *
+	 * It also comes back when asked. Consent that cannot be withdrawn is not consent, and
+	 * the only way back used to be clearing browser storage.
 	 */
 
 	let show = false;
 
+	/** What the visitor said last time, so a second visit shows what it is changing. */
+	let current: 'granted' | 'denied' | 'unknown' = 'unknown';
+
 	onMount(() => {
-		show = isCountable() && storedConsent() === 'unknown';
+		current = storedConsent();
+		show = isCountable() && current === 'unknown';
 	});
+
+	// Reopened from the footer or the privacy page.
+	$: if ($consentPrompt) {
+		current = storedConsent();
+		show = true;
+	}
 
 	function answer(consent: 'granted' | 'denied'): void {
 		setConsent(consent);
+		current = consent;
 		show = false;
+		consentPrompt.set(false);
 	}
 </script>
 
@@ -39,6 +54,11 @@
 				We tellen graag hoeveel mensen het archief bezoeken en welke foto's gezocht worden. Dat
 				gebeurt met Google Analytics en zet een cookie. Zonder uw toestemming meten we niets, en de
 				site werkt precies hetzelfde.
+				{#if current !== 'unknown'}
+					<span class="mt-1 block font-medium">
+						Nu ingesteld op: {current === 'granted' ? 'wel meten' : 'niet meten'}.
+					</span>
+				{/if}
 			</p>
 
 			<div class="flex shrink-0 gap-2">

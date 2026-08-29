@@ -15,6 +15,8 @@
  *   - no measurement id, which is how a fork or a local build gets no tracking at all.
  */
 
+import { writable } from 'svelte/store';
+
 /** The GA4 property for gzvka.com. Not a secret - it is in the page source of every site. */
 const MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID ?? 'G-HJKBK3R57W';
 
@@ -33,6 +35,21 @@ const COUNTED_HOSTS = (import.meta.env.VITE_ANALYTICS_HOSTS ?? 'gzvka.com,www.gz
 	.split(',')
 	.map((host: string) => host.trim().toLowerCase())
 	.filter((host: string) => host !== '');
+
+/**
+ * Set when somebody asks to change their answer, so the banner can come back.
+ *
+ * Consent that cannot be withdrawn is not consent. The banner asked once and then never
+ * again, and there was no control anywhere on the site to reach it - so a visitor who
+ * clicked the wrong button, or changed their mind, had no way back short of clearing their
+ * browser storage.
+ */
+export const consentPrompt = writable(false);
+
+/** Brings the banner back, whatever the stored answer is. */
+export function askAgain(): void {
+	consentPrompt.set(true);
+}
 
 export const CONSENT_KEY = 'analytics-consent';
 

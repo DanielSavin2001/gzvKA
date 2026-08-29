@@ -62,7 +62,8 @@ function main(): void {
 		{ path: '/verhalen', priority: 0.8, changefreq: 'monthly' },
 		{ path: '/upload', priority: 0.6, changefreq: 'yearly' },
 		{ path: '/over-ons', priority: 0.5, changefreq: 'yearly' },
-		{ path: '/contact', priority: 0.5, changefreq: 'yearly' }
+		{ path: '/contact', priority: 0.5, changefreq: 'yearly' },
+		{ path: '/privacy', priority: 0.3, changefreq: 'yearly' }
 	];
 
 	// Places carrying photographs. A place with none is a page that says so, and there is
