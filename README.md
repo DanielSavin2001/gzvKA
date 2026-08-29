@@ -293,11 +293,21 @@ matters — each step below is blocked by the one above it.
    firebase deploy --only functions
    ```
 
-7. **Set the client values** — `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`,
-   `VITE_FIREBASE_PROJECT_ID`, and `VITE_BASE_URL_GF` for the functions — in `.env`
-   locally and as GitHub secrets for the deploy. The first three come from the web app
-   registered in step 1: Project settings → General → Your apps. They are not secrets;
-   Firebase publishes them in every client app.
+7. **Set the client values**, in `.env` locally and as repository secrets under the same
+   names for the deploy. Both hosting workflows pass all four through to the build.
+
+   | Name                        | Value for this project                                | Where it comes from                        |
+   | --------------------------- | ----------------------------------------------------- | ------------------------------------------ |
+   | `VITE_FIREBASE_PROJECT_ID`  | `gzvka-12a9f`                                         | Project settings → General                 |
+   | `VITE_FIREBASE_AUTH_DOMAIN` | `gzvka-12a9f.firebaseapp.com`                         | always `<project>.firebaseapp.com`         |
+   | `VITE_FIREBASE_API_KEY`     | `AIza…`                                               | the web app from step 1 — **nowhere else** |
+   | `VITE_BASE_URL_GF`          | `https://us-central1-gzvka-12a9f.cloudfunctions.net/` | **keep the trailing slash**                |
+
+   Only the API key needs looking up, and only a registered web app has one: Project
+   settings → General → Your apps → the app → _SDK setup and configuration_ → _Config_.
+   None of the four is a secret — Firebase publishes all of them in every client app, and
+   an API key here identifies the project rather than authorising anything. They are
+   repository secrets only so the project can be pointed elsewhere without a commit.
 
 Without step 7 the page says so instead of failing in a confusing way.
 
