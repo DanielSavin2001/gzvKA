@@ -13,7 +13,7 @@ npm run corpus:report          # what the archive yields with no AI at all
 npm run corpus:report -- --samples
 npm run gazetteer:build        # rebuild the place list, verified against the corpus
 npm run map:labels             # street names recovered from the town map
-npx jest                       # 139 tests, no credentials needed
+npx jest                       # 158 tests, no credentials needed
 ```
 
 ---
@@ -83,7 +83,8 @@ to the gazetteer from them — see *Rules we hold to* below.
   `Doprsstraat`, `Hoogboomsesteenweg`, `Kon. Astridlaan` all resolve, while
   `Mastenbos`/`Mastenhof` and `FC Capellen`/`Kapellen` stay apart.
 - Street names recovered from the town map, staged for review.
-- Four bugs fixed along the way (see *Fixed on the way through*).
+- Seven bugs fixed along the way (see *Fixed on the way through*), three of them in
+  the upload path a contributor actually uses.
 
 ### Phase 2 — make it searchable (next)
 
