@@ -13,7 +13,7 @@ npm run corpus:report          # what the archive yields with no AI at all
 npm run corpus:report -- --samples
 npm run gazetteer:build        # rebuild the place list, verified against the corpus
 npm run map:labels             # street names recovered from the town map
-npx jest                       # 158 tests, no credentials needed
+npx jest                       # 162 tests, no credentials needed
 ```
 
 ---
