@@ -10,6 +10,7 @@
  * Rebuild the index with `npm run archive:index` after adding photographs.
  */
 
+import { encodePath } from '../../sharedModels/image-path';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
 
@@ -168,11 +169,6 @@ export function sortForDisplay(photos: ArchivePhoto[]): ArchivePhoto[] {
 /** The URL of a photograph's larger image. */
 export function detailUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
 	return `${archive.imageBase}/${encodePath(photo.p)}.web.webp`;
-}
-
-/** Percent-encodes each path segment, leaving the separators intact. */
-function encodePath(relativePath: string): string {
-	return relativePath.split('/').map(encodeURIComponent).join('/');
 }
 
 /** A photograph with its relevance, for a result list. */
