@@ -1497,6 +1497,25 @@
 			}
 		},
 		{
+			"id": "lucien-bevernagestraat",
+			"name": "Lucien Bevernagestraat",
+			"aliases": [
+				"Nieuwstraat"
+			],
+			"kind": "street",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"note": "renamed from Nieuwstraat; source: legacy-site/Antwerpsesteenweg.htm heading",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 1,
+				"sampleFile": "src/lib/images/history-images/Station en omgeving/Station en Nieuwstraat - Heemkring Hoghescote - 25.01.2018.jpg"
+			}
+		},
+		{
 			"id": "lusthof-hoenderhof",
 			"name": "Lusthof Hoenderhof",
 			"aliases": [
@@ -1633,23 +1652,6 @@
 			"evidence": {
 				"corpusHits": 23,
 				"sampleFile": "src/lib/images/history-images/Akkerstraat - Nieuwe Wijk/Akkerstraat - Bewoners - Gustaaf Donckers - 15.12.2016.jpg"
-			}
-		},
-		{
-			"id": "nieuwstraat",
-			"name": "Nieuwstraat",
-			"aliases": [],
-			"kind": "street",
-			"district": "unknown",
-			"inMunicipality": true,
-			"isStreet": true,
-			"allowHouseNumber": true,
-			"fuzzy": true,
-			"note": "single corpus occurrence; confirm against OSM",
-			"manualGeometry": null,
-			"evidence": {
-				"corpusHits": 1,
-				"sampleFile": "src/lib/images/history-images/Station en omgeving/Station en Nieuwstraat - Heemkring Hoghescote - 25.01.2018.jpg"
 			}
 		},
 		{
@@ -1874,15 +1876,16 @@
 			"id": "rubensheide",
 			"name": "Rubensheide",
 			"aliases": [],
-			"kind": "area",
-			"district": "unknown",
+			"kind": "street",
+			"district": "hoogboom",
 			"inMunicipality": true,
-			"isStreet": false,
-			"allowHouseNumber": false,
+			"isStreet": true,
+			"allowHouseNumber": true,
 			"fuzzy": true,
 			"relatedIds": [
 				"oude-baan"
 			],
+			"note": "formerly Oude Baan; confirmed in the street register",
 			"manualGeometry": null,
 			"evidence": {
 				"corpusHits": 15,

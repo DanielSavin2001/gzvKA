@@ -473,3 +473,65 @@ describe('the gazetteer data itself', () => {
 		expect(idsIn(`${CORPUS}/x/Hoevensebaam - zn - zd.jpg`)).not.toContain('hoevensebaan');
 	});
 });
+
+// Two street corrections Daniel found by looking at the site, both confirmed against the
+// official register and the old website's own pages before being made.
+describe('streets that were renamed', () => {
+	it('resolves Kapellen\'s old Nieuwstraat to the Lucien Bevernagestraat', () => {
+		// The old site's own heading reads "LUCIEN BEVERNAGESTRAAT (Nieuwstraat)", and the
+		// modern register has a Nieuwstraat only in Stabroek. A bare `nieuwstraat` entry put
+		// a Kapellen photograph on a street in the next municipality.
+		expect(idsIn(`${CORPUS}/Station en omgeving/Station en Nieuwstraat - zn - zd.jpg`)).toContain(
+			'lucien-bevernagestraat'
+		);
+	});
+
+	it('has no Kapellen entry left called Nieuwstraat', () => {
+		expect(gazetteer.entries.some((entry) => entry.id === 'nieuwstraat')).toBe(false);
+	});
+
+	it('treats Rubensheide as a street, so its house numbers survive', () => {
+		// It was filed as an 'area', and an area takes no house number - so every number on
+		// legacy-site/Rubensheide.htm (55, 120, 132, 134, 136, 142) was being discarded.
+		const result = matchImagePath(
+			`${CORPUS}/Rubensheide/Villa Rozenhof - Rubensheide 120 - zn - zd.jpg`,
+			index
+		);
+
+		expect(result.bestStreet?.entryId).toBe('rubensheide');
+		expect(result.bestStreet?.houseNumber).toBe(120);
+	});
+});
+
+describe('photo-corrections.json', () => {
+	const corrections = JSON.parse(
+		fs.readFileSync(path.join(__dirname, '..', 'data', 'photo-corrections.json'), 'utf8')
+	) as {
+		corrections: Record<string, { places?: string[]; by?: string; note?: string }>;
+	};
+
+	const ids = new Set(gazetteer.entries.map((entry) => entry.id));
+
+	it('only names places that exist', () => {
+		// The build throws on this too; the test says so before anyone waits for a build.
+		for (const [photo, correction] of Object.entries(corrections.corrections)) {
+			for (const placeId of correction.places ?? []) {
+				expect({ photo, placeId, known: ids.has(placeId) }).toEqual({
+					photo,
+					placeId,
+					known: true
+				});
+			}
+		}
+	});
+
+	it('records who made each correction, so a doubtful one can be asked about', () => {
+		for (const [photo, correction] of Object.entries(corrections.corrections)) {
+			expect({ photo, by: Boolean(correction.by), note: Boolean(correction.note) }).toEqual({
+				photo,
+				by: true,
+				note: true
+			});
+		}
+	});
+});

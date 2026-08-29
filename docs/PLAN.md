@@ -227,6 +227,28 @@ provenance is part of the record.
 
 ---
 
+## Corrections made by hand
+
+Two street names were wrong, both found by Daniel looking at the site and both confirmed
+against the register and the old website before being changed:
+
+- **Nieuwstraat → Lucien Bevernagestraat.** The old site's own heading reads "LUCIEN
+  BEVERNAGESTRAAT (Nieuwstraat)", and the modern register has a Nieuwstraat only in
+  *Stabroek*. The gazetteer's bare `nieuwstraat` entry — seeded from a single corpus
+  occurrence and marked "confirm against OSM", never confirmed — was putting a Kapellen
+  photograph on a street in the next municipality.
+- **Rubensheide is a street, not an area.** "De Rubensheide - vroeger Oude Baan - is gelegen
+  ten zuiden van de spoorlijn 12" (`legacy-site/Rubensheide.htm`), and the register lists it
+  as a Kapellen street. Filed as an `area` it took no house number, so every number on that
+  page — 55, 120, 132, 134, 136, 142 — was being discarded.
+
+Per-photograph corrections now have a home in
+`functions/src/data/photo-corrections.json`, applied by `npm run archive:index`. The build
+refuses a correction that names an unknown place or a photograph that is not in the corpus,
+because a correction that silently does nothing is worse than one that fails loudly.
+
+---
+
 ## Rules we hold to
 
 These are the ones worth stating out loud, because breaking any of them damages the

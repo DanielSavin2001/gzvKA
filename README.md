@@ -169,3 +169,28 @@ Two rules hold:
 
 `docs/streets-not-in-register.md` lists the gazetteer streets today's register has never
 heard of. That is the archive's own evidence about which street names are historical.
+
+## Correcting a photograph
+
+Everything the archive knows about a photograph is worked out from its filename, which is
+right about four in five and quietly wrong about the rest. `functions/src/data/photo-corrections.json`
+is the one place a person overrules that:
+
+```json
+"station-en-omgeving-station-en-nieuwstraat-heemkring-hoghescote-25-01-2018": {
+  "places": ["rubensheide"],
+  "houseNumber": 144,
+  "note": "why this is the right answer",
+  "by": "Daniel Savin",
+  "on": "2026-08-29"
+}
+```
+
+The photograph's id is in its URL. `places` replaces what the matcher found rather than
+adding to it; `houseNumber`, `year` and `title` override those fields. Re-run
+`npm run archive:index` to apply.
+
+Two things the build refuses rather than ignores: a correction naming a place that is not in
+the gazetteer, and a correction naming a photograph that is not in the corpus. Either would
+mean somebody recorded a fact and the archive silently dropped it, which is worse than a
+build failure.

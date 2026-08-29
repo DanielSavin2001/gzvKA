@@ -94,7 +94,18 @@ const STREETS: SeedEntry[] = [
 	{ id: 'putsesteenweg', name: 'Putsesteenweg', kind: 'street', district: 'putte-kapellen', note: 'single corpus occurrence; confirm against OSM' },
 	{ id: 'korte-vredestraat', name: 'Korte Vredestraat', kind: 'street', note: 'single corpus occurrence; confirm against OSM' },
 	{ id: 'oude-galgenstraat', name: 'Oude Galgenstraat', kind: 'street', note: 'single corpus occurrence; confirm against OSM' },
-	{ id: 'nieuwstraat', name: 'Nieuwstraat', kind: 'street', note: 'single corpus occurrence; confirm against OSM' },
+	// Kapellen's Nieuwstraat was renamed: the old site's own heading reads "LUCIEN
+	// BEVERNAGESTRAAT (Nieuwstraat)", and the modern register has a Nieuwstraat only in
+	// Stabroek. Keeping the old name as an alias is what lets a photograph filed under it
+	// land on the street it is actually of.
+	{
+		id: 'lucien-bevernagestraat',
+		name: 'Lucien Bevernagestraat',
+		aliases: ['Nieuwstraat'],
+		kind: 'street',
+		district: 'kapellen',
+		note: 'renamed from Nieuwstraat; source: legacy-site/Antwerpsesteenweg.htm heading'
+	},
 	{ id: 'lepelstraat', name: 'Lepelstraat', kind: 'street', district: 'putte-kapellen', note: 'single corpus occurrence; confirm against OSM' },
 	{ id: 'koningin-elisabethlei', name: 'Koningin Elisabethlei', aliases: ['Kon. Elisabethlei'], kind: 'street', note: 'single corpus occurrence; confirm against OSM' },
 	{ id: 'denneburgdreef', name: 'Denneburgdreef', kind: 'street', relatedIds: ['kasteel-dennenburg'], note: 'single corpus occurrence; confirm against OSM' },
@@ -129,7 +140,18 @@ const AREAS: SeedEntry[] = [
 	{ id: 'geuzenhoek', name: 'Geuzenhoek', kind: 'area', district: 'kapellen' },
 	{ id: 'het-rood', name: 'Het Rood', aliases: ['Rood'], kind: 'area', fuzzy: false },
 	{ id: 'de-uitlegger', name: 'De Uitlegger', aliases: ['Uitlegger', 'UItlegger'], kind: 'area' },
-	{ id: 'rubensheide', name: 'Rubensheide', kind: 'area', relatedIds: ['oude-baan'] },
+	// A street, not a district: "De Rubensheide - vroeger Oude Baan - is gelegen ten zuiden
+	// van de spoorlijn 12" (legacy-site/Rubensheide.htm), and the register lists it as a
+	// Kapellen street. As an 'area' it took no house number, so the numbers all over that
+	// page - 55, 120, 134, 136, 142 - were being discarded.
+	{
+		id: 'rubensheide',
+		name: 'Rubensheide',
+		kind: 'street',
+		district: 'hoogboom',
+		relatedIds: ['oude-baan'],
+		note: 'formerly Oude Baan; confirmed in the street register'
+	},
 	{ id: 'duitse-wijk', name: 'Duitse Wijk', kind: 'area', district: 'kapellen' },
 	{ id: 'ertbrand', name: 'Ertbrand', kind: 'area', district: 'ertbrand' },
 	{ id: 'nieuwe-wijk', name: 'Nieuwe Wijk', kind: 'area', district: 'kapellen' },
