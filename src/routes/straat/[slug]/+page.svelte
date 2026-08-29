@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { SITE, summarise } from '$lib/seo';
+	import Seo from '../../components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { Archive, ArchivePhoto, ArchivePlace } from '$lib/archive';
-	import { loadArchive, sortForDisplay } from '$lib/archive';
+	import { loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
 	import type { StoryIndex } from '$lib/stories';
@@ -10,7 +12,7 @@
 	import ArchiveMap from '../../components/ArchiveMap.svelte';
 	import PhotoCard from '../../components/PhotoCard.svelte';
 
-	export let data: { slug: string };
+	export let data: { slug: string; summary: { id: string; name: string; count: number } | null };
 
 	let archive: Archive | null = null;
 	let storyIndex: StoryIndex | null = null;
@@ -42,6 +44,23 @@
 	let photos: ArchivePhoto[] = [];
 
 	$: place = archive?.placeById.get(data.slug);
+
+	/**
+	 * The head reads from `load`, not from the archive.
+	 *
+	 * `place` comes out of the archive index, which is fetched in the browser and therefore
+	 * absent while the page is being prerendered - so a title built from it was the raw
+	 * slug in the HTML that crawlers and link previews actually receive.
+	 */
+	$: named = data.summary?.name ?? place?.name ?? data.slug;
+	$: counted = data.summary?.count ?? place?.count ?? 0;
+
+	$: placeDescription = counted
+		? summarise(
+				`${counted} ${counted === 1 ? 'foto' : "foto's"} van ${named} in Kapellen, ` +
+					'uit het fotoarchief van de gemeente.'
+			)
+		: `Foto's van ${named} in Kapellen, uit het fotoarchief van de gemeente.`;
 	$: photos = archive?.photosByPlace.get(data.slug) ?? [];
 
 	// Oldest first: this is a history archive, and the undated ones belong at the end. The
@@ -56,9 +75,29 @@
 	$: shape = geometry[data.slug];
 </script>
 
-<svelte:head>
-	<title>{place ? place.name : data.slug} | gzvKA fotoarchief</title>
-</svelte:head>
+<Seo
+	title={named}
+	description={placeDescription}
+	path="/straat/{data.slug}"
+	image={archive && photos.length > 0 ? thumbUrl(archive, photos[0]) : null}
+	structured={{
+		'@context': 'https://schema.org',
+		'@type': 'CollectionPage',
+		name: named,
+		description: placeDescription,
+		inLanguage: 'nl-BE',
+		url: `${SITE}/straat/${data.slug}`,
+		about: {
+			'@type': 'Place',
+			name: named,
+			address: {
+				'@type': 'PostalAddress',
+				addressLocality: 'Kapellen',
+				addressCountry: 'BE'
+			}
+		}
+	}}
+/>
 
 <div class="mx-auto max-w-6xl px-4 py-8">
 	<nav class="text-sm text-gray-600 dark:text-gray-400">

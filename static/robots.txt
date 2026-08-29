@@ -1,0 +1,8 @@
+# The archive is meant to be found. Everything is open except the curator's desk,
+# which is behind a sign-in anyway and has nothing to offer a search engine.
+User-agent: *
+Allow: /
+Disallow: /beheer
+Disallow: /200
+
+Sitemap: https://gzvka.com/sitemap.xml

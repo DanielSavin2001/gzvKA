@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '../components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { StoryIndex } from '$lib/stories';
@@ -20,13 +21,11 @@
 	$: totalProse = stories.reduce((sum, story) => sum + story.prose, 0);
 </script>
 
-<svelte:head>
-	<title>Verhalen uit Kapellen | gzvKA fotoarchief</title>
-	<meta
-		name="description"
-		content="De verhalen van de oude gzvka.be: de geschiedenis van de kastelen, de cafés, de straten en de mensen van Kapellen."
-	/>
-</svelte:head>
+<Seo
+	title="Verhalen uit Kapellen"
+	description="De verhalen van de oude gzvka.be: de geschiedenis van de kastelen, de cafés, de straten en de mensen van Kapellen."
+	path="/verhalen"
+/>
 
 <div class="mx-auto max-w-5xl px-4 py-8">
 	<nav class="text-sm text-gray-600 dark:text-gray-400">

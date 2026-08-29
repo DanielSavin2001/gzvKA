@@ -3,7 +3,18 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
-		<title>Ge zijt van Kapellen als ge...</title>
+		<!--
+			No title element here on purpose.
+
+			The placeholder below inserts the page's own title, and a hardcoded one here is
+			not replaced - it is simply first. Every page carried two titles, and a crawler
+			takes the first, so all 4,700 of them announced themselves as the generic site
+			name regardless of what they were about.
+
+			Do not write that placeholder's name anywhere else in this file, comments
+			included: SvelteKit replaces the first occurrence it finds, so a mention of it in
+			prose swallows the entire head into the prose and leaves the real one as text.
+		-->
 
 		%sveltekit.head%
 

@@ -37,12 +37,17 @@ The upload zone and the older subject pages talk to Cloud Functions. For those, 
 npm run archive:index   # rebuild the photo index after adding or renaming photos
 npm run stories         # rebuild the stories after editing legacy-site/ (run the index first)
 npm run streets         # rebuild street positions from the official register
+npm run sitemap         # rebuild sitemap.xml and robots.txt (run last: it reads the two above)
 ```
+
+`sitemap.xml` is committed rather than built in CI, because it is derived entirely from
+files that are themselves committed. Run it after anything that changes the number of
+photographs, places or stories, or search engines keep being handed last month's list.
 
 ```bash
 cd functions
 npm install
-npx jest                     # 209 tests, no credentials needed
+npx jest                     # 321 tests, no credentials needed
 npm run gazetteer:build      # rebuild the Kapellen place list
 npm run corpus:report        # what the filenames alone yield
 npm run map:labels           # street names recovered from the town map PDF

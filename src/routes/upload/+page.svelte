@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '../components/Seo.svelte';
 	import { MAX_SUBMISSION_BYTES, ALLOWED_CONTENT_TYPES } from '../../../sharedModels/submission';
 
 	/**
@@ -94,13 +95,11 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Foto insturen | gzvKA fotoarchief</title>
-	<meta
-		name="description"
-		content="Stuur uw oude foto's van Kapellen in. Iedereen kan meedoen, een account is niet nodig."
-	/>
-</svelte:head>
+<Seo
+	title="Foto insturen"
+	description="Stuur uw oude foto's van Kapellen in. Iedereen kan meedoen, een account is niet nodig."
+	path="/upload"
+/>
 
 <div class="mx-auto max-w-3xl px-4 py-8">
 	<nav class="text-sm text-gray-600 dark:text-gray-400">

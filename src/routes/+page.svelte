@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from './components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
@@ -85,13 +86,29 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Ge zijt van Kapellen als ge ... - fotoarchief</title>
-	<meta
-		name="description"
-		content="Het fotoarchief van Kapellen: duizenden foto's van straten, kastelen, mensen en momenten, doorzoekbaar per straat."
-	/>
-</svelte:head>
+<Seo
+	title="Ge zijt van Kapellen als ge ..."
+	description={archive
+		? `Het fotoarchief van Kapellen: ${archive.imageCount.toLocaleString(
+				'nl-BE'
+		  )} foto's van straten, kastelen, mensen en momenten, doorzoekbaar per straat en op de kaart.`
+		: "Het fotoarchief van Kapellen: duizenden foto's van straten, kastelen, mensen en momenten, doorzoekbaar per straat."}
+	path="/"
+	structured={{
+		'@context': 'https://schema.org',
+		'@type': 'WebSite',
+		name: 'gzvKA fotoarchief',
+		alternateName: 'Ge zijt van Kapellen als ge ...',
+		url: 'https://gzvka.com',
+		inLanguage: 'nl-BE',
+		description: 'Fotoarchief van Kapellen, België.',
+		potentialAction: {
+			'@type': 'SearchAction',
+			target: { '@type': 'EntryPoint', urlTemplate: 'https://gzvka.com/?q={search_term_string}' },
+			'query-input': 'required name=search_term_string'
+		}
+	}}
+/>
 
 <div class="mx-auto max-w-7xl px-4">
 	<section class="py-10 text-center sm:py-14">

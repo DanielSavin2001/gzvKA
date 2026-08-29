@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '../components/Seo.svelte';
 	/**
 	 * How to reach the archive.
 	 *
@@ -13,13 +14,11 @@
 	 */
 </script>
 
-<svelte:head>
-	<title>Contact | gzvKA fotoarchief</title>
-	<meta
-		name="description"
-		content="Foto's insturen, een plek op de kaart rechtzetten, of iets melden dat niet klopt."
-	/>
-</svelte:head>
+<Seo
+	title="Contact"
+	description="Foto's insturen, een plek op de kaart rechtzetten, of iets melden dat niet klopt."
+	path="/contact"
+/>
 
 <div class="mx-auto max-w-3xl px-4 py-10">
 	<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
