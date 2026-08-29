@@ -13,6 +13,8 @@
 
 	import type { Archive } from '$lib/archive';
 	import { detailUrl, thumbUrl } from '$lib/archive';
+	import type { ZoomState } from '$lib/gestures';
+	import { NO_ZOOM, pinchZoom, swipe } from '$lib/gestures';
 
 	export let archive: Archive;
 	export let items: LightboxItem[];
@@ -21,7 +23,17 @@
 
 	const dispatch = createEventDispatcher<{ close: void; move: number }>();
 
+	/** Pinch/double-tap magnification, applied to the photograph itself. */
+	let zoom: ZoomState = { ...NO_ZOOM };
+
 	$: current = index >= 0 && index < items.length ? items[index] : null;
+
+	// Moving to another photograph starts it unzoomed; staying zoomed in on a picture you
+	// have not seen yet is disorienting.
+	$: if (index >= 0) {
+		index;
+		zoom = { ...NO_ZOOM };
+	}
 	$: previous = index > 0 ? items[index - 1] : null;
 	$: next = index >= 0 && index < items.length - 1 ? items[index + 1] : null;
 
@@ -76,7 +88,12 @@
 		<div class="flex items-start justify-between gap-4 p-4 text-white">
 			<div class="min-w-0">
 				<p class="truncate text-lg font-semibold">{current.photo.t}</p>
-				<p class="text-sm text-white/70">{index + 1} van {items.length}</p>
+				<p class="text-sm text-white/70">
+					{index + 1} van {items.length}
+					{#if zoom.scale > 1}
+						&middot; {zoom.scale.toFixed(1)}&times;
+					{/if}
+				</p>
 			</div>
 
 			<button
@@ -88,7 +105,15 @@
 			</button>
 		</div>
 
-		<div class="relative flex min-h-0 flex-1 items-center justify-center px-2 sm:px-16">
+		<div
+			class="relative flex min-h-0 flex-1 touch-none items-center justify-center overflow-hidden px-2 sm:px-16"
+			use:swipe={{
+				onLeft: () => next && dispatch('move', index + 1),
+				onRight: () => previous && dispatch('move', index - 1),
+				enabled: () => zoom.scale === 1
+			}}
+			use:pinchZoom={{ onChange: (state) => (zoom = state) }}
+		>
 			{#if previous}
 				<button
 					type="button"
@@ -104,7 +129,12 @@
 				src={detailUrl(archive, current.photo)}
 				on:error={fallBackToThumbnail}
 				alt={current.caption ?? current.photo.t}
-				class="max-h-full max-w-full object-contain"
+				draggable="false"
+				class="max-h-full max-w-full select-none object-contain"
+				style="transform: translate({zoom.x}px, {zoom.y}px) scale({zoom.scale}); transition: {zoom.scale ===
+				1
+					? 'transform 150ms ease-out'
+					: 'none'}"
 			/>
 
 			{#if next}
@@ -129,6 +159,7 @@
 			>
 				Alle gegevens van deze foto
 			</a>
+			<p class="mt-1 text-xs text-white/50 sm:hidden">Veeg om te bladeren, knijp om in te zoomen</p>
 		</div>
 	</div>
 {/if}

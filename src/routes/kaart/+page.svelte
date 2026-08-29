@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	import {
 		GeoJSON,
 		LineLayer,
@@ -36,6 +37,14 @@
 	/** Placing mode: click the map to give the highlighted street a location. */
 	let placing = false;
 	let placingBy = '';
+
+	/**
+	 * The placing tool is for whoever curates the archive, not for a visitor looking at
+	 * photographs of their street. It stays a click away at `/kaart?beheer`, and is invisible
+	 * otherwise - the register already positions every street, so the tool is now only needed
+	 * for the castles, woods and districts it does not cover.
+	 */
+	$: curating = $page.url.searchParams.has('beheer');
 
 	/**
 	 * MapLibre needs WebGL, which some older machines and locked-down browsers do not have -
@@ -108,7 +117,7 @@
 	}
 
 	function onMapClick(event: CustomEvent<{ lngLat: { lng: number; lat: number } }>): void {
-		if (!placing || !nextToPlace) return;
+		if (!curating || !placing || !nextToPlace) return;
 
 		const { lng, lat } = event.detail.lngLat;
 
@@ -177,25 +186,27 @@
 			</p>
 		</div>
 
-		<button
-			type="button"
-			class="rounded-lg border-2 px-4 py-2 font-semibold transition {placing
-				? 'border-orange-600 bg-orange-600 text-white'
-				: 'border-blue-800 text-blue-800 hover:bg-blue-50'}"
-			on:click={() => {
-				placing = !placing;
-				selected = null;
-			}}
-		>
-			{placing ? 'Stoppen met plaatsen' : 'Straten plaatsen'}
-		</button>
+		{#if curating}
+			<button
+				type="button"
+				class="rounded-lg border-2 px-4 py-2 font-semibold transition {placing
+					? 'border-orange-600 bg-orange-600 text-white'
+					: 'border-blue-800 text-blue-800 hover:bg-blue-50'}"
+				on:click={() => {
+					placing = !placing;
+					selected = null;
+				}}
+			>
+				{placing ? 'Stoppen met plaatsen' : 'Plaatsen aanduiden'}
+			</button>
+		{/if}
 	</header>
 
 	{#if error}
 		<div class="mb-4 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900">{error}</div>
 	{/if}
 
-	{#if placing}
+	{#if placing && curating}
 		<div class="mb-4 rounded-lg border-2 border-orange-300 bg-orange-50 p-4">
 			<h2 class="font-bold text-orange-950">
 				{#if nextToPlace}
