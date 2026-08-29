@@ -4,7 +4,18 @@
 	import type { Archive } from '$lib/archive';
 	import { loadArchive } from '$lib/archive';
 	import type { Curator, Decision, QueuedSubmission } from '$lib/admin';
-	import { isConfigured, queue, review, signIn, signOut, watchSignIn, whoAmI } from '$lib/admin';
+	import {
+		corrections,
+		isConfigured,
+		judgeCorrection,
+		queue,
+		review,
+		signIn,
+		signOut,
+		watchSignIn,
+		whoAmI
+	} from '$lib/admin';
+	import type { PlaceCorrection } from '../../../sharedModels/correction';
 
 	/**
 	 * The curator's desk.
@@ -25,6 +36,11 @@
 	let error: string | null = null;
 
 	let showing: 'pending' | 'approved' | 'rejected' = 'pending';
+
+	/** Which desk the curator is at: photographs waiting, or places said to be misplaced. */
+	let desk: 'fotos' | 'correcties' = 'fotos';
+	let reports: PlaceCorrection[] = [];
+	let reportBusy: string | null = null;
 
 	const tabs: ['pending' | 'approved' | 'rejected', string][] = [
 		['pending', 'Te bekijken'],
@@ -84,13 +100,54 @@
 	async function refresh(): Promise<void> {
 		loading = true;
 		try {
-			items = await queue(showing);
+			if (desk === 'correcties') {
+				reports = await corrections(
+					showing === 'approved' ? 'accepted' : showing === 'rejected' ? 'rejected' : 'pending'
+				);
+			} else {
+				items = await queue(showing);
+			}
 			error = null;
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function judge(
+		report: PlaceCorrection,
+		status: 'accepted' | 'rejected' | 'pending'
+	): Promise<void> {
+		reportBusy = report.id;
+		try {
+			let reason: string | undefined;
+
+			if (status === 'rejected') {
+				const typed = window.prompt('Waarom wordt deze melding afgewezen?') ?? '';
+				if (!typed.trim()) {
+					reportBusy = null;
+					return;
+				}
+				reason = typed.trim();
+			}
+
+			await judgeCorrection({ id: report.id, status, rejectionReason: reason });
+			reports = reports.filter((other) => other.id !== report.id);
+			error = null;
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		} finally {
+			reportBusy = null;
+		}
+	}
+
+	/** What the person is actually claiming, in one line a curator can act on. */
+	function claim(report: PlaceCorrection): string {
+		if (report.kind === 'not-a-place') return 'Dit is geen plaats';
+		if (report.kind === 'still-unknown') return 'Geen van de mogelijkheden';
+		if (report.kind === 'candidate') return `Het is: ${report.candidateLabel}`;
+		return `Hier: ${report.lat?.toFixed(5)}, ${report.lng?.toFixed(5)}`;
 	}
 
 	function editsFor(item: QueuedSubmission): Decision {
@@ -201,6 +258,24 @@
 			</button>
 		</div>
 	{:else}
+		<nav class="mt-6 flex gap-2 border-b border-gray-200 pb-3">
+			{#each [['fotos', "Foto's"], ['correcties', 'Correcties op de kaart']] as [value, label] (value)}
+				<button
+					type="button"
+					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
+						? 'bg-gray-900 text-white'
+						: 'text-gray-700 hover:bg-gray-100'}"
+					on:click={() => {
+						desk = value === 'correcties' ? 'correcties' : 'fotos';
+						showing = 'pending';
+						refresh();
+					}}
+				>
+					{label}
+				</button>
+			{/each}
+		</nav>
+
 		<nav class="mt-6 flex gap-2">
 			{#each tabs as [value, label] (value)}
 				<button
@@ -218,7 +293,79 @@
 			{/each}
 		</nav>
 
-		{#if loading}
+		{#if desk === 'correcties'}
+			{#if loading}
+				<p class="py-16 text-center text-gray-500">Bezig met laden ...</p>
+			{:else if reports.length === 0}
+				<p class="py-16 text-center text-gray-600">
+					Geen meldingen. 24 plaatsen staan bij benadering op de kaart en wachten op iemand die het
+					beter weet.
+				</p>
+			{:else}
+				<ul class="mt-6 space-y-4">
+					{#each reports as report (report.id)}
+						<li class="rounded-xl border border-gray-300 bg-white p-4">
+							<div class="flex flex-wrap items-start justify-between gap-3">
+								<div class="min-w-0">
+									<h3 class="text-lg font-bold text-gray-900">{report.placeName}</h3>
+									<p class="font-medium text-gray-800">{claim(report)}</p>
+									{#if report.message}
+										<p class="mt-2 rounded bg-amber-50 p-2 text-sm text-gray-800">
+											&ldquo;{report.message}&rdquo;
+										</p>
+									{/if}
+									<p class="mt-2 text-sm text-gray-500">
+										Gemeld {new Date(report.submittedAt).toLocaleDateString('nl-BE')}
+										{#if report.contributor.name}door {report.contributor.name}{/if}
+										{#if report.contributor.email}&middot; {report.contributor.email}{/if}
+									</p>
+								</div>
+
+								<!-- What the map was claiming when they objected. Captured at the time,
+								     because the research may have been regenerated since. -->
+								<dl class="shrink-0 rounded bg-gray-50 p-3 text-sm text-gray-700">
+									<dt class="font-semibold">Stond als</dt>
+									<dd>{report.previous.display} &middot; klasse {report.previous.grade}</dd>
+									{#if report.previous.lat != null}
+										<dd>{report.previous.lat.toFixed(5)}, {report.previous.lng?.toFixed(5)}</dd>
+									{/if}
+									{#if report.previous.radius}<dd>&plusmn; {report.previous.radius} m</dd>{/if}
+								</dl>
+							</div>
+
+							<p class="mt-3 text-sm text-gray-600">
+								Goedkeuren noteert dat de melding klopt. De kaart verandert pas als
+								<code class="rounded bg-gray-100 px-1">plaatsen.geojson</code> wordt aangepast, zodat
+								de klasse en de twijfeltekst mee veranderen met het punt.
+							</p>
+
+							<div class="mt-3 flex flex-wrap gap-2">
+								{#if report.status !== 'accepted'}
+									<button
+										type="button"
+										class="rounded-lg bg-green-700 px-5 py-2.5 font-semibold text-white hover:bg-green-800 disabled:bg-gray-400"
+										disabled={reportBusy === report.id}
+										on:click={() => judge(report, 'accepted')}
+									>
+										{reportBusy === report.id ? 'Bezig ...' : 'Klopt'}
+									</button>
+								{/if}
+								{#if report.status !== 'rejected'}
+									<button
+										type="button"
+										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+										disabled={reportBusy === report.id}
+										on:click={() => judge(report, 'rejected')}
+									>
+										Klopt niet
+									</button>
+								{/if}
+							</div>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		{:else if loading}
 			<p class="py-16 text-center text-gray-500">Bezig met laden ...</p>
 		{:else if items.length === 0}
 			<p class="py-16 text-center text-gray-600">

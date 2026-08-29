@@ -11,6 +11,8 @@
  * at `/kaart`, which hands back a replacement for this file.
  */
 
+import type { Approximation } from '../../sharedModels/approximation';
+
 /** One placed coordinate, with who placed it and when. */
 export interface PlacedCoordinate {
 	lat: number;
@@ -100,6 +102,9 @@ export async function loadStreetGeometry(
 	}
 }
 
+/** Where a coordinate came from, worst case last. */
+export type CoordinateSource = 'placed' | 'register' | 'onderzoek';
+
 /**
  * Where a place is, best source first.
  *
@@ -107,17 +112,32 @@ export async function loadStreetGeometry(
  * authoritative about where the Dorpsstraat runs, but a curator who moved a place did so
  * for a reason - the castle sits back from the road, the photograph is of the far end - and
  * that judgement is worth more than a centreline midpoint.
+ *
+ * Researched places come last, and deliberately so: they are the only tier that can be
+ * wrong by hundreds of metres. `source` is returned rather than discarded precisely so a
+ * caller can tell the three apart - a map that cannot distinguish a clicked pin from a
+ * reading of a sentence will draw them the same, and then nobody knows which to trust.
+ *
+ * This answers "where is it", not "should it be drawn". A place outside Kapellen has a
+ * perfectly good coordinate and still does not belong on a map of Kapellen; that is
+ * `isDrawable`'s decision, not this one.
  */
 export function locate(
 	placeId: string,
 	placedCoordinates: Record<string, PlacedCoordinate>,
-	geometry: Record<string, StreetGeometry>
-): { lat: number; lng: number; source: 'placed' | 'register' } | null {
+	geometry: Record<string, StreetGeometry>,
+	approximations: Record<string, Approximation> = {}
+): { lat: number; lng: number; source: CoordinateSource } | null {
 	const byHand = placedCoordinates[placeId];
 	if (byHand) return { lat: byHand.lat, lng: byHand.lng, source: 'placed' };
 
 	const derived = geometry[placeId];
 	if (derived) return { lat: derived.lat, lng: derived.lng, source: 'register' };
+
+	const researched = approximations[placeId];
+	if (researched && researched.lat != null && researched.lng != null) {
+		return { lat: researched.lat, lng: researched.lng, source: 'onderzoek' };
+	}
 
 	return null;
 }

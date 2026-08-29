@@ -27,3 +27,8 @@ static/data/
 # text migration would destroy the evidence it exists to preserve.
 legacy-site/
 docs/legacy-missing-photos.txt
+
+# The researched places, and the file generated from them. The geojson is source data
+# written elsewhere; reformatting 82 features would bury the next real change in noise.
+functions/src/data/plaatsen.geojson
+functions/src/data/place-approximations.json

@@ -38,12 +38,25 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 	let startY = 0;
 	let pointerId: number | null = null;
 
+	/**
+	 * The gesture is followed on `window` rather than by capturing the pointer.
+	 *
+	 * Capture was the obvious fix for the original bug - a swipe is a movement towards the
+	 * edge, so `pointerup` usually landed outside the element and the gesture was lost - but
+	 * it broke something quieter. A captured pointer retargets every later pointer event to
+	 * the capturing element, and the browser synthesises the `click` from those: the
+	 * next and previous arrows inside this container stopped navigating altogether, because
+	 * no click ever reached the link.
+	 *
+	 * Listening on `window` for the rest of the gesture solves the same problem without
+	 * touching what a click targets. The listeners live only for the length of one gesture.
+	 */
 	function down(event: PointerEvent): void {
 		if (current.enabled && !current.enabled()) return;
 
 		if (pointerId !== null) {
-			release(pointerId);
-			pointerId = null; // a second finger: this is a pinch, not a swipe
+			// A second finger: this is a pinch, not a swipe.
+			stop();
 			return;
 		}
 
@@ -51,33 +64,24 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 		startX = event.clientX;
 		startY = event.clientY;
 
-		// Without capture the gesture is lost the moment the pointer leaves the element -
-		// which on a swipe is most of the time, because a swipe is precisely a movement
-		// towards the edge. `pointerup` then fires somewhere else and the swipe never lands.
-		try {
-			node.setPointerCapture(event.pointerId);
-		} catch {
-			// Capture is best-effort; a browser that refuses it still works most of the time.
-		}
+		window.addEventListener('pointerup', up);
+		window.addEventListener('pointercancel', cancel);
 	}
 
-	function release(id: number): void {
-		try {
-			if (node.hasPointerCapture(id)) node.releasePointerCapture(id);
-		} catch {
-			// Nothing to release.
-		}
+	function stop(): void {
+		pointerId = null;
+		window.removeEventListener('pointerup', up);
+		window.removeEventListener('pointercancel', cancel);
 	}
 
 	function up(event: PointerEvent): void {
 		if (pointerId !== event.pointerId) return;
-		release(pointerId);
-		pointerId = null;
-
-		if (current.enabled && !current.enabled()) return;
 
 		const dx = event.clientX - startX;
 		const dy = event.clientY - startY;
+		stop();
+
+		if (current.enabled && !current.enabled()) return;
 
 		if (Math.abs(dx) < SWIPE_THRESHOLD) return;
 		if (Math.abs(dx) < Math.abs(dy) * HORIZONTAL_RATIO) return;
@@ -88,8 +92,8 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 	}
 
 	function cancel(event: PointerEvent): void {
-		release(event.pointerId);
-		pointerId = null;
+		if (pointerId !== event.pointerId) return;
+		stop();
 	}
 
 	/**
@@ -102,8 +106,6 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 	}
 
 	node.addEventListener('pointerdown', down);
-	node.addEventListener('pointerup', up);
-	node.addEventListener('pointercancel', cancel);
 	node.addEventListener('dragstart', noDrag);
 
 	return {
@@ -111,9 +113,8 @@ export function swipe(node: HTMLElement, options: SwipeOptions) {
 			current = next;
 		},
 		destroy() {
+			stop();
 			node.removeEventListener('pointerdown', down);
-			node.removeEventListener('pointerup', up);
-			node.removeEventListener('pointercancel', cancel);
 			node.removeEventListener('dragstart', noDrag);
 		}
 	};

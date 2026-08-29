@@ -70,3 +70,7 @@ export const publishedPhotos = controllers.submissionController.publishedPhotos;
 export const listSubmissions = controllers.submissionController.listSubmissions;
 export const reviewSubmission = controllers.submissionController.reviewSubmission;
 export const whoAmI = controllers.submissionController.whoAmI;
+
+export const submitCorrection = controllers.correctionController.submitCorrection;
+export const listCorrections = controllers.correctionController.listCorrections;
+export const reviewCorrection = controllers.correctionController.reviewCorrection;

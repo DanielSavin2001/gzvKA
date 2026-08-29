@@ -11,6 +11,7 @@
  * visitors are here to look at photographs of their street, not to sign in.
  */
 
+import type { PlaceCorrection } from '../../sharedModels/correction';
 import type { Submission } from '../../sharedModels/submission';
 
 /** A submission with a link a curator can actually open while it is still private. */
@@ -133,6 +134,33 @@ export interface Decision {
 
 export function review(decision: Decision): Promise<Submission> {
 	return call<Submission>('reviewSubmission', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(decision)
+	});
+}
+
+/**
+ * Reports that a place is in the wrong spot.
+ *
+ * Accepting one marks the report as good; it does not move the pin. The map is built from
+ * `plaatsen.geojson` in the repository, so applying a correction is a commit somebody can
+ * read - which is what stops a point relocating quietly while the warning beside it still
+ * says the location is a guess.
+ */
+export async function corrections(status = 'pending'): Promise<PlaceCorrection[]> {
+	const result = await call<{ corrections: PlaceCorrection[] }>(
+		`listCorrections?status=${encodeURIComponent(status)}`
+	);
+	return result.corrections;
+}
+
+export function judgeCorrection(decision: {
+	id: string;
+	status: 'pending' | 'accepted' | 'rejected';
+	rejectionReason?: string;
+}): Promise<PlaceCorrection> {
+	return call<PlaceCorrection>('reviewCorrection', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(decision)
