@@ -196,7 +196,9 @@ function build(): BuildResult {
 			...(seed.negativeContext ? { negativeContext: seed.negativeContext } : {}),
 			...(seed.relatedIds ? { relatedIds: seed.relatedIds } : {}),
 			...(seed.note ? { note: seed.note } : {}),
-			manualGeometry: null,
+			// Carried through from the seed, never overwritten: the seed is the only place a
+			// human may record a coordinate, and this file is regenerated wholesale.
+			manualGeometry: seed.manualGeometry ?? null,
 			evidence: { corpusHits: totalHits, sampleFile }
 		});
 	}

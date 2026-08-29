@@ -5,6 +5,8 @@
 	"scripts": {
 		"start": "vite dev",
 		"build": "vite build",
+		"archive:index": "npm --prefix functions run archive:index",
+		"thumbs": "node scripts/build-thumbnails.mjs",
 		"deploy": "vite build && firebase deploy --only hosting",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
@@ -29,6 +31,7 @@
 		"postcss-load-config": "^4.0.1",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.8.1",
+		"sharp": "^0.35.4",
 		"svelte": "^3.54.0",
 		"svelte-check": "^3.0.1",
 		"svelte-preprocess": "^4.10.7",

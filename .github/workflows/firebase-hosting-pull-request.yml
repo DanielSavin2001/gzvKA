@@ -18,7 +18,12 @@ jobs:
         run: |
           echo "VITE_BASE_URL_GF=${{ secrets.VITE_BASE_URL_GF_PRD }}" >> $GITHUB_ENV
 
-      - run: npm ci && npm run build
+      # The web-sized images are generated rather than committed, so the deploy has to
+      # produce them or the site ships with no photographs at all. Thumbnails only: they
+      # come to 78 MB where both sizes come to 443 MB, and hosting keeps every version.
+      - run: npm ci
+      - run: npm run thumbs -- --only=thumb
+      - run: npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
