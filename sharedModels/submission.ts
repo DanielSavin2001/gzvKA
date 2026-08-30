@@ -20,8 +20,24 @@ export interface Contributor {
 	name?: string;
 	/** Only so a curator can ask a question. Never shown on the site. */
 	email?: string;
-	/** Anything they want to say: where it was taken, who is in it, what year. */
+	/** Anything they want to say about the batch as a whole. */
 	note?: string;
+}
+
+/**
+ * What the contributor suggested about one photograph in particular.
+ *
+ * A suggestion, not a decision: none of it reaches the website until a curator has read it
+ * and made it their own. That is why these fields live apart from {@link CuratorFields} -
+ * mixing them would let unreviewed text become a published title on approval.
+ */
+export interface PhotoSuggestion {
+	/** What they would call it. */
+	title?: string;
+	/** When they think it was taken. Free text: "rond 1950" is an answer worth having. */
+	year?: string;
+	/** What is on it: the street, the people, the occasion. */
+	description?: string;
 }
 
 /**
@@ -40,6 +56,8 @@ export interface CuratorFields {
 	year?: string;
 	/** Who gave it to the archive. */
 	donor?: string;
+	/** What is on the photograph, as shown on the site. */
+	description?: string;
 	/** A coordinate a curator placed for this photograph alone. */
 	lat?: number;
 	lng?: number;
@@ -57,6 +75,8 @@ export interface Submission extends CuratorFields {
 	bytes: number;
 
 	contributor: Contributor;
+	/** What the contributor suggested about this photograph. Never published as-is. */
+	suggestion?: PhotoSuggestion;
 
 	/** ISO timestamps. */
 	submittedAt: string;
@@ -77,6 +97,8 @@ export interface PublishedPhoto {
 	houseNumber?: number;
 	year?: string;
 	donor?: string;
+	/** The curator's description. A contributor's suggestion never appears here unedited. */
+	description?: string;
 	lat?: number;
 	lng?: number;
 	/** ISO date it was approved, so new arrivals can be shown first. */
@@ -89,7 +111,7 @@ export const MAX_SUBMISSION_BYTES = 25 * 1024 * 1024;
 export const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 /** Trimmed to a length that cannot fill a screen or a database field. */
-const LIMITS = { name: 120, email: 200, note: 2000, title: 200 };
+const LIMITS = { name: 120, email: 200, note: 2000, title: 200, year: 40, description: 4000 };
 
 function clean(value: unknown, limit: number): string | undefined {
 	if (typeof value !== 'string') return undefined;
@@ -117,6 +139,31 @@ export function readContributor(input: Record<string, unknown>): Contributor {
 	if (note) contributor.note = note;
 
 	return contributor;
+}
+
+/**
+ * Reads what a contributor suggested about one photograph, with the same discipline as
+ * {@link readContributor}: everything optional, everything trimmed and capped, nothing
+ * trusted. Returns undefined when there is nothing in it, so an empty suggestion is not
+ * stored as an empty object.
+ */
+export function readSuggestion(input: unknown): PhotoSuggestion | undefined {
+	if (typeof input !== 'object' || input === null) return undefined;
+	const record = input as Record<string, unknown>;
+	const suggestion: PhotoSuggestion = {};
+
+	const title = clean(record.title, LIMITS.title);
+	if (title) suggestion.title = title;
+
+	// Free text rather than a validated year: "rond 1950" or "jaren 30" is an answer worth
+	// having, and the curator turns it into a real year while reviewing.
+	const year = clean(record.year, LIMITS.year);
+	if (year) suggestion.year = year;
+
+	const description = clean(record.description, LIMITS.description);
+	if (description) suggestion.description = description;
+
+	return Object.keys(suggestion).length > 0 ? suggestion : undefined;
 }
 
 /** Raised when a submission cannot be accepted. The message is shown to the contributor. */
@@ -170,6 +217,9 @@ export function toPublished(submission: Submission, url: string): PublishedPhoto
 	if (submission.year) published.year = submission.year;
 	if (submission.donor) published.donor = submission.donor;
 	else if (submission.contributor.name) published.donor = submission.contributor.name;
+	// The curator's description only. The contributor's suggestion stays in the queue: it is
+	// prefilled into the curator's form, so publishing it is a decision, not a default.
+	if (submission.description) published.description = submission.description;
 	if (submission.lat != null && submission.lng != null) {
 		published.lat = submission.lat;
 		published.lng = submission.lng;

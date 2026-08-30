@@ -201,14 +201,23 @@
 
 	function editsFor(item: QueuedSubmission): Decision {
 		if (!edits[item.id]) {
+			// The contributor's suggestion prefills the form, so publishing it is one look and
+			// one click rather than retyping - but it only reaches the site through these
+			// fields, after a curator has seen it. A suggested year prefills only when it is
+			// already a real year ("1957" or "1957-1958"): the server refuses anything else,
+			// and silently losing "rond 1950" on approve is worse than showing it as a quote.
+			const suggestedYear = /^\d{4}(-\d{4})?$/.test(item.suggestion?.year ?? '')
+				? item.suggestion?.year
+				: undefined;
 			edits[item.id] = {
 				id: item.id,
 				status: 'approved',
-				title: item.title ?? item.originalName.replace(/\.[^.]+$/, ''),
+				title: item.title ?? item.suggestion?.title ?? item.originalName.replace(/\.[^.]+$/, ''),
 				places: item.places ?? [],
 				...(item.houseNumber != null ? { houseNumber: item.houseNumber } : {}),
-				...(item.year ? { year: item.year } : {}),
-				donor: item.donor ?? item.contributor.name ?? ''
+				...(item.year ? { year: item.year } : suggestedYear ? { year: suggestedYear } : {}),
+				donor: item.donor ?? item.contributor.name ?? '',
+				description: item.description ?? item.suggestion?.description ?? ''
 			};
 		}
 		return edits[item.id];
@@ -567,8 +576,28 @@
 								<p
 									class="mt-2 rounded bg-amber-50 dark:bg-amber-950 p-2 text-sm text-gray-800 dark:text-gray-200"
 								>
-									&ldquo;{item.contributor.note}&rdquo;
+									Over de inzending: &ldquo;{item.contributor.note}&rdquo;
 								</p>
+							{/if}
+							{#if item.suggestion}
+								<!--
+									What they said about this photograph in particular. Shown verbatim
+									beside the form it prefilled, so a curator can see what was suggested
+									even after editing the fields.
+								-->
+								<div
+									class="mt-2 space-y-1 rounded bg-amber-50 dark:bg-amber-950 p-2 text-sm text-gray-800 dark:text-gray-200"
+								>
+									{#if item.suggestion.title}
+										<p>Titel: &ldquo;{item.suggestion.title}&rdquo;</p>
+									{/if}
+									{#if item.suggestion.year}
+										<p>Jaartal: &ldquo;{item.suggestion.year}&rdquo;</p>
+									{/if}
+									{#if item.suggestion.description}
+										<p>&ldquo;{item.suggestion.description}&rdquo;</p>
+									{/if}
+								</div>
 							{/if}
 							{#if item.rejectionReason}
 								<p
@@ -584,6 +613,17 @@
 								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Titel</span>
 								<input
 									bind:value={edits[item.id].title}
+									class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+								/>
+							</label>
+
+							<label class="mt-3 block">
+								<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+									>Beschrijving</span
+								>
+								<textarea
+									bind:value={edits[item.id].description}
+									rows="2"
 									class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 								/>
 							</label>

@@ -129,6 +129,7 @@ export interface Decision {
 	houseNumber?: number;
 	year?: string;
 	donor?: string;
+	description?: string;
 	lat?: number;
 	lng?: number;
 	rejectionReason?: string;

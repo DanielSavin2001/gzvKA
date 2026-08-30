@@ -1,12 +1,25 @@
-import { collectFiles, MAX_FILE_BYTES, UploadValidationError } from './multipart';
+import { collectFiles, collectUpload, MAX_FILE_BYTES, UploadValidationError } from './multipart';
 
 const BOUNDARY = '----gzvkaTestBoundary';
 
 /** Builds a multipart body the same way a browser's FormData upload does. */
 function multipartBody(
-	files: Array<{ field?: string; filename: string; contentType: string; content: Buffer | string }>
+	files: Array<{ field?: string; filename: string; contentType: string; content: Buffer | string }>,
+	fields: Record<string, string> = {}
 ): { headers: Record<string, string>; body: Buffer } {
 	const parts: Buffer[] = [];
+
+	// Plain fields first, the way the upload page appends `meta` before the photographs.
+	for (const [name, value] of Object.entries(fields)) {
+		parts.push(
+			Buffer.from(
+				`--${BOUNDARY}\r\n` + `Content-Disposition: form-data; name="${name}"\r\n\r\n`,
+				'latin1'
+			),
+			Buffer.from(value, 'latin1'),
+			Buffer.from('\r\n', 'latin1')
+		);
+	}
 
 	for (const file of files) {
 		parts.push(
@@ -105,6 +118,36 @@ describe('collectFiles', () => {
 		]);
 
 		await expect(collectFiles(headers, body)).rejects.toThrow(UploadValidationError);
+	});
+
+	it('hands back plain fields beside the files, keyed by name', async () => {
+		// The upload page sends one `meta` field with a suggestion per photograph; before the
+		// field handler existed, busboy consumed these parts and told nobody.
+		const meta = JSON.stringify([{ title: 'De bakkerij', year: 'rond 1950' }]);
+		const { headers, body } = multipartBody(
+			[{ filename: 'a.jpg', contentType: 'image/jpeg', content: 'x' }],
+			{ meta }
+		);
+
+		const upload = await collectUpload(headers, body);
+
+		expect(upload.files).toHaveLength(1);
+		expect(upload.fields).toEqual({ meta });
+	});
+
+	it('keeps files and fields apart whatever their order', async () => {
+		const { headers, body } = multipartBody(
+			[
+				{ filename: 'a.jpg', contentType: 'image/jpeg', content: 'first' },
+				{ filename: 'b.png', contentType: 'image/png', content: 'second' }
+			],
+			{ meta: '[]', other: 'waarde' }
+		);
+
+		const upload = await collectUpload(headers, body);
+
+		expect(upload.files.map((f) => f.fields.filename)).toEqual(['a.jpg', 'b.png']);
+		expect(upload.fields).toEqual({ meta: '[]', other: 'waarde' });
 	});
 
 	it('always settles, so a request can never hang waiting on it', async () => {

@@ -12,6 +12,7 @@ import { randomUUID } from 'crypto';
 
 import type {
 	CuratorFields,
+	PhotoSuggestion,
 	PublishedPhoto,
 	Submission,
 	SubmissionStatus
@@ -62,7 +63,8 @@ export interface IncomingFile {
  */
 export async function submit(
 	file: IncomingFile,
-	contributor: Submission['contributor']
+	contributor: Submission['contributor'],
+	suggestion?: PhotoSuggestion
 ): Promise<Submission> {
 	validateFile({ contentType: file.contentType, bytes: file.buffer.length });
 
@@ -86,6 +88,7 @@ export async function submit(
 		contentType: file.contentType,
 		bytes: file.buffer.length,
 		contributor,
+		...(suggestion ? { suggestion } : {}),
 		submittedAt: new Date().toISOString()
 	};
 
@@ -122,6 +125,9 @@ export function readCuratorFields(input: Record<string, unknown>): CuratorFields
 	}
 	if (typeof input.donor === 'string' && input.donor.trim()) {
 		fields.donor = input.donor.trim().slice(0, 200);
+	}
+	if (typeof input.description === 'string' && input.description.trim()) {
+		fields.description = input.description.trim().slice(0, 4000);
 	}
 	if (typeof input.lat === 'number' && typeof input.lng === 'number') {
 		fields.lat = input.lat;

@@ -4,6 +4,7 @@ import {
 	SubmissionError,
 	canTransition,
 	readContributor,
+	readSuggestion,
 	toPublished,
 	validateFile
 } from '../../../sharedModels/submission';
@@ -37,6 +38,32 @@ describe('readContributor', () => {
 
 	it('ignores anything that is not text', () => {
 		expect(readContributor({ name: 42, note: { toString: () => 'nope' } })).toEqual({});
+	});
+});
+
+describe('readSuggestion', () => {
+	it('keeps a title, a year and a description', () => {
+		expect(
+			readSuggestion({ title: ' De bakkerij ', year: 'rond 1950', description: 'Mijn grootvader.' })
+		).toEqual({ title: 'De bakkerij', year: 'rond 1950', description: 'Mijn grootvader.' });
+	});
+
+	it('keeps a year as free text', () => {
+		// "rond 1950" is an answer worth having; the curator turns it into a real year.
+		expect(readSuggestion({ year: 'jaren 30' })).toEqual({ year: 'jaren 30' });
+	});
+
+	it('returns nothing rather than an empty object', () => {
+		expect(readSuggestion({})).toBeUndefined();
+		expect(readSuggestion({ title: '   ' })).toBeUndefined();
+		expect(readSuggestion('niet een object')).toBeUndefined();
+		expect(readSuggestion(null)).toBeUndefined();
+	});
+
+	it('trims what a form can be made to send', () => {
+		expect(readSuggestion({ description: 'x'.repeat(5000) })?.description?.length).toBe(4000);
+		expect(readSuggestion({ year: 'x'.repeat(100) })?.year?.length).toBe(40);
+		expect(readSuggestion({ title: 42, description: ['a'] })).toBeUndefined();
 	});
 });
 
@@ -118,6 +145,16 @@ describe('readCuratorFields', () => {
 		expect(
 			readCuratorFields({ status: 'approved', reviewedBy: 'someone@else', id: 'other' })
 		).toEqual({});
+		// A suggestion is the contributor's; a review may adopt its text into `description`,
+		// but the request cannot write the suggestion record itself.
+		expect(readCuratorFields({ suggestion: { title: 'x' } })).toEqual({});
+	});
+
+	it('takes a description, trimmed and capped', () => {
+		expect(readCuratorFields({ description: '  Het café op de hoek. ' })).toEqual({
+			description: 'Het café op de hoek.'
+		});
+		expect(readCuratorFields({ description: 'x'.repeat(5000) }).description?.length).toBe(4000);
 	});
 
 	it('refuses a year that is not one', () => {
@@ -173,6 +210,20 @@ describe('toPublished', () => {
 		const published = toPublished({ ...submission, lat: 51.3 }, 'x');
 		expect(published.lat).toBeUndefined();
 		expect(published.lng).toBeUndefined();
+	});
+
+	it("publishes the curator's description, never the contributor's suggestion", () => {
+		const withSuggestion: Submission = {
+			...submission,
+			suggestion: { title: 'ongelezen titel', year: 'rond 1950', description: 'ongelezen tekst' }
+		};
+
+		// The suggestion prefills the curator's form; publishing it is a decision, not a
+		// default. A suggestion that was never adopted must not appear anywhere public.
+		expect(JSON.stringify(toPublished(withSuggestion, 'x'))).not.toContain('ongelezen');
+
+		const adopted = toPublished({ ...withSuggestion, description: 'Gelezen en overgenomen.' }, 'x');
+		expect(adopted.description).toBe('Gelezen en overgenomen.');
 	});
 });
 
