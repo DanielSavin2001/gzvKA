@@ -39,3 +39,19 @@ export const reviewCorrection = controllers.correctionController.reviewCorrectio
 export const photoEdits = controllers.photoEditController.photoEdits;
 export const savePhotoEdit = controllers.photoEditController.savePhotoEdit;
 export const deletePhotoEdit = controllers.photoEditController.deletePhotoEdit;
+
+/**
+ * Functions behind "I know when this photograph was taken".
+ *
+ * 3,896 of the 4,504 photographs have no year, and no work inside this repository can
+ * change that - a year is remembered, not derived. Accepting a suggestion writes it into
+ * the same photo-edit overlay a curator's own correction lands in, so the timeline grows
+ * without waiting for a rebuild.
+ *
+ * @function submitPhotoFact  public - somebody dates a photograph
+ * @function listPhotoFacts   curators - the queue
+ * @function reviewPhotoFact  curators - accept or reject
+ */
+export const submitPhotoFact = controllers.photoFactController.submitPhotoFact;
+export const listPhotoFacts = controllers.photoFactController.listPhotoFacts;
+export const reviewPhotoFact = controllers.photoFactController.reviewPhotoFact;

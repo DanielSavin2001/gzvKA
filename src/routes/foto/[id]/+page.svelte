@@ -8,6 +8,7 @@
 	import { SITE, summarise } from '$lib/seo';
 	import { slugify } from '../../../../sharedModels/text';
 	import Seo from '../../components/Seo.svelte';
+	import DatePhoto from '../../components/DatePhoto.svelte';
 	import { swipe } from '$lib/gestures';
 	import { extensionOf, keepsakeName, loadedSource, shareOrCopy } from '$lib/keepsake';
 	import { showErrorToast, showSuccessToast } from '../../../services/toaster-service';
@@ -622,11 +623,22 @@
 				</dl>
 
 				<p
-					class="mt-6 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400"
+					class="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400"
 				>
-					Klopt er iets niet, of weet u meer over deze foto? Laat het ons weten &mdash; deze
-					gegevens zijn automatisch uit de bestandsnaam gehaald en niet altijd volledig.
+					Deze gegevens zijn automatisch uit de bestandsnaam gehaald en zijn niet altijd volledig.
 				</p>
+
+				<!--
+					This used to be the sentence "laat het ons weten" with nothing to press. The
+					year is the field worth asking for: 3,896 photographs have none, so the
+					timeline shows an eighth of the archive, and the only person who can fix that
+					is the one looking at the picture.
+				-->
+				<DatePhoto
+					photoId={data.id}
+					photoTitle={data.summary?.title ?? photo?.t ?? ''}
+					currentYear={photo?.y ?? data.summary?.year}
+				/>
 			</figcaption>
 		</figure>
 
