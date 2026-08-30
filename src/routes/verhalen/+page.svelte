@@ -1,32 +1,28 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import Seo from '../components/Seo.svelte';
 
 	import type { StoryIndex } from '$lib/stories';
-	import { contestStories, historyStories, loadStoryIndex, readingMinutes } from '$lib/stories';
+	import { contestStories, historyStories, readingMinutes } from '$lib/stories';
 
-	let index: StoryIndex | null = null;
-	let error: string | null = null;
+	export let data: { index: StoryIndex };
 
-	onMount(async () => {
-		try {
-			index = await loadStoryIndex();
-		} catch (e) {
-			error = e instanceof Error ? e.message : String(e);
-		}
-	});
+	/**
+	 * The stories come from `load`, which is what lets this page be prerendered - the list
+	 * is in the HTML a crawler receives instead of arriving after it has already been
+	 * served. It is the only route to 101 stories, so it has to be a real list of links.
+	 */
+	$: index = data.index;
 
 	$: stories = historyStories(index);
 	$: contests = contestStories(index);
 	$: totalProse = stories.reduce((sum, story) => sum + story.prose, 0);
 </script>
 
-<svelte:head>
-	<title>Verhalen uit Kapellen | gzvKA fotoarchief</title>
-	<meta
-		name="description"
-		content="De verhalen van de oude gzvka.be: de geschiedenis van de kastelen, de cafés, de straten en de mensen van Kapellen."
-	/>
-</svelte:head>
+<Seo
+	title="Verhalen uit Kapellen"
+	description="De verhalen van de oude gzvka.be: de geschiedenis van de kastelen, de cafés, de straten en de mensen van Kapellen."
+	path="/verhalen"
+/>
 
 <div class="mx-auto max-w-5xl px-4 py-8">
 	<nav class="text-sm text-gray-600 dark:text-gray-400">
@@ -47,15 +43,8 @@
 		</p>
 	</header>
 
-	{#if error}
-		<div
-			class="my-8 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-5 text-red-900 dark:text-red-200"
-		>
-			<p class="font-semibold">De verhalen konden niet geladen worden</p>
-			<p class="mt-1 text-sm">{error}</p>
-		</div>
-	{:else if !index}
-		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+	{#if stories.length === 0}
+		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Er zijn nog geen verhalen.</p>
 	{:else}
 		<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
 			{stories.length} verhalen &middot; {Math.round(totalProse / 1000)}.000 tekens

@@ -1,19 +1,27 @@
 <script lang="ts">
+	import { SITE, summarise } from '$lib/seo';
+	import Seo from '../../components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
-	import { loadArchive } from '$lib/archive';
+	import { loadArchive, thumbUrl } from '$lib/archive';
 	import type { Story } from '$lib/stories';
 	import { formatBytes, loadStory, readingMinutes } from '$lib/stories';
 	import Lightbox from '../../components/Lightbox.svelte';
 	import type { LightboxItem } from '../../components/Lightbox.svelte';
 	import StoryBody from '../../components/StoryBody.svelte';
 
-	export let data: { slug: string };
+	export let data: { slug: string; story: Story; image: string | null };
 
 	let archive: Archive | null = null;
-	let story: Story | null = null;
 	let error: string | null = null;
+
+	/**
+	 * The story arrives from `load` rather than from `onMount`, which is what lets this page
+	 * be prerendered - the text is in the HTML a crawler or a link preview receives instead
+	 * of being fetched after the page has already been served empty.
+	 */
+	$: story = data.story;
 
 	/** Which photograph the lightbox is showing, as an index into `photos`. -1 is closed. */
 	let openPhoto = -1;
@@ -22,17 +30,14 @@
 	let activeSection = 0;
 
 	onMount(async () => {
-		// The story is what this page is for; the archive only turns its photograph
-		// references into pictures. A failure to load the archive must not blank the text.
-		const [storyResult, archiveResult] = await Promise.allSettled([
-			loadStory(data.slug),
-			loadArchive()
-		]);
-
-		if (storyResult.status === 'fulfilled') story = storyResult.value;
-		else error = 'Dit verhaal konden we niet vinden.';
-
-		if (archiveResult.status === 'fulfilled') archive = archiveResult.value;
+		// Only the archive is loaded here now: it turns the story's photograph references
+		// into pictures, and failing to get it must not blank the text, which is already on
+		// the page.
+		try {
+			archive = await loadArchive();
+		} catch {
+			error = null;
+		}
 	});
 
 	$: places = story
@@ -52,6 +57,24 @@
 				0
 		  )
 		: 0;
+
+	/**
+	 * The opening of the story itself as the search description.
+	 *
+	 * The title alone was being used, which meant a result for "Café Pancras" showed
+	 * "Café Pancras" and told a reader nothing they did not already know from the heading.
+	 * The first real sentences say what the piece is about.
+	 */
+	$: storyDescription = story
+		? summarise(
+				story.sections
+					.flatMap((section) =>
+						section.parts.map((part) => (part.k === 'p' && !part.credit ? part.t : ''))
+					)
+					.filter((text) => text !== '')
+					.join(' ')
+		  ) || `${story.title} - een verhaal uit het fotoarchief van Kapellen.`
+		: 'Een verhaal uit het fotoarchief van Kapellen.';
 
 	/**
 	 * Every photograph in the story, in the order it appears, so the lightbox can walk the
@@ -117,12 +140,25 @@
 	});
 </script>
 
-<svelte:head>
-	<title>{story ? story.title : 'Verhaal'} | gzvKA fotoarchief</title>
-	{#if story}
-		<meta name="description" content={story.title} />
-	{/if}
-</svelte:head>
+<Seo
+	title={story ? story.title : 'Verhaal'}
+	description={storyDescription}
+	path="/verhaal/{data.slug}"
+	type="article"
+	image={data.image ?? (archive && photos.length > 0 ? thumbUrl(archive, photos[0].photo) : null)}
+	structured={story
+		? {
+				'@context': 'https://schema.org',
+				'@type': 'Article',
+				headline: story.title,
+				description: storyDescription,
+				inLanguage: 'nl-BE',
+				url: `${SITE}/verhaal/${data.slug}`,
+				isPartOf: { '@type': 'Collection', name: 'gzvKA fotoarchief', url: SITE },
+				publisher: { '@type': 'Organization', name: 'gzvKA fotoarchief', url: SITE }
+		  }
+		: null}
+/>
 
 {#if archive && photos.length > 0}
 	<Lightbox

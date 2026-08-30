@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from './components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
@@ -10,8 +11,14 @@
 	import SearchBox from './components/SearchBox.svelte';
 	import SearchResults from './components/SearchResults.svelte';
 
+	import type { ArchiveSummary } from '$lib/page-data';
+
+	export let data: { summary: ArchiveSummary; stories: StoryIndex | null };
+
 	let archive: Archive | null = null;
-	let storyIndex: StoryIndex | null = null;
+	// Seeded from `load` so the four featured stories are links in the prerendered HTML
+	// rather than appearing once the browser has fetched the index for itself.
+	let storyIndex: StoryIndex | null = data.stories;
 	let error: string | null = null;
 
 	/** What is being searched for. Empty means the page shows itself rather than results. */
@@ -85,13 +92,29 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Ge zijt van Kapellen als ge ... - fotoarchief</title>
-	<meta
-		name="description"
-		content="Het fotoarchief van Kapellen: duizenden foto's van straten, kastelen, mensen en momenten, doorzoekbaar per straat."
-	/>
-</svelte:head>
+<Seo
+	title="Ge zijt van Kapellen als ge ..."
+	description={archive
+		? `Het fotoarchief van Kapellen: ${archive.imageCount.toLocaleString(
+				'nl-BE'
+		  )} foto's van straten, kastelen, mensen en momenten, doorzoekbaar per straat en op de kaart.`
+		: "Het fotoarchief van Kapellen: duizenden foto's van straten, kastelen, mensen en momenten, doorzoekbaar per straat."}
+	path="/"
+	structured={{
+		'@context': 'https://schema.org',
+		'@type': 'WebSite',
+		name: 'gzvKA fotoarchief',
+		alternateName: 'Ge zijt van Kapellen als ge ...',
+		url: 'https://gzvka.com',
+		inLanguage: 'nl-BE',
+		description: 'Fotoarchief van Kapellen, België.',
+		potentialAction: {
+			'@type': 'SearchAction',
+			target: { '@type': 'EntryPoint', urlTemplate: 'https://gzvka.com/?q={search_term_string}' },
+			'query-input': 'required name=search_term_string'
+		}
+	}}
+/>
 
 <div class="mx-auto max-w-7xl px-4">
 	<section class="py-10 text-center sm:py-14">
@@ -156,9 +179,59 @@
 			<p class="mt-1 text-sm">{error}</p>
 		</div>
 	{:else if !archive}
-		<div class="py-16 text-center text-gray-500 dark:text-gray-400">
-			Bezig met laden van het archief ...
-		</div>
+		<!--
+			The browse lists, from `load`, before the archive has arrived.
+
+			These are the only links out of the home page, and they were built from an index
+			fetched after the HTML had been served - so the response a crawler received had a
+			heading, a search box it cannot use, and no route to any of the 121 places or the
+			101 stories below it. The counts and the photographs fill in a moment later.
+		-->
+		<section class="py-8">
+			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Straten van Kapellen</h2>
+			<p class="mt-1 text-gray-600 dark:text-gray-400">
+				{data.summary.streets.length} straten en pleinen met foto's in het archief.
+			</p>
+
+			<ul class="mt-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+				{#each data.summary.streets as street (street.id)}
+					<li>
+						<a
+							class="flex items-baseline justify-between gap-3 rounded px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950"
+							href="/straat/{street.id}"
+						>
+							<span class="font-medium text-gray-900 dark:text-gray-100">{street.name}</span>
+							<span class="shrink-0 text-sm tabular-nums text-gray-500 dark:text-gray-400"
+								>{street.count}</span
+							>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+
+		{#if data.summary.areas.length > 0}
+			<section class="border-t border-gray-200 py-8 dark:border-gray-700">
+				<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+					Kastelen, wijken en gehuchten
+				</h2>
+				<ul class="mt-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+					{#each data.summary.areas as place (place.id)}
+						<li>
+							<a
+								class="flex items-baseline justify-between gap-3 rounded px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950"
+								href="/straat/{place.id}"
+							>
+								<span class="font-medium text-gray-900 dark:text-gray-100">{place.name}</span>
+								<span class="shrink-0 text-sm tabular-nums text-gray-500 dark:text-gray-400"
+									>{place.count}</span
+								>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 	{:else}
 		<section class="py-8">
 			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Straten van Kapellen</h2>

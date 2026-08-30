@@ -34,6 +34,11 @@
 	>
 		<FooterLink href="/over-ons">Over ons</FooterLink>
 		<FooterLink href="/contact">Contact</FooterLink>
+		<!--
+			The way back to the cookie question. Without a route to it the banner asked once
+			and the answer was final, which is not what consent means.
+		-->
+		<FooterLink href="/privacy">Privacy en cookies</FooterLink>
 		<!-- A door for two people rather than a feature, so it sits here and not in the menu. -->
 		<FooterLink href="/beheer">Beheer</FooterLink>
 	</FooterLinkGroup>

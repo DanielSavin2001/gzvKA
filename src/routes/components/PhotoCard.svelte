@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Archive, ArchivePhoto } from '$lib/archive';
-	import { thumbUrl } from '$lib/archive';
+	import { photoAlt, thumbUrl } from '$lib/archive';
 
 	export let archive: Archive;
 	export let photo: ArchivePhoto;
@@ -20,10 +20,9 @@
 	$: street = places.find((place) => place.isStreet);
 
 	// The alt text is the archive's own description of the photograph, which is far more
-	// use to a screen reader than "foto".
-	$: alt = [photo.t, street ? `in de ${street.name}` : '', photo.y ? `(${photo.y})` : '']
-		.filter(Boolean)
-		.join(' ');
+	// use to a screen reader than "foto". Shared with the photograph's own page, so the
+	// thumbnail and the picture it links to describe themselves the same way.
+	$: alt = photoAlt(archive, photo);
 </script>
 
 <a

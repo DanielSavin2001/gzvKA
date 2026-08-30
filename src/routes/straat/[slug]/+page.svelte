@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { SITE, summarise } from '$lib/seo';
+	import Seo from '../../components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { Archive, ArchivePhoto, ArchivePlace } from '$lib/archive';
-	import { loadArchive, sortForDisplay } from '$lib/archive';
+	import { loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
 	import type { StoryIndex } from '$lib/stories';
@@ -10,7 +12,9 @@
 	import ArchiveMap from '../../components/ArchiveMap.svelte';
 	import PhotoCard from '../../components/PhotoCard.svelte';
 
-	export let data: { slug: string };
+	import type { PlaceSummary } from '$lib/page-data';
+
+	export let data: { slug: string; summary: PlaceSummary | null };
 
 	let archive: Archive | null = null;
 	let storyIndex: StoryIndex | null = null;
@@ -42,6 +46,23 @@
 	let photos: ArchivePhoto[] = [];
 
 	$: place = archive?.placeById.get(data.slug);
+
+	/**
+	 * The head reads from `load`, not from the archive.
+	 *
+	 * `place` comes out of the archive index, which is fetched in the browser and therefore
+	 * absent while the page is being prerendered - so a title built from it was the raw
+	 * slug in the HTML that crawlers and link previews actually receive.
+	 */
+	$: named = data.summary?.name ?? place?.name ?? data.slug;
+	$: counted = data.summary?.count ?? place?.count ?? 0;
+
+	$: placeDescription = counted
+		? summarise(
+				`${counted} ${counted === 1 ? 'foto' : "foto's"} van ${named} in Kapellen, ` +
+					'uit het fotoarchief van de gemeente.'
+		  )
+		: `Foto's van ${named} in Kapellen, uit het fotoarchief van de gemeente.`;
 	$: photos = archive?.photosByPlace.get(data.slug) ?? [];
 
 	// Oldest first: this is a history archive, and the undated ones belong at the end. The
@@ -56,9 +77,29 @@
 	$: shape = geometry[data.slug];
 </script>
 
-<svelte:head>
-	<title>{place ? place.name : data.slug} | gzvKA fotoarchief</title>
-</svelte:head>
+<Seo
+	title={named}
+	description={placeDescription}
+	path="/straat/{data.slug}"
+	image={archive && photos.length > 0 ? thumbUrl(archive, photos[0]) : null}
+	structured={{
+		'@context': 'https://schema.org',
+		'@type': 'CollectionPage',
+		name: named,
+		description: placeDescription,
+		inLanguage: 'nl-BE',
+		url: `${SITE}/straat/${data.slug}`,
+		about: {
+			'@type': 'Place',
+			name: named,
+			address: {
+				'@type': 'PostalAddress',
+				addressLocality: 'Kapellen',
+				addressCountry: 'BE'
+			}
+		}
+	}}
+/>
 
 <div class="mx-auto max-w-6xl px-4 py-8">
 	<nav class="text-sm text-gray-600 dark:text-gray-400">
@@ -76,7 +117,64 @@
 			<p class="mt-1 text-sm">{error}</p>
 		</div>
 	{:else if !archive}
-		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+		<!--
+			The place and its photographs, from `load`, before the archive has arrived.
+
+			This used to be the words "Bezig met laden ...", which is also all a crawler ever
+			saw of the 121 pages that are the only route into the archive. The map, the
+			stories and the house numbers fill in a moment later; the pictures and the links
+			to them are here from the start.
+		-->
+		{#if data.summary}
+			<header class="mt-3">
+				<h1
+					class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100"
+				>
+					{data.summary.name}
+				</h1>
+				<p class="mt-2 text-gray-600 dark:text-gray-400">
+					{data.summary.count}
+					{data.summary.count === 1 ? 'foto' : "foto's"} uit het fotoarchief van Kapellen.
+				</p>
+			</header>
+
+			{#if data.summary.photos.length > 0}
+				<div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+					{#each data.summary.photos as photo (photo.id)}
+						<a
+							class="group block overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"
+							href="/foto/{photo.id}?lijst=straat:{data.slug}"
+						>
+							<div class="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800">
+								<img
+									src={photo.image}
+									alt={photo.alt}
+									loading="lazy"
+									decoding="async"
+									class="h-full w-full object-cover"
+								/>
+							</div>
+							<div class="p-3">
+								<h2 class="text-base font-semibold leading-snug text-gray-900 dark:text-gray-100">
+									{photo.title}
+								</h2>
+								<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+									{data.summary.name}{photo.houseNumber ? ` ${photo.houseNumber}` : ''}{photo.year
+										? ` · ${photo.year}`
+										: ''}
+								</p>
+							</div>
+						</a>
+					{/each}
+				</div>
+			{:else}
+				<p class="py-12 text-gray-600 dark:text-gray-400">
+					Nog geen foto's aan deze plaats gekoppeld.
+				</p>
+			{/if}
+		{:else}
+			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+		{/if}
 	{:else if !place}
 		<div class="py-16 text-center">
 			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">

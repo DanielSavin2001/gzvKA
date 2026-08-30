@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
 	import type { Archive, ArchivePhoto } from '$lib/archive';
-	import { detailUrl, loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
+	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
+	import type { PhotoSummary } from '$lib/page-data';
+	import { SITE, summarise } from '$lib/seo';
+	import Seo from '../../components/Seo.svelte';
 	import { swipe } from '$lib/gestures';
 	import type { PhotoContext } from '$lib/stories';
 	import { loadStory, loadStoryPhotos, photoContext } from '$lib/stories';
 
-	export let data: { id: string };
+	export let data: { id: string; summary: PhotoSummary | null };
 
 	let archive: Archive | null = null;
 	let error: string | null = null;
@@ -18,6 +20,8 @@
 	let context: PhotoContext | null = null;
 
 	onMount(async () => {
+		listKey = new URLSearchParams(window.location.search).get('lijst') ?? '';
+
 		try {
 			archive = await loadArchive();
 		} catch (e) {
@@ -51,8 +55,47 @@
 	let photo: ArchivePhoto | undefined;
 	$: photo = archive?.photoById.get(data.id);
 
-	/** Set only by a curator; the generated index has no such field. */
-	$: description = (photo as (typeof photo & { desc?: string }) | undefined)?.desc ?? '';
+	/**
+	 * The head reads from `load`, not from the archive.
+	 *
+	 * `photo` comes out of the archive index, which the browser fetches - so at prerender
+	 * time it is null and every one of the 4,504 pages would carry the same empty title and
+	 * no share image, which is exactly what a link preview reads.
+	 */
+	$: headTitle = data.summary?.title ?? photo?.t ?? 'Foto';
+	$: headImage = data.summary?.image ?? null;
+
+	/**
+	 * The sentence a search result shows.
+	 *
+	 * Built from what the archive actually knows rather than from a template with blanks,
+	 * so a photograph with a street and a year reads differently from one with neither.
+	 */
+	$: photoDescription = data.summary
+		? summarise(
+				data.summary.description ||
+					[
+						data.summary.title,
+						data.summary.place ? `in de ${data.summary.place}` : null,
+						data.summary.year ? `(${data.summary.year})` : null,
+						'- uit het fotoarchief van Kapellen.'
+					]
+						.filter(Boolean)
+						.join(' ')
+		  )
+		: 'Een foto uit het fotoarchief van Kapellen.';
+
+	/**
+	 * A curator's own words about the photograph, when there are any.
+	 *
+	 * From `load` first so it is in the prerendered HTML - it is the only real prose on the
+	 * page and the one thing here worth reading. The archive copy takes over once it has
+	 * loaded, so a curator sees their own edit without waiting for a deploy.
+	 */
+	$: description =
+		(photo as (typeof photo & { desc?: string }) | undefined)?.desc ??
+		data.summary?.description ??
+		'';
 
 	$: places = photo
 		? photo.st
@@ -68,7 +111,16 @@
 	 * Arriving with no parameter - a shared link, a bookmark - falls back to the photograph's
 	 * own street, which is the most useful list it belongs to.
 	 */
-	$: listKey = $page.url.searchParams.get('lijst') ?? '';
+	/**
+	 * Read from `window` rather than the page store.
+	 *
+	 * This page is prerendered now, and SvelteKit refuses `url.searchParams` on a
+	 * prerendered page - rightly, since the query string does not exist when the HTML is
+	 * written. The list is a browsing convenience, so resolving it after the page is on
+	 * screen is exactly right: the photograph renders from the URL alone, and the arrows
+	 * pick up the thread a moment later.
+	 */
+	let listKey = '';
 
 	$: siblings = ((): ArchivePhoto[] => {
 		if (!archive || !photo) return [];
@@ -140,9 +192,43 @@
 
 <svelte:window on:keydown={onKey} />
 
-<svelte:head>
-	<title>{photo ? photo.t : 'Foto'} | gzvKA fotoarchief</title>
-</svelte:head>
+<!--
+	A photograph is the thing people actually search for and the thing they share, so this
+	is where the head tags earn their keep: without og:image a picture pasted into WhatsApp
+	shows as a bare link, and WhatsApp does not run JavaScript to find one.
+-->
+<Seo
+	title={headTitle}
+	description={photoDescription}
+	path="/foto/{data.id}"
+	image={headImage}
+	structured={data.summary
+		? {
+				'@context': 'https://schema.org',
+				'@type': 'Photograph',
+				name: data.summary.title,
+				description: photoDescription,
+				contentUrl: SITE + headImage,
+				inLanguage: 'nl-BE',
+				isPartOf: { '@type': 'Collection', name: 'gzvKA fotoarchief', url: SITE },
+				...(data.summary.year ? { dateCreated: data.summary.year } : {}),
+				...(data.summary.donor ? { creditText: data.summary.donor } : {}),
+				...(data.summary.place
+					? {
+							contentLocation: {
+								'@type': 'Place',
+								name: data.summary.place,
+								address: {
+									'@type': 'PostalAddress',
+									addressLocality: 'Kapellen',
+									addressCountry: 'BE'
+								}
+							}
+					  }
+					: {})
+		  }
+		: null}
+/>
 
 <div class="mx-auto max-w-5xl px-4 py-8">
 	{#if error}
@@ -153,7 +239,55 @@
 			<p class="mt-1 text-sm">{error}</p>
 		</div>
 	{:else if !archive}
-		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+		<!--
+			The photograph itself, from `load`, before the archive has arrived.
+
+			This used to be the word "Bezig met laden ...", which is also all a search engine
+			ever saw of a photo page - the head was right and the body said nothing. It is the
+			better experience too: the picture is on screen immediately instead of after a
+			700 KB index has downloaded and parsed. The neighbours, the story and the place
+			links fill in a moment later.
+		-->
+		{#if data.summary}
+			<figure class="mt-4">
+				<div class="flex h-[58vh] items-center justify-center sm:h-[64vh]">
+					<img
+						src={data.summary.image}
+						alt={data.summary.alt}
+						{...{ fetchpriority: 'high' }}
+						decoding="async"
+						class="max-h-full max-w-full rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+					/>
+				</div>
+				<figcaption class="mt-4">
+					<h1 class="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-gray-100">
+						{data.summary.title}
+					</h1>
+					<p class="mt-2 text-gray-700 dark:text-gray-300">{photoDescription}</p>
+					{#if data.summary.place}
+						<!--
+							A link, not a label. These 4,504 pages are the largest thing on the site
+							and they pointed nowhere a crawler could follow, so the street pages had
+							almost no inbound links and the archive read as 4,504 dead ends.
+						-->
+						<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+							{#if data.summary.placeId}
+								<a
+									class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+									href="/straat/{data.summary.placeId}"
+								>
+									{data.summary.place}
+								</a>
+							{:else}
+								{data.summary.place}
+							{/if}{data.summary.year ? ` · ${data.summary.year}` : ''}
+						</p>
+					{/if}
+				</figcaption>
+			</figure>
+		{:else}
+			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+		{/if}
 	{:else if !photo}
 		<div class="py-16 text-center">
 			<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Deze foto kennen we niet</h1>
@@ -205,6 +339,8 @@
 						<img
 							src={thumbUrl(archive, previous)}
 							alt=""
+							loading="lazy"
+							decoding="async"
 							draggable="false"
 							class="h-full w-full select-none rounded-l-lg object-cover opacity-40 transition hover:opacity-80"
 						/>
@@ -217,7 +353,8 @@
 					<img
 						src={detailUrl(archive, photo)}
 						on:error={fallBackToThumbnail}
-						alt={photo.t}
+						alt={photoAlt(archive, photo)}
+						{...{ fetchpriority: 'high' }}
 						draggable="false"
 						class="max-h-full max-w-full select-none rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 object-contain"
 					/>

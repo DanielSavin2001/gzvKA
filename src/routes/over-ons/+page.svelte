@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '../components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
@@ -28,13 +29,11 @@
 		: 0;
 </script>
 
-<svelte:head>
-	<title>Over ons | gzvKA fotoarchief</title>
-	<meta
-		name="description"
-		content="Over het fotoarchief van Kapellen: waar de foto's vandaan komen, wie ze verzamelde, en hoe u kunt helpen."
-	/>
-</svelte:head>
+<Seo
+	title="Over ons"
+	description="Over het fotoarchief van Kapellen: waar de foto's vandaan komen, wie ze verzamelde, en hoe u kunt helpen."
+	path="/over-ons"
+/>
 
 <div class="mx-auto max-w-3xl px-4 py-10">
 	<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">

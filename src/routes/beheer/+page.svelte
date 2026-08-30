@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '../components/Seo.svelte';
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
@@ -244,10 +245,12 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Beheer | gzvKA fotoarchief</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
+<Seo
+	title="Beheer"
+	description="De werkplek van wie het archief beheert."
+	path="/beheer"
+	noindex
+/>
 
 <div class="mx-auto max-w-6xl px-4 py-8">
 	<header class="flex flex-wrap items-center justify-between gap-3">
