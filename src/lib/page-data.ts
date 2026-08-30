@@ -18,7 +18,8 @@
  * the head says the same thing the page does about a photograph a curator has corrected.
  */
 
-import type { Archive } from './archive';
+import type { Archive, ArchivePhoto } from './archive';
+import { loadPairs } from './then-and-now';
 import type { PlaceFamily } from './archive';
 import {
 	isPerson,
@@ -27,7 +28,9 @@ import {
 	placesInFamily,
 	placesWithPhotos,
 	sortForDisplay,
-	thumbUrl
+	thumbUrl,
+	cardUrl,
+	donors
 } from './archive';
 
 /** The shape of the archive, for the home page: what there is, and what to call it. */
@@ -77,6 +80,93 @@ export async function placeFamily(
 	return placesInFamily(archive, family).map(({ id, name, count }) => ({ id, name, count }));
 }
 
+/** One decade of the archive, for the timeline. */
+export interface Decade {
+	/** Anchor and key, e.g. `1960` or `voor-1900`. */
+	key: string;
+	/** The big numeral: `1960`, or `Voor 1900`. */
+	label: string;
+	/** The years actually present in this band, e.g. `1960 – 1969`. */
+	span: string;
+	count: number;
+	photos: PhotoLink[];
+}
+
+/**
+ * The archive arranged by decade.
+ *
+ * 608 of the 4,504 photographs carry a year. That is the honest denominator and the page
+ * says so: a timeline that quietly showed an eighth of the archive as though it were all
+ * of it would be worse than no timeline.
+ *
+ * Everything before 1900 is one band. Seven photographs are spread across seventy years
+ * there - maps from 1841 and 1846, a barn dated 1886 - and a row of decade bars each
+ * holding one photograph says nothing except that the archive is old, which the single
+ * band says better.
+ */
+export async function decades(fetcher: typeof fetch): Promise<{
+	decades: Decade[];
+	dated: number;
+	total: number;
+	/** The most recent dated photograph, as a link-preview card. */
+	card: string | null;
+}> {
+	const archive = await loadArchive(fetcher);
+
+	const dated = archive.photos
+		.filter((photo) => /^\d{4}$/.test(photo.y ?? ''))
+		.map((photo) => ({ photo, year: Number(photo.y) }));
+
+	const bands = new Map<string, { year: number; photo: ArchivePhoto }[]>();
+	for (const entry of dated) {
+		const key = entry.year < 1900 ? 'voor-1900' : String(Math.floor(entry.year / 10) * 10);
+		const band = bands.get(key);
+		if (band) band.push(entry);
+		else bands.set(key, [entry]);
+	}
+
+	const ordered = [...bands.entries()].sort(([a], [b]) => {
+		if (a === 'voor-1900') return -1;
+		if (b === 'voor-1900') return 1;
+		return Number(a) - Number(b);
+	});
+
+	// The newest dated photograph leads the preview. The page itself is a century of
+	// pictures and any one of them is arbitrary, so the most recent is at least a rule.
+	const newest = dated.length
+		? dated.reduce((latest, entry) => (entry.year >= latest.year ? entry : latest)).photo
+		: null;
+
+	return {
+		dated: dated.length,
+		total: archive.photos.length,
+		card: newest ? cardUrl(archive, newest) : null,
+		decades: ordered.map(([key, entries]) => {
+			const years = entries.map((entry) => entry.year);
+			const from = Math.min(...years);
+			const to = Math.max(...years);
+
+			return {
+				key,
+				label: key === 'voor-1900' ? 'Voor 1900' : key,
+				span: from === to ? String(from) : `${from} \u2013 ${to}`,
+				count: entries.length,
+				photos: entries
+					// Oldest first inside a decade, as everywhere else in the archive.
+					.sort((a, b) => a.year - b.year || a.photo.t.localeCompare(b.photo.t))
+					.map(({ photo }) => ({
+						id: photo.id,
+						title: photo.t,
+						alt: photoAlt(archive, photo),
+						image: thumbUrl(archive, photo),
+						...(photo.y ? { year: photo.y } : {}),
+						...(photo.hn ? { houseNumber: photo.hn } : {})
+					}))
+			};
+		})
+	};
+}
+
 /** One photograph as a place page lists it. */
 export interface PhotoLink {
 	id: string;
@@ -113,6 +203,14 @@ export interface PlaceSummary {
 	 * That is the page's actual content; it is the one thing worth inlining.
 	 */
 	photos: PhotoLink[];
+	/**
+	 * The first photograph as a link-preview card.
+	 *
+	 * The page used to build this from the archive, which the browser fetches - so at
+	 * prerender time it was null, and all 121 place pages went out with no share image at
+	 * all. A street pasted into WhatsApp was a bare link.
+	 */
+	card: string | null;
 }
 
 export async function placeSummary(
@@ -132,7 +230,16 @@ export async function placeSummary(
 		...(photo.hn ? { houseNumber: photo.hn } : {})
 	}));
 
-	return { id: place.id, name: place.name, count: place.count, person: isPerson(place), photos };
+	const first = sortForDisplay(archive.photosByPlace.get(slug) ?? [])[0];
+
+	return {
+		id: place.id,
+		name: place.name,
+		count: place.count,
+		person: isPerson(place),
+		photos,
+		card: first ? cardUrl(archive, first) : null
+	};
 }
 
 /** Just enough of a photograph for the head tags. */
@@ -148,18 +255,28 @@ export interface PhotoSummary {
 	donor?: string;
 	description?: string;
 	/**
-	 * The share image, root-relative.
+	 * The picture the page paints first, root-relative.
 	 *
 	 * The thumbnail, not the larger copy. Both sizes together come to 443 MB and hosting
-	 * keeps every version, so the deploy generates thumbnails only - which means an
-	 * og:image pointing at the 1400 px file is a 404 for every link preview on the live
-	 * site. It would have looked perfectly correct in the HTML.
+	 * keeps every version, so the deploy does not generate the 1400 px file - which means
+	 * pointing at it here would be a 404 on the live site. It would have looked perfectly
+	 * correct in the HTML.
 	 *
 	 * Built here rather than in the page, because the rule for turning a corpus path into
-	 * an image URL lives in `archive.ts`, and a second copy of it in a head tag is how a
-	 * preview quietly starts pointing at nothing.
+	 * an image URL lives in `archive.ts`, and a second copy of it is how a page quietly
+	 * starts pointing at nothing.
 	 */
 	image: string;
+	/**
+	 * The link preview, root-relative. A different picture from `image` on purpose.
+	 *
+	 * These two were one field, which meant whichever size satisfied the page lost the
+	 * share and vice versa. The page wants the photograph's own shape; a preview wants a
+	 * fixed 1200x630, because that is the floor under which Facebook and WhatsApp stop
+	 * drawing the large card - and at 480 px on its long edge, the thumbnail was always
+	 * under it.
+	 */
+	card: string;
 }
 
 export async function photoSummary(
@@ -186,7 +303,7 @@ export async function storyImage(
 	const archive = await loadArchive(fetcher);
 	for (const id of photoIds) {
 		const photo = archive.photoById.get(id);
-		if (photo) return thumbUrl(archive, photo);
+		if (photo) return cardUrl(archive, photo);
 	}
 
 	return null;
@@ -208,8 +325,154 @@ function summarisePhoto(archive: Archive, id: string): PhotoSummary | null {
 		...(found ? { placeId: found.id } : {}),
 		alt: photoAlt(archive, photo),
 		image: thumbUrl(archive, photo),
+		card: cardUrl(archive, photo),
 		...(photo.y ? { year: photo.y } : {}),
 		...(photo.d ? { donor: photo.d } : {}),
 		...(photo.desc ? { description: photo.desc } : {})
+	};
+}
+
+/** One donor, as the index page lists them. */
+export interface DonorLink {
+	slug: string;
+	name: string;
+	count: number;
+}
+
+/**
+ * Everyone who gave the archive a photograph.
+ *
+ * From `load` rather than the browser, for the same reason the place lists are: this page
+ * is the only route to 298 donor pages, and a crawler that receives a heading and the word
+ * "Bezig met laden ..." finds none of them.
+ */
+export async function donorIndex(fetcher: typeof fetch): Promise<DonorLink[]> {
+	const archive = await loadArchive(fetcher);
+
+	return donors(archive).map(({ slug, name, photos }) => ({
+		slug,
+		name,
+		count: photos.length
+	}));
+}
+
+/** One donor, and everything they gave. */
+export interface DonorSummary {
+	slug: string;
+	name: string;
+	count: number;
+	photos: PhotoLink[];
+	/** The first of them, as a link-preview card. */
+	card: string | null;
+	/** The places they photographed, biggest first - what this person's giving amounts to. */
+	places: { id: string; name: string; count: number }[];
+	/** The years their photographs span, when enough of them are dated to say. */
+	span: string | null;
+}
+
+export async function donorSummary(
+	fetcher: typeof fetch,
+	slug: string
+): Promise<DonorSummary | null> {
+	const archive = await loadArchive(fetcher);
+	const donor = donors(archive).find((candidate) => candidate.slug === slug);
+	if (!donor) return null;
+
+	const ordered = sortForDisplay(donor.photos);
+
+	// Which places this person photographed. A donor page that is only a grid of pictures
+	// says what they gave; this says what they were interested in, which is the more
+	// human fact about them.
+	const counts = new Map<string, number>();
+	for (const photo of donor.photos) {
+		for (const placeId of photo.st) counts.set(placeId, (counts.get(placeId) ?? 0) + 1);
+	}
+
+	const places = [...counts.entries()]
+		.map(([id, count]) => ({ place: archive.placeById.get(id), count }))
+		// Tajje is filed as a place so his photographs stay findable, but "photographed
+		// Tajje 4 times" is not a place somebody went.
+		.filter(({ place }) => place !== undefined && !isPerson(place))
+		.map(({ place, count }) => ({ id: place!.id, name: place!.name, count }))
+		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'nl'))
+		.slice(0, 12);
+
+	const years = donor.photos
+		.map((photo) => Number(photo.y))
+		.filter((year) => Number.isFinite(year))
+		.sort((a, b) => a - b);
+
+	return {
+		slug: donor.slug,
+		name: donor.name,
+		count: donor.photos.length,
+		photos: ordered.map((photo) => ({
+			id: photo.id,
+			title: photo.t,
+			alt: photoAlt(archive, photo),
+			image: thumbUrl(archive, photo),
+			...(photo.y ? { year: photo.y } : {}),
+			...(photo.hn ? { houseNumber: photo.hn } : {})
+		})),
+		card: ordered[0] ? cardUrl(archive, ordered[0]) : null,
+		places,
+		span: years.length
+			? years[0] === years[years.length - 1]
+				? String(years[0])
+				: `${years[0]} \u2013 ${years[years.length - 1]}`
+			: null
+	};
+}
+
+/** One curated pairing, with both photographs resolved. */
+export interface ThenAndNowView {
+	then: PhotoLink & { label: string };
+	now: PhotoLink & { label: string };
+	note?: string;
+}
+
+/**
+ * The curated then-and-now pairings.
+ *
+ * A pair whose photographs are not both in the archive is dropped rather than half-drawn -
+ * an id can go stale when the index is rebuilt, and half a comparison is worse than none.
+ */
+export async function thenAndNow(fetcher: typeof fetch): Promise<{
+	pairs: ThenAndNowView[];
+	card: string | null;
+}> {
+	const [archive, curated] = await Promise.all([loadArchive(fetcher), loadPairs(fetcher)]);
+
+	// The thumbnail, not the larger copy. The deploy ships thumbnails and cards only, so
+	// `detailUrl` is a 404 on the live site - and unlike the photo page, which falls back
+	// when the large file is missing, a slider would simply show two broken images. It is
+	// the same trap the share image fell into.
+	const link = (photo: ArchivePhoto) => ({
+		id: photo.id,
+		title: photo.t,
+		alt: photoAlt(archive, photo),
+		image: thumbUrl(archive, photo),
+		...(photo.y ? { year: photo.y } : {}),
+		// The year if there is one, the title if there is not. A slider handle labelled
+		// "toen" and "nu" says less than one labelled "1912" and "2018".
+		label: photo.y ?? photo.t
+	});
+
+	const pairs: ThenAndNowView[] = [];
+	for (const pair of curated) {
+		const before = archive.photoById.get(pair.then);
+		const after = archive.photoById.get(pair.now);
+		if (!before || !after) continue;
+
+		pairs.push({
+			then: link(before),
+			now: link(after),
+			...(pair.note ? { note: pair.note } : {})
+		});
+	}
+
+	return {
+		pairs,
+		card: pairs[0] ? cardUrl(archive, archive.photoById.get(curated[0].then)!) : null
 	};
 }

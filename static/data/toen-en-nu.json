@@ -1,0 +1,5 @@
+{
+	"version": 1,
+	"_comment": "Pairs of photographs of the same view, decades apart. Deliberately empty: see docs/toen-en-nu.md. Add { \"then\": \"<foto-id>\", \"now\": \"<foto-id>\", \"note\": \"...\" } once somebody has stood where the first photographer stood.",
+	"pairs": []
+}

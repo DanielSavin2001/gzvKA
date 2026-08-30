@@ -1,53 +1,17 @@
 import * as controllers from './controllers';
 
 /**
- * Functions related to the Data Controller
+ * What this project deploys.
  *
- * Retrieves GeoJSON data from the database.
- * @function getGeoJson
+ * Nine functions used to live above this line - getGeoJson, createGeoJson,
+ * createGeoJsonJob, getAllSubjects, getSubject, createSubject, uploadImages,
+ * getImageDocuments and retrieveImage. They served the old Firestore-backed site, whose
+ * only page was `/detail/[id]`, and nothing has linked to that page since the archive
+ * became a static index. They are gone with it.
  *
- * Creates the GeoJSON data manually.
- * @function createGeoJson
- *
- * Sets-up the GeoJSON data automatically via recurring job.
- * @function createGeoJsonJob
+ * The Firestore documents and the Storage objects they read are untouched: removing a
+ * function removes the way in, not the data.
  */
-export const getGeoJson = controllers.dataController.getGeoJson;
-export const createGeoJson = controllers.dataController.createGeoJson;
-export const createGeoJsonJob = controllers.dataController.createGeoJsonJob;
-
-/**
- * Functions related to the Subject Controller
- *
- * Retrieves all subjects from the database.
- * @function getAllSubjects
- *
- * Retrieves a subject from the database.
- * @function getSubject
- *
- * Creates a new subject in the database.
- * @function createSubject
- *
- */
-export const getAllSubjects = controllers.subjectController.getAllSubjects;
-export const getSubject = controllers.subjectController.getSubject;
-export const createSubject = controllers.subjectController.createSubject;
-
-/**
- * Functions related to the Image Controller
- *
- * Handles the uploading of images related to subjects.
- * @function uploadImages
- *
- * Retrieves all Images of a subject from the database.
- * @function getImageDocuments
- *
- * Retrieves Image from Google Storage by imgURL
- * @function retrieveImage
- */
-export const uploadImages = controllers.imageController.uploadImages;
-export const getImageDocuments = controllers.imageController.getImageDocuments;
-export const retrieveImage = controllers.imageController.retrieveImage;
 
 /**
  * Functions behind contributing a photograph and curating what arrives.
@@ -75,3 +39,19 @@ export const reviewCorrection = controllers.correctionController.reviewCorrectio
 export const photoEdits = controllers.photoEditController.photoEdits;
 export const savePhotoEdit = controllers.photoEditController.savePhotoEdit;
 export const deletePhotoEdit = controllers.photoEditController.deletePhotoEdit;
+
+/**
+ * Functions behind "I know when this photograph was taken".
+ *
+ * 3,896 of the 4,504 photographs have no year, and no work inside this repository can
+ * change that - a year is remembered, not derived. Accepting a suggestion writes it into
+ * the same photo-edit overlay a curator's own correction lands in, so the timeline grows
+ * without waiting for a rebuild.
+ *
+ * @function submitPhotoFact  public - somebody dates a photograph
+ * @function listPhotoFacts   curators - the queue
+ * @function reviewPhotoFact  curators - accept or reject
+ */
+export const submitPhotoFact = controllers.photoFactController.submitPhotoFact;
+export const listPhotoFacts = controllers.photoFactController.listPhotoFacts;
+export const reviewPhotoFact = controllers.photoFactController.reviewPhotoFact;

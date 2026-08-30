@@ -22,6 +22,7 @@
 	import type { PhotoEdit } from '$lib/photo-edits';
 	import { forgetPhotoEdits, loadPhotoEdits } from '$lib/photo-edits';
 	import PhotoEditor from '../components/PhotoEditor.svelte';
+	import DatingDesk from '../components/DatingDesk.svelte';
 
 	/**
 	 * The curator's desk.
@@ -50,7 +51,7 @@
 	 * *in*, and the 4,504 already here - every field of them read out of a filename - had no
 	 * way to be corrected at all.
 	 */
-	let desk: 'fotos' | 'archief' | 'correcties' = 'fotos';
+	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
 
@@ -66,7 +67,20 @@
 		desk = 'archief';
 		openPhoto = null;
 		error = null;
+		await refreshEdits();
+	}
 
+	/**
+	 * The dating desk wants the same overlay the archive desk does, for the same reason: a
+	 * year saved on top of a corrected title must not erase the title.
+	 */
+	async function openDatingDesk(): Promise<void> {
+		desk = 'jaartallen';
+		error = null;
+		await refreshEdits();
+	}
+
+	async function refreshEdits(): Promise<void> {
 		// Fetched fresh rather than from the cache the site holds, so a curator sees their
 		// own last edit rather than whatever was loaded when the page opened.
 		forgetPhotoEdits();
@@ -245,12 +259,7 @@
 	}
 </script>
 
-<Seo
-	title="Beheer"
-	description="De werkplek van wie het archief beheert."
-	path="/beheer"
-	noindex
-/>
+<Seo title="Beheer" description="De werkplek van wie het archief beheert." path="/beheer" noindex />
 
 <div class="mx-auto max-w-6xl px-4 py-8">
 	<header class="flex flex-wrap items-center justify-between gap-3">
@@ -300,7 +309,7 @@
 		</div>
 	{:else}
 		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['correcties', 'Correcties op de kaart']] as [value, label] (value)}
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Correcties op de kaart']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
@@ -309,6 +318,10 @@
 					on:click={() => {
 						if (value === 'archief') {
 							openArchiveDesk();
+							return;
+						}
+						if (value === 'jaartallen') {
+							openDatingDesk();
 							return;
 						}
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
@@ -321,7 +334,7 @@
 			{/each}
 		</nav>
 
-		<nav class="mt-6 flex gap-2" class:hidden={desk === 'archief'}>
+		<nav class="mt-6 flex gap-2" class:hidden={desk === 'archief' || desk === 'jaartallen'}>
 			{#each tabs as [value, label] (value)}
 				<button
 					type="button"
@@ -338,7 +351,20 @@
 			{/each}
 		</nav>
 
-		{#if desk === 'archief'}
+		{#if desk === 'jaartallen'}
+			<!--
+				Where the timeline actually grows. 3,896 photographs have no year, and the two
+				ways that changes - what a visitor suggests and what a curator knows - are the
+				same job from two directions, so they share a desk.
+			-->
+			{#if archive}
+				<DatingDesk {archive} edits={photoEdits} />
+			{:else}
+				<p class="py-10 text-center text-gray-500 dark:text-gray-400">
+					Bezig met het laden van het archief ...
+				</p>
+			{/if}
+		{:else if desk === 'archief'}
 			<section class="mt-6">
 				<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
 					Een foto uit het archief aanpassen

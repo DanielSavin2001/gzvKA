@@ -144,7 +144,7 @@ async function main() {
 		'3. **Omschrijving** (`hoek van X en Y`, `achter het station`) - dan een ruwe plaats.',
 		'4. **"Weet ik niet"** - ook een antwoord; dan blijft het van de kaart en verzinnen we niets.',
 		'',
-		'Fijn afstellen kan achteraf op `/kaart?beheer` door op de kaart te klikken.',
+		'Fijn afstellen kan achteraf op `/?beheer` door op de kaart te klikken.',
 		'',
 		'---',
 		''

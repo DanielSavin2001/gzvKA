@@ -1,68 +1,72 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import type { Archive, ArchivePlace } from '$lib/archive';
 	import ThemeToggle from './ThemeToggle.svelte';
-	import { familyOf, loadArchive } from '$lib/archive';
 	import logo_no_background from '$lib/images/logo/svg/logo-no-background.svg';
 	import logo_white from '$lib/images/logo/svg/logo-white-transparent.svg';
 	import flag_of_kapellen from '$lib/images/logo/kapellen-flag/Flag_of_Kapellen,_Belgium.svg';
 
-	let archive: Archive | null = null;
+	/** All a menu entry is: somewhere to go, what to call it, and how much is there. */
+	interface MenuPlace {
+		id: string;
+		name: string;
+		count: number;
+	}
+
+	interface Menu {
+		straten: MenuPlace[];
+		kastelen: MenuPlace[];
+		wijken: MenuPlace[];
+	}
+
+	const EMPTY: Menu = { straten: [], kastelen: [], wijken: [] };
+
+	let menu: Menu = EMPTY;
 	let open = false;
 
-	// The menus used to be a hand-written list where almost every item linked nowhere.
-	// They are now built from the archive itself, so an entry exists only when there are
-	// photographs behind it and its count is always true.
+	/**
+	 * The menus are their own small file, not a slice of the archive.
+	 *
+	 * They were built from the full index, which meant every cold visit downloaded 1.1 MB
+	 * before a dropdown could list ten street names - about forty names and counts, paid for
+	 * with a megabyte, on the critical path of every page on the site. `menu.json` is the
+	 * same answer in under two kilobytes, generated alongside the index so it cannot
+	 * disagree with it.
+	 *
+	 * Still after mount rather than from `load`: SvelteKit inlines a layout's load data into
+	 * every prerendered page, and two kilobytes across 4,700 pages is nine megabytes of HTML
+	 * to save one small cached fetch.
+	 */
 	onMount(async () => {
 		try {
-			archive = await loadArchive();
+			const response = await fetch('/data/menu.json');
+			if (response.ok) menu = (await response.json()) as Menu;
 		} catch {
-			// The header must still render if the index cannot be loaded; the page itself
-			// reports the problem.
+			// The header must still render without it. Every menu has an "Alle ..." link at
+			// the foot that goes to the full index page, so nothing becomes unreachable.
 		}
 	});
 
-	function top(
-		loaded: Archive | null,
-		kind: (place: ArchivePlace) => boolean,
-		limit: number
-	): ArchivePlace[] {
-		if (!loaded) return [];
-		return loaded.places
-			.filter((place) => place.count > 0 && kind(place))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, limit);
-	}
-
-	// `archive` has to appear in the reactive statement itself. Svelte 3 works out a
-	// statement's dependencies from the identifiers written in it, so `top(...)` alone -
-	// with `archive` read only inside the function body - never re-ran when the archive
-	// finished loading, and all three menus stayed permanently empty.
-	$: streets = top(archive, (place) => place.isStreet, 10);
-	$: castles = top(archive, (place) => place.kind === 'castle-estate', 10);
-	$: areas = top(archive, (place) => place.kind === 'area', 8);
+	// `menu` has to appear in the reactive statement itself. Svelte 3 works out a
+	// statement's dependencies from the identifiers written in it, so a call that read it
+	// only inside a function body never re-ran when the data arrived, and all three menus
+	// stayed permanently empty.
+	$: streets = menu.straten;
+	$: castles = menu.kastelen;
+	$: areas = menu.wijken;
 
 	/**
 	 * The same three families the index pages use, for the phone menu.
 	 *
-	 * Built from `familyOf` rather than from the conditions above, so a place cannot be in
-	 * a menu group and missing from the page that group links to. The desktop menus keep
-	 * their own narrower picks - `area` only, `castle-estate` only - because they are a
-	 * shortcut to the obvious ones rather than a way through everything.
+	 * The desktop dropdowns above now read the same three lists. They used to apply their
+	 * own narrower rule - `castle-estate` only, `area` only - which meant the header could
+	 * file a fort under nothing while /kastelen listed it, so a place was reachable from the
+	 * page and missing from the menu that points at it.
 	 */
 	$: groups = [
-		{
-			slug: 'straten',
-			label: 'Straten',
-			places: top(archive, (p) => familyOf(p) === 'straten', 10)
-		},
-		{
-			slug: 'kastelen',
-			label: 'Kastelen',
-			places: top(archive, (p) => familyOf(p) === 'kastelen', 10)
-		},
-		{ slug: 'wijken', label: 'Wijken', places: top(archive, (p) => familyOf(p) === 'wijken', 10) }
+		{ slug: 'straten', label: 'Straten', places: menu.straten },
+		{ slug: 'kastelen', label: 'Kastelen', places: menu.kastelen },
+		{ slug: 'wijken', label: 'Wijken', places: menu.wijken }
 	];
 
 	/** Which group is folded open. One at a time, so the menu stays a menu. */
@@ -92,6 +96,10 @@
 			<a
 				class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 				href="/verhalen">Verhalen</a
+			>
+			<a
+				class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				href="/tijdlijn">Tijdlijn</a
 			>
 
 			<div class="group relative">
@@ -241,6 +249,11 @@
 				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 				href="/verhalen"
 				on:click={() => (open = false)}>Verhalen</a
+			>
+			<a
+				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				href="/tijdlijn"
+				on:click={() => (open = false)}>Tijdlijn</a
 			>
 			<a
 				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"

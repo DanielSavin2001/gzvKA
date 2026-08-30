@@ -12,6 +12,7 @@
  */
 
 import type { PlaceCorrection } from '../../sharedModels/correction';
+import type { PhotoFact } from '../../sharedModels/photo-fact';
 import type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
 import type { Submission } from '../../sharedModels/submission';
 
@@ -189,5 +190,32 @@ export function revertPhotoEdit(photoId: string): Promise<{ id: string }> {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ photoId })
+	});
+}
+
+/**
+ * Suggestions from the public about when a photograph was taken.
+ *
+ * Unlike a pin correction, accepting one takes effect at once: the year is written into the
+ * photo-edit overlay, which the site lays over the generated index. A year has no radius,
+ * grade or doubt text that could fall out of step with it, so there is nothing here for a
+ * human to carry across in a commit.
+ */
+export async function photoFacts(status = 'pending'): Promise<PhotoFact[]> {
+	const result = await call<{ facts: PhotoFact[] }>(
+		`listPhotoFacts?status=${encodeURIComponent(status)}`
+	);
+	return result.facts;
+}
+
+export function judgePhotoFact(decision: {
+	id: string;
+	status: 'pending' | 'accepted' | 'rejected';
+	reason?: string;
+}): Promise<PhotoFact> {
+	return call<PhotoFact>('reviewPhotoFact', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(decision)
 	});
 }

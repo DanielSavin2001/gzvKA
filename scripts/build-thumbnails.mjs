@@ -41,14 +41,60 @@ const THUMB = { name: 'thumb', suffix: '.thumb.webp', longEdge: 480, quality: 74
 const DETAIL = { name: 'detail', suffix: '.web.webp', longEdge: 1400, quality: 82 };
 
 /**
- * Which sizes to produce. `--only=thumb` is what the deploy uses: the thumbnails come to
- * 78 MB where both sizes come to 443 MB, and a hosting deploy pays for every version it
- * keeps. The detail page falls back to the thumbnail when the larger file is absent, so a
- * thumbnails-only deploy shows every photograph - just not at full size.
+ * The link preview.
+ *
+ * Facebook, WhatsApp and LinkedIn only draw the big card everybody recognises when the
+ * image is at least 600x315; below that they fall back to a thumbnail beside a line of
+ * text. Every thumbnail here is 480 on its long edge, so every share the archive has ever
+ * produced rendered as the small one.
+ *
+ * A fixed 1200x630 canvas rather than a scaled photograph, because a preview is cropped by
+ * whoever is displaying it, and a fixed 1.91:1 is the ratio they all crop to. The
+ * photograph is fitted inside it and the remainder is `paper-base`, so a portrait
+ * photograph sits on the archive's own colour instead of a black bar.
+ *
+ * Deliberately still not enlarging: a small original keeps its size and gets more paper
+ * around it. The canvas is 1200x630 either way, so the card is always valid - it just is
+ * not upscaled into fuzz.
  */
-const onlyArgument = process.argv.find((arg) => arg.startsWith('--only='))?.split('=')[1];
-const VARIANTS =
-	onlyArgument === 'thumb' ? [THUMB] : onlyArgument === 'detail' ? [DETAIL] : [THUMB, DETAIL];
+const SOCIAL = {
+	name: 'social',
+	suffix: '.card.webp',
+	width: 1200,
+	height: 630,
+	fit: 'contain',
+	// #fcf9f0 - `paper-base` in the Tailwind config, which is what the page paints.
+	background: { r: 252, g: 249, b: 240 },
+	quality: 72
+};
+
+/**
+ * Which sizes to produce. `--only=thumb,social` is what the deploy uses: measured over the
+ * whole corpus that is 78 MB of thumbnails and 280 MB of cards, against 693 MB for all
+ * three, and a hosting deploy pays for every version it keeps. The detail page falls back
+ * to the thumbnail when the larger file is absent, so a deploy without `detail` shows every
+ * photograph - just not at full size.
+ *
+ * The cards are the expensive half and their cost is the pixel count, not the quality:
+ * dropping from 72 to 55 saves only 17%. If they ever need to be smaller the lever is the
+ * canvas - 900x473 is still comfortably over the 600x315 floor and roughly halves it.
+ *
+ * Comma-separated, so a deploy can ask for exactly the set it serves.
+ */
+const ALL_VARIANTS = { thumb: THUMB, detail: DETAIL, social: SOCIAL };
+const onlyArgument = process.argv.find((argument) => argument.startsWith('--only='))?.split('=')[1];
+const VARIANTS = onlyArgument
+	? onlyArgument.split(',').map((name) => {
+			const variant = ALL_VARIANTS[name.trim()];
+			if (!variant) {
+				console.error(
+					`Unknown variant "${name.trim()}". Known: ${Object.keys(ALL_VARIANTS).join(', ')}`
+				);
+				process.exit(1);
+			}
+			return variant;
+	  })
+	: [THUMB, DETAIL, SOCIAL];
 
 async function listCorpusFiles(directory) {
 	const found = [];
@@ -95,9 +141,13 @@ async function convertOne(sourcePath) {
 		await sharp(sourcePath, { failOn: 'none', animated: false })
 			.rotate() // honour EXIF orientation before resizing
 			.resize({
-				width: variant.longEdge,
-				height: variant.longEdge,
-				fit: 'inside',
+				// A `longEdge` variant bounds both sides by the same number and keeps the
+				// photograph's own shape; a card variant asks for an exact canvas and pads
+				// what is left over.
+				width: variant.width ?? variant.longEdge,
+				height: variant.height ?? variant.longEdge,
+				fit: variant.fit ?? 'inside',
+				...(variant.background ? { background: variant.background } : {}),
 				withoutEnlargement: true // never upscale: it costs bytes and adds nothing
 			})
 			.webp({ quality: variant.quality })

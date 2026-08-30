@@ -15,6 +15,8 @@
  */
 
 import { encodePath } from '../../sharedModels/image-path';
+import type { PlaceFamily } from '../../sharedModels/place-family';
+import { familyOfPlace, isPersonKind } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
 
@@ -195,6 +197,18 @@ export function detailUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
 	return `${archive.imageBase}/${encodePath(photo.p)}.web.webp`;
 }
 
+/**
+ * The URL of a photograph's link-preview card.
+ *
+ * A fixed 1200x630 image, which is the size Facebook, WhatsApp and LinkedIn require before
+ * they will draw the large card rather than a thumbnail beside a line of text. The
+ * thumbnails this used to point at are 480 on their long edge, so every share the archive
+ * produced rendered as the small one.
+ */
+export function cardUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
+	return `${archive.imageBase}/${encodePath(photo.p)}.card.webp`;
+}
+
 /** A photograph with its relevance, for a result list. */
 export interface SearchHit {
 	photo: ArchivePhoto;
@@ -278,32 +292,73 @@ export function suggestPlaces(archive: Archive, query: string, limit = 8): Archi
  * place with photographs: 44 streets, 26 castles and forts, and 51 districts, buildings
  * and parks.
  */
-export type PlaceFamily = 'straten' | 'kastelen' | 'wijken';
-
-const CASTLE_KINDS = new Set(['castle-estate', 'fort']);
+export type { PlaceFamily } from '../../sharedModels/place-family';
 
 /**
- * Someone the archive photographed, filed under the name people knew them by.
+ * Someone the archive photographed rather than somewhere it photographed.
  *
- * "Tajje de Kotter" was Matheus Janssens, and the 58 photographs under that name are of
- * the procession through Kapellen for his hundredth birthday. It was listed among the
- * buildings, so it appeared in the browse lists as somewhere you could go and on the map as
- * a single point - which put a parade that ran from the Akkerstraat down the Hoevensebaan
- * to the centre on one house number.
- *
- * The entry stays, because the photographs have to be findable under his name. It is simply
- * not a place, so it is not offered as one.
+ * The rule itself is in the shared models, because the build-time menu generator has to
+ * classify places exactly as these pages do and cannot import anything from here.
  */
 export function isPerson(place: ArchivePlace): boolean {
-	return place.kind === 'person';
+	return isPersonKind(place);
 }
 
 /** Which browse list a place belongs in, or null for anything that is not a place. */
 export function familyOf(place: ArchivePlace): PlaceFamily | null {
-	if (isPerson(place)) return null;
-	if (place.isStreet) return 'straten';
-	if (CASTLE_KINDS.has(place.kind)) return 'kastelen';
-	return 'wijken';
+	return familyOfPlace(place);
+}
+
+/** Everyone who gave the archive a photograph, and what they gave. */
+export interface Donor {
+	/** Identity. Two spellings of one name slug to the same thing and become one donor. */
+	slug: string;
+	/** The spelling to show: whichever the archive used most often for this person. */
+	name: string;
+	photos: ArchivePhoto[];
+}
+
+/**
+ * The archive grouped by who gave it.
+ *
+ * 3,006 of the 4,504 photographs credit somebody, across 298 names, and until now that
+ * credit was a line of text on a photo page - searchable, but not a place you could go.
+ * These are the people the archive is made of; a page per person is the thanks it owes
+ * them, and the thing somebody forwards to their family.
+ *
+ * The slug is the identity rather than the string, which merges the spelling variants the
+ * corpus carries: "Johan Van Elst" and "Johan van Elst" are one man with 89 photographs,
+ * not two men with 88 and 1. The displayed spelling is whichever the archive used most,
+ * because that is evidence rather than a preference - it is what nearly every filename
+ * actually says.
+ */
+export function donors(archive: Archive): Donor[] {
+	const grouped = new Map<string, { photos: ArchivePhoto[]; spellings: Map<string, number> }>();
+
+	for (const photo of archive.photos) {
+		const name = photo.d?.trim();
+		if (!name) continue;
+
+		const slug = slugify(name);
+		if (!slug) continue;
+
+		let entry = grouped.get(slug);
+		if (!entry) {
+			entry = { photos: [], spellings: new Map() };
+			grouped.set(slug, entry);
+		}
+
+		entry.photos.push(photo);
+		entry.spellings.set(name, (entry.spellings.get(name) ?? 0) + 1);
+	}
+
+	return [...grouped.entries()]
+		.map(([slug, { photos, spellings }]) => ({
+			slug,
+			name: [...spellings.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0],
+			photos
+		}))
+		.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
 }
 
 /** Places of one family, with photographs, in alphabetical order. */

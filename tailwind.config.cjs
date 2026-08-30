@@ -24,6 +24,21 @@ const config = {
                  * them look faded, and these are not faded.
                  */
                 'paper': '#f7f4ec',
+                /*
+                 * What the body actually paints, underneath the paper grain.
+                 *
+                 * The grain in `app.postcss` is mid-grey noise at 15%, and any texture
+                 * visible on a ground this light must darken it - the blend modes that
+                 * would preserve the colour (overlay, soft-light) all screen towards
+                 * white up here and flatten the grain to nothing. Measured, that costs
+                 * about five levels per channel.
+                 *
+                 * So the body starts five levels light and lands on `paper` once the
+                 * grain is composited over it. Anything that has to match the page
+                 * behind it - the timeline's sticky decade strip - wants `paper`, which
+                 * is the colour a reader actually sees. Only the body wants this one.
+                 */
+                'paper-base': '#fcf9f0',
             }
         }
     }

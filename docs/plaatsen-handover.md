@@ -33,7 +33,7 @@ it came from reading sentences on a heritage website. Regenerating would destroy
 identical pins, the map asserts a precision the data does not have, and nobody will ever know
 which pins to distrust. Render C with a visibly larger radius or a distinct style.
 
-**Never silently upgrade a grade.** If someone corrects a point via `/kaart?beheer`, that is
+**Never silently upgrade a grade.** If someone corrects a point via `/?beheer`, that is
 new evidence and the row should become A — but that must be an explicit edit that also
 rewrites `toelichting`, not a side effect of the point moving.
 

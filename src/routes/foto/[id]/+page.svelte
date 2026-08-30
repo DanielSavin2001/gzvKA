@@ -6,8 +6,12 @@
 	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PhotoSummary } from '$lib/page-data';
 	import { SITE, summarise } from '$lib/seo';
+	import { slugify } from '../../../../sharedModels/text';
 	import Seo from '../../components/Seo.svelte';
+	import DatePhoto from '../../components/DatePhoto.svelte';
 	import { swipe } from '$lib/gestures';
+	import { extensionOf, keepsakeName, loadedSource, shareOrCopy } from '$lib/keepsake';
+	import { showErrorToast, showSuccessToast } from '../../../services/toaster-service';
 	import Lightbox from '../../components/Lightbox.svelte';
 	import type { LightboxItem } from '../../components/Lightbox.svelte';
 	import type { PhotoContext } from '$lib/stories';
@@ -65,7 +69,16 @@
 	 * no share image, which is exactly what a link preview reads.
 	 */
 	$: headTitle = data.summary?.title ?? photo?.t ?? 'Foto';
-	$: headImage = data.summary?.image ?? null;
+
+	/**
+	 * The link preview is a different picture from the one on the page.
+	 *
+	 * The page wants the photograph in its own shape and as few bytes as possible, so it
+	 * paints the thumbnail. A preview wants a fixed 1200x630 - below that Facebook and
+	 * WhatsApp draw a small card instead of the big one - and the thumbnail is 480 on its
+	 * long edge, so sharing any photograph in this archive produced the small card.
+	 */
+	$: headImage = data.summary?.card ?? null;
 
 	/**
 	 * The sentence a search result shows.
@@ -133,6 +146,12 @@
 		if (kind === 'onderwerp') {
 			return sortForDisplay(archive.photos.filter((other) => other.s === value));
 		}
+		// Arriving from somebody's page walks what that person gave, in the order that page
+		// showed it. Matched on the slug rather than the name, so the spelling variants the
+		// corpus carries do not split one donor's photographs into two shorter walks.
+		if (kind === 'schenker') {
+			return sortForDisplay(archive.photos.filter((other) => slugify(other.d) === value));
+		}
 
 		const street = places.find((place) => place.isStreet) ?? places[0];
 		return street ? sortForDisplay(archive.photosByPlace.get(street.id) ?? []) : [];
@@ -152,6 +171,39 @@
 
 	function step(to: ArchivePhoto | null): void {
 		if (to) goto(`/foto/${to.id}${neighbourQuery}`);
+	}
+
+	/**
+	 * The element showing the photograph, so saving it saves what is on screen.
+	 *
+	 * The deploy carries thumbnails only, so the page asks for the 1400 px copy and falls
+	 * back when it is not there. Pointing a download at the larger copy would hand people a
+	 * 404 on the live site while working perfectly in development.
+	 */
+	let shown: HTMLImageElement | null = null;
+
+	$: keepsake = ((): { href: string; name: string } | null => {
+		const source = loadedSource(shown);
+		if (!source || !photo) return null;
+
+		return { href: source, name: keepsakeName(photo.t, photo.y, extensionOf(source)) };
+	})();
+
+	async function share(): Promise<void> {
+		if (!photo) return;
+
+		const outcome = await shareOrCopy({
+			title: photo.t,
+			text: `${photo.t} - uit het fotoarchief van Kapellen`,
+			url: `${SITE}/foto/${data.id}`
+		});
+
+		if (outcome === 'copied') {
+			showSuccessToast('Link gekopieerd', 'Plak hem waar u wil.');
+		}
+		if (outcome === 'failed') {
+			showErrorToast('Kopiëren lukte niet', 'Kopieer het adres uit de adresbalk.');
+		}
 	}
 
 	/**
@@ -405,6 +457,7 @@
 						on:click={() => (openAt = lightboxStart)}
 					>
 						<img
+							bind:this={shown}
 							src={detailUrl(archive, photo)}
 							on:error={fallBackToThumbnail}
 							alt={photoAlt(archive, photo)}
@@ -479,6 +532,33 @@
 			<figcaption class="mt-4">
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">{photo.t}</h1>
 
+				<!--
+					Take it with you, or send it to somebody.
+
+					The two things a visitor most obviously wanted and could not do: somebody
+					finds their grandparents' house and the only way to keep it was a long-press
+					on a file called `... .jpg.thumb.webp`.
+				-->
+				<div class="mt-4 flex flex-wrap gap-2">
+					{#if keepsake}
+						<a
+							class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+							href={keepsake.href}
+							download={keepsake.name}
+						>
+							&#8681; Bewaren
+						</a>
+					{/if}
+
+					<button
+						type="button"
+						class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+						on:click={share}
+					>
+						&#8631; Delen
+					</button>
+				</div>
+
 				{#if description}
 					<!--
 						The one thing no filename could ever carry, so nothing here ever had one
@@ -519,7 +599,17 @@
 							<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">
 								Ingezonden door
 							</dt>
-							<dd class="text-gray-900 dark:text-gray-100">{photo.d}</dd>
+							<!--
+								A link, not a line of text. 298 people gave this archive its
+								photographs and their names were the one thing on the page that
+								went nowhere - searchable, but only if you already knew to search.
+							-->
+							<dd>
+								<a
+									class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+									href="/schenker/{slugify(photo.d)}">{photo.d}</a
+								>
+							</dd>
 						</div>
 					{/if}
 					{#if photo.a}
@@ -533,11 +623,22 @@
 				</dl>
 
 				<p
-					class="mt-6 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 text-sm text-gray-600 dark:text-gray-400"
+					class="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400"
 				>
-					Klopt er iets niet, of weet u meer over deze foto? Laat het ons weten &mdash; deze
-					gegevens zijn automatisch uit de bestandsnaam gehaald en niet altijd volledig.
+					Deze gegevens zijn automatisch uit de bestandsnaam gehaald en zijn niet altijd volledig.
 				</p>
+
+				<!--
+					This used to be the sentence "laat het ons weten" with nothing to press. The
+					year is the field worth asking for: 3,896 photographs have none, so the
+					timeline shows an eighth of the archive, and the only person who can fix that
+					is the one looking at the picture.
+				-->
+				<DatePhoto
+					photoId={data.id}
+					photoTitle={data.summary?.title ?? photo?.t ?? ''}
+					currentYear={photo?.y ?? data.summary?.year}
+				/>
 			</figcaption>
 		</figure>
 
