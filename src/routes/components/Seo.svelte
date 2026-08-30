@@ -64,6 +64,18 @@
 	<meta property="og:url" content={url} />
 	{#if absoluteImage}
 		<meta property="og:image" content={absoluteImage} />
+		<!--
+			Declared rather than left to be discovered.
+
+			Every image passed here is a `.card.webp`, which the thumbnail script writes as an
+			exact 1200x630 canvas. Stating the size lets a crawler lay out the large card
+			without fetching the file first, and it is the size that decides whether the large
+			card is drawn at all - under 600x315 Facebook and WhatsApp fall back to a thumbnail
+			beside a line of text, which is what every share of this archive used to be.
+		-->
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:type" content="image/webp" />
 	{/if}
 
 	<meta name="twitter:card" content={absoluteImage ? 'summary_large_image' : 'summary'} />

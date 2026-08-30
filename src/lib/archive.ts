@@ -195,6 +195,18 @@ export function detailUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
 	return `${archive.imageBase}/${encodePath(photo.p)}.web.webp`;
 }
 
+/**
+ * The URL of a photograph's link-preview card.
+ *
+ * A fixed 1200x630 image, which is the size Facebook, WhatsApp and LinkedIn require before
+ * they will draw the large card rather than a thumbnail beside a line of text. The
+ * thumbnails this used to point at are 480 on their long edge, so every share the archive
+ * produced rendered as the small one.
+ */
+export function cardUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
+	return `${archive.imageBase}/${encodePath(photo.p)}.card.webp`;
+}
+
 /** A photograph with its relevance, for a result list. */
 export interface SearchHit {
 	photo: ArchivePhoto;

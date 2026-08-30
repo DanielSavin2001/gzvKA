@@ -5,7 +5,7 @@
 	import { SITE } from '$lib/seo';
 	import Seo from '../components/Seo.svelte';
 
-	export let data: { decades: Decade[]; dated: number; total: number };
+	export let data: { decades: Decade[]; dated: number; total: number; card: string | null };
 
 	/**
 	 * The tallest band sets the scale.
@@ -50,7 +50,7 @@
 	title="Tijdlijn van het fotoarchief"
 	description="Blader door het fotoarchief van Kapellen per decennium, van de eerste kaarten uit 1841 tot vandaag."
 	path="/tijdlijn"
-	image={data.decades.at(-1)?.photos[0]?.image ?? null}
+	image={data.card}
 	structured={{
 		'@context': 'https://schema.org',
 		'@type': 'CollectionPage',

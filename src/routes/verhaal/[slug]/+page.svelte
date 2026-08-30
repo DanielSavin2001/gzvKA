@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
-	import { loadArchive, thumbUrl } from '$lib/archive';
+	import { cardUrl, loadArchive, thumbUrl } from '$lib/archive';
 	import type { Story } from '$lib/stories';
 	import { formatBytes, loadStory, readingMinutes } from '$lib/stories';
 	import Lightbox from '../../components/Lightbox.svelte';
@@ -145,7 +145,7 @@
 	description={storyDescription}
 	path="/verhaal/{data.slug}"
 	type="article"
-	image={data.image ?? (archive && photos.length > 0 ? thumbUrl(archive, photos[0].photo) : null)}
+	image={data.image ?? (archive && photos.length > 0 ? cardUrl(archive, photos[0].photo) : null)}
 	structured={story
 		? {
 				'@context': 'https://schema.org',

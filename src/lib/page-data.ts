@@ -27,7 +27,8 @@ import {
 	placesInFamily,
 	placesWithPhotos,
 	sortForDisplay,
-	thumbUrl
+	thumbUrl,
+	cardUrl
 } from './archive';
 
 /** The shape of the archive, for the home page: what there is, and what to call it. */
@@ -105,6 +106,8 @@ export async function decades(fetcher: typeof fetch): Promise<{
 	decades: Decade[];
 	dated: number;
 	total: number;
+	/** The most recent dated photograph, as a link-preview card. */
+	card: string | null;
 }> {
 	const archive = await loadArchive(fetcher);
 
@@ -126,9 +129,16 @@ export async function decades(fetcher: typeof fetch): Promise<{
 		return Number(a) - Number(b);
 	});
 
+	// The newest dated photograph leads the preview. The page itself is a century of
+	// pictures and any one of them is arbitrary, so the most recent is at least a rule.
+	const newest = dated.length
+		? dated.reduce((latest, entry) => (entry.year >= latest.year ? entry : latest)).photo
+		: null;
+
 	return {
 		dated: dated.length,
 		total: archive.photos.length,
+		card: newest ? cardUrl(archive, newest) : null,
 		decades: ordered.map(([key, entries]) => {
 			const years = entries.map((entry) => entry.year);
 			const from = Math.min(...years);
@@ -191,6 +201,14 @@ export interface PlaceSummary {
 	 * That is the page's actual content; it is the one thing worth inlining.
 	 */
 	photos: PhotoLink[];
+	/**
+	 * The first photograph as a link-preview card.
+	 *
+	 * The page used to build this from the archive, which the browser fetches - so at
+	 * prerender time it was null, and all 121 place pages went out with no share image at
+	 * all. A street pasted into WhatsApp was a bare link.
+	 */
+	card: string | null;
 }
 
 export async function placeSummary(
@@ -210,7 +228,16 @@ export async function placeSummary(
 		...(photo.hn ? { houseNumber: photo.hn } : {})
 	}));
 
-	return { id: place.id, name: place.name, count: place.count, person: isPerson(place), photos };
+	const first = sortForDisplay(archive.photosByPlace.get(slug) ?? [])[0];
+
+	return {
+		id: place.id,
+		name: place.name,
+		count: place.count,
+		person: isPerson(place),
+		photos,
+		card: first ? cardUrl(archive, first) : null
+	};
 }
 
 /** Just enough of a photograph for the head tags. */
@@ -226,18 +253,28 @@ export interface PhotoSummary {
 	donor?: string;
 	description?: string;
 	/**
-	 * The share image, root-relative.
+	 * The picture the page paints first, root-relative.
 	 *
 	 * The thumbnail, not the larger copy. Both sizes together come to 443 MB and hosting
-	 * keeps every version, so the deploy generates thumbnails only - which means an
-	 * og:image pointing at the 1400 px file is a 404 for every link preview on the live
-	 * site. It would have looked perfectly correct in the HTML.
+	 * keeps every version, so the deploy does not generate the 1400 px file - which means
+	 * pointing at it here would be a 404 on the live site. It would have looked perfectly
+	 * correct in the HTML.
 	 *
 	 * Built here rather than in the page, because the rule for turning a corpus path into
-	 * an image URL lives in `archive.ts`, and a second copy of it in a head tag is how a
-	 * preview quietly starts pointing at nothing.
+	 * an image URL lives in `archive.ts`, and a second copy of it is how a page quietly
+	 * starts pointing at nothing.
 	 */
 	image: string;
+	/**
+	 * The link preview, root-relative. A different picture from `image` on purpose.
+	 *
+	 * These two were one field, which meant whichever size satisfied the page lost the
+	 * share and vice versa. The page wants the photograph's own shape; a preview wants a
+	 * fixed 1200x630, because that is the floor under which Facebook and WhatsApp stop
+	 * drawing the large card - and at 480 px on its long edge, the thumbnail was always
+	 * under it.
+	 */
+	card: string;
 }
 
 export async function photoSummary(
@@ -264,7 +301,7 @@ export async function storyImage(
 	const archive = await loadArchive(fetcher);
 	for (const id of photoIds) {
 		const photo = archive.photoById.get(id);
-		if (photo) return thumbUrl(archive, photo);
+		if (photo) return cardUrl(archive, photo);
 	}
 
 	return null;
@@ -286,6 +323,7 @@ function summarisePhoto(archive: Archive, id: string): PhotoSummary | null {
 		...(found ? { placeId: found.id } : {}),
 		alt: photoAlt(archive, photo),
 		image: thumbUrl(archive, photo),
+		card: cardUrl(archive, photo),
 		...(photo.y ? { year: photo.y } : {}),
 		...(photo.d ? { donor: photo.d } : {}),
 		...(photo.desc ? { description: photo.desc } : {})

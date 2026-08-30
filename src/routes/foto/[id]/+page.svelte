@@ -67,7 +67,16 @@
 	 * no share image, which is exactly what a link preview reads.
 	 */
 	$: headTitle = data.summary?.title ?? photo?.t ?? 'Foto';
-	$: headImage = data.summary?.image ?? null;
+
+	/**
+	 * The link preview is a different picture from the one on the page.
+	 *
+	 * The page wants the photograph in its own shape and as few bytes as possible, so it
+	 * paints the thumbnail. A preview wants a fixed 1200x630 - below that Facebook and
+	 * WhatsApp draw a small card instead of the big one - and the thumbnail is 480 on its
+	 * long edge, so sharing any photograph in this archive produced the small card.
+	 */
+	$: headImage = data.summary?.card ?? null;
 
 	/**
 	 * The sentence a search result shows.

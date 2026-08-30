@@ -86,7 +86,7 @@
 	title={named}
 	description={placeDescription}
 	path="/straat/{data.slug}"
-	image={archive && photos.length > 0 ? thumbUrl(archive, photos[0]) : null}
+	image={data.summary?.card ?? null}
 	structured={{
 		'@context': 'https://schema.org',
 		'@type': 'CollectionPage',
