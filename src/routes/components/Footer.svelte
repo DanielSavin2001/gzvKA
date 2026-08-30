@@ -33,6 +33,11 @@
 		ulClass="flex flex-wrap items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0"
 	>
 		<FooterLink href="/over-ons">Over ons</FooterLink>
+		<!--
+			The people the archive is made of. Here rather than in the header menu because it
+			is not a way of browsing photographs - it is who to thank for them.
+		-->
+		<FooterLink href="/schenker">Schenkers</FooterLink>
 		<FooterLink href="/contact">Contact</FooterLink>
 		<!--
 			The way back to the cookie question. Without a route to it the banner asked once

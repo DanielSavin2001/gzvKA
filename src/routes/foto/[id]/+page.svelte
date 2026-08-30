@@ -6,6 +6,7 @@
 	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PhotoSummary } from '$lib/page-data';
 	import { SITE, summarise } from '$lib/seo';
+	import { slugify } from '../../../../sharedModels/text';
 	import Seo from '../../components/Seo.svelte';
 	import { swipe } from '$lib/gestures';
 	import { extensionOf, keepsakeName, loadedSource, shareOrCopy } from '$lib/keepsake';
@@ -143,6 +144,12 @@
 		if (kind === 'straat') return sortForDisplay(archive.photosByPlace.get(value) ?? []);
 		if (kind === 'onderwerp') {
 			return sortForDisplay(archive.photos.filter((other) => other.s === value));
+		}
+		// Arriving from somebody's page walks what that person gave, in the order that page
+		// showed it. Matched on the slug rather than the name, so the spelling variants the
+		// corpus carries do not split one donor's photographs into two shorter walks.
+		if (kind === 'schenker') {
+			return sortForDisplay(archive.photos.filter((other) => slugify(other.d) === value));
 		}
 
 		const street = places.find((place) => place.isStreet) ?? places[0];
@@ -591,7 +598,17 @@
 							<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">
 								Ingezonden door
 							</dt>
-							<dd class="text-gray-900 dark:text-gray-100">{photo.d}</dd>
+							<!--
+								A link, not a line of text. 298 people gave this archive its
+								photographs and their names were the one thing on the page that
+								went nowhere - searchable, but only if you already knew to search.
+							-->
+							<dd>
+								<a
+									class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+									href="/schenker/{slugify(photo.d)}">{photo.d}</a
+								>
+							</dd>
 						</div>
 					{/if}
 					{#if photo.a}

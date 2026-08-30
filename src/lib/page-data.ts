@@ -28,7 +28,8 @@ import {
 	placesWithPhotos,
 	sortForDisplay,
 	thumbUrl,
-	cardUrl
+	cardUrl,
+	donors
 } from './archive';
 
 /** The shape of the archive, for the home page: what there is, and what to call it. */
@@ -327,5 +328,97 @@ function summarisePhoto(archive: Archive, id: string): PhotoSummary | null {
 		...(photo.y ? { year: photo.y } : {}),
 		...(photo.d ? { donor: photo.d } : {}),
 		...(photo.desc ? { description: photo.desc } : {})
+	};
+}
+
+/** One donor, as the index page lists them. */
+export interface DonorLink {
+	slug: string;
+	name: string;
+	count: number;
+}
+
+/**
+ * Everyone who gave the archive a photograph.
+ *
+ * From `load` rather than the browser, for the same reason the place lists are: this page
+ * is the only route to 298 donor pages, and a crawler that receives a heading and the word
+ * "Bezig met laden ..." finds none of them.
+ */
+export async function donorIndex(fetcher: typeof fetch): Promise<DonorLink[]> {
+	const archive = await loadArchive(fetcher);
+
+	return donors(archive).map(({ slug, name, photos }) => ({
+		slug,
+		name,
+		count: photos.length
+	}));
+}
+
+/** One donor, and everything they gave. */
+export interface DonorSummary {
+	slug: string;
+	name: string;
+	count: number;
+	photos: PhotoLink[];
+	/** The first of them, as a link-preview card. */
+	card: string | null;
+	/** The places they photographed, biggest first - what this person's giving amounts to. */
+	places: { id: string; name: string; count: number }[];
+	/** The years their photographs span, when enough of them are dated to say. */
+	span: string | null;
+}
+
+export async function donorSummary(
+	fetcher: typeof fetch,
+	slug: string
+): Promise<DonorSummary | null> {
+	const archive = await loadArchive(fetcher);
+	const donor = donors(archive).find((candidate) => candidate.slug === slug);
+	if (!donor) return null;
+
+	const ordered = sortForDisplay(donor.photos);
+
+	// Which places this person photographed. A donor page that is only a grid of pictures
+	// says what they gave; this says what they were interested in, which is the more
+	// human fact about them.
+	const counts = new Map<string, number>();
+	for (const photo of donor.photos) {
+		for (const placeId of photo.st) counts.set(placeId, (counts.get(placeId) ?? 0) + 1);
+	}
+
+	const places = [...counts.entries()]
+		.map(([id, count]) => ({ place: archive.placeById.get(id), count }))
+		// Tajje is filed as a place so his photographs stay findable, but "photographed
+		// Tajje 4 times" is not a place somebody went.
+		.filter(({ place }) => place !== undefined && !isPerson(place))
+		.map(({ place, count }) => ({ id: place!.id, name: place!.name, count }))
+		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'nl'))
+		.slice(0, 12);
+
+	const years = donor.photos
+		.map((photo) => Number(photo.y))
+		.filter((year) => Number.isFinite(year))
+		.sort((a, b) => a - b);
+
+	return {
+		slug: donor.slug,
+		name: donor.name,
+		count: donor.photos.length,
+		photos: ordered.map((photo) => ({
+			id: photo.id,
+			title: photo.t,
+			alt: photoAlt(archive, photo),
+			image: thumbUrl(archive, photo),
+			...(photo.y ? { year: photo.y } : {}),
+			...(photo.hn ? { houseNumber: photo.hn } : {})
+		})),
+		card: ordered[0] ? cardUrl(archive, ordered[0]) : null,
+		places,
+		span: years.length
+			? years[0] === years[years.length - 1]
+				? String(years[0])
+				: `${years[0]} \u2013 ${years[years.length - 1]}`
+			: null
 	};
 }

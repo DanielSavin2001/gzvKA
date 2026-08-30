@@ -309,6 +309,58 @@ export function familyOf(place: ArchivePlace): PlaceFamily | null {
 	return familyOfPlace(place);
 }
 
+/** Everyone who gave the archive a photograph, and what they gave. */
+export interface Donor {
+	/** Identity. Two spellings of one name slug to the same thing and become one donor. */
+	slug: string;
+	/** The spelling to show: whichever the archive used most often for this person. */
+	name: string;
+	photos: ArchivePhoto[];
+}
+
+/**
+ * The archive grouped by who gave it.
+ *
+ * 3,006 of the 4,504 photographs credit somebody, across 298 names, and until now that
+ * credit was a line of text on a photo page - searchable, but not a place you could go.
+ * These are the people the archive is made of; a page per person is the thanks it owes
+ * them, and the thing somebody forwards to their family.
+ *
+ * The slug is the identity rather than the string, which merges the spelling variants the
+ * corpus carries: "Johan Van Elst" and "Johan van Elst" are one man with 89 photographs,
+ * not two men with 88 and 1. The displayed spelling is whichever the archive used most,
+ * because that is evidence rather than a preference - it is what nearly every filename
+ * actually says.
+ */
+export function donors(archive: Archive): Donor[] {
+	const grouped = new Map<string, { photos: ArchivePhoto[]; spellings: Map<string, number> }>();
+
+	for (const photo of archive.photos) {
+		const name = photo.d?.trim();
+		if (!name) continue;
+
+		const slug = slugify(name);
+		if (!slug) continue;
+
+		let entry = grouped.get(slug);
+		if (!entry) {
+			entry = { photos: [], spellings: new Map() };
+			grouped.set(slug, entry);
+		}
+
+		entry.photos.push(photo);
+		entry.spellings.set(name, (entry.spellings.get(name) ?? 0) + 1);
+	}
+
+	return [...grouped.entries()]
+		.map(([slug, { photos, spellings }]) => ({
+			slug,
+			name: [...spellings.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0],
+			photos
+		}))
+		.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+}
+
 /** Places of one family, with photographs, in alphabetical order. */
 export function placesInFamily(archive: Archive, family: PlaceFamily): ArchivePlace[] {
 	return archive.places

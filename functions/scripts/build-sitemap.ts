@@ -18,6 +18,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import type { SitemapEntry } from '../src/utils/sitemap';
+import { slugify } from '../../sharedModels/text';
 import { renderRobots, renderSitemap } from '../src/utils/sitemap';
 
 function findRepoRoot(startDirectory: string): string {
@@ -50,7 +51,7 @@ function read<T>(file: string): T {
 
 function main(): void {
 	const archive = read<{
-		photos: { id: string }[];
+		photos: { id: string; d?: string }[];
 		places: { id: string; count: number }[];
 	}>(ARCHIVE_INDEX);
 
@@ -66,6 +67,7 @@ function main(): void {
 		{ path: '/kastelen', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/wijken', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/tijdlijn', priority: 0.8, changefreq: 'monthly' },
+		{ path: '/schenker', priority: 0.7, changefreq: 'monthly' },
 		{ path: '/upload', priority: 0.6, changefreq: 'yearly' },
 		{ path: '/over-ons', priority: 0.5, changefreq: 'yearly' },
 		{ path: '/contact', priority: 0.5, changefreq: 'yearly' },
@@ -80,6 +82,19 @@ function main(): void {
 
 	for (const story of storyList) {
 		entries.push({ path: `/verhaal/${story.slug}`, priority: 0.7, changefreq: 'yearly' });
+	}
+
+	// The people who gave the photographs. Slugged rather than named, so the spelling
+	// variants the corpus carries collapse to one page and one URL - listing both "Johan
+	// Van Elst" and "Johan van Elst" would ask a crawler to index the same page twice.
+	const donorSlugs = new Set<string>();
+	for (const photo of archive.photos) {
+		const slug = slugify(photo.d?.trim());
+		if (slug) donorSlugs.add(slug);
+	}
+
+	for (const slug of donorSlugs) {
+		entries.push({ path: `/schenker/${slug}`, priority: 0.5, changefreq: 'yearly' });
 	}
 
 	// The photographs themselves. These are the long tail and the reason anybody arrives
@@ -97,6 +112,7 @@ function main(): void {
 	console.log(`   ${archive.photos.length} photographs`);
 	console.log(`   ${archive.places.filter((place) => place.count > 0).length} places`);
 	console.log(`   ${storyList.length} stories`);
+	console.log(`   ${donorSlugs.size} donors`);
 	console.log(`Wrote ${ROBOTS}`);
 
 	// The sitemaps protocol caps a single file at 50,000 URLs and 50 MB uncompressed. Well
