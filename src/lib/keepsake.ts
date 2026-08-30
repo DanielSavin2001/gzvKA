@@ -29,6 +29,101 @@ export function extensionOf(url: string): string {
 }
 
 /**
+ * The format to hand somebody, taken from the format the archive holds.
+ *
+ * The site serves WebP because it is half the bytes, but a saved file is not a page: it
+ * goes into a downloads folder and gets opened years later by whatever is on that machine,
+ * emailed to a cousin, printed at a shop. WebP is a bad guest there. So a download is
+ * re-encoded to what the original actually is.
+ *
+ * The corpus is 4,081 JPEGs, 411 PNGs and 12 .jpeg - no GIFs, nothing animated - so this
+ * is a two-way choice and not a general format table. PNG stays PNG because some of those
+ * are scans and maps where a JPEG's ringing shows; everything else becomes a JPEG, which
+ * is both what it already was and the one format that opens anywhere.
+ */
+export function originalFormat(corpusPath: string): { extension: string; mime: string } {
+	return /\.png$/i.test(corpusPath)
+		? { extension: 'png', mime: 'image/png' }
+		: { extension: 'jpg', mime: 'image/jpeg' };
+}
+
+/**
+ * Saves what is on screen, converted to `mime`.
+ *
+ * A plain `<a download>` would hand over the WebP the page happens to be showing. This
+ * draws it into a canvas and re-encodes instead. Same origin, so the canvas is not tainted
+ * and `toBlob` is allowed.
+ *
+ * Returns false rather than throwing when anything goes wrong - a blocked canvas, a failed
+ * fetch, a browser without `toBlob` - so the caller can fall back to handing over the file
+ * as it came. A download that is the wrong format beats no download.
+ */
+export async function saveConverted(
+	source: string,
+	filename: string,
+	mime: string
+): Promise<boolean> {
+	try {
+		const response = await fetch(source);
+		if (!response.ok) return false;
+
+		const blob = await response.blob();
+		// Guard against the fallback HTML a static host serves for a missing file: without
+		// this the "photograph" saved is a 2 KB copy of the site's shell renamed .jpg, which
+		// is exactly the bug this function was written to fix.
+		if (!blob.type.startsWith('image/')) return false;
+
+		const objectUrl = URL.createObjectURL(blob);
+		try {
+			const image = new Image();
+			image.src = objectUrl;
+			await image.decode();
+
+			const canvas = document.createElement('canvas');
+			canvas.width = image.naturalWidth;
+			canvas.height = image.naturalHeight;
+
+			const context = canvas.getContext('2d');
+			if (!context) return false;
+
+			// JPEG has no alpha, so a transparent PNG would composite onto black. White is
+			// what a scan's transparent margin is meant to be.
+			if (mime === 'image/jpeg') {
+				context.fillStyle = '#ffffff';
+				context.fillRect(0, 0, canvas.width, canvas.height);
+			}
+			context.drawImage(image, 0, 0);
+
+			const converted = await new Promise<Blob | null>((resolve) =>
+				canvas.toBlob(resolve, mime, 0.92)
+			);
+			if (!converted) return false;
+
+			download(URL.createObjectURL(converted), filename, true);
+			return true;
+		} finally {
+			URL.revokeObjectURL(objectUrl);
+		}
+	} catch {
+		return false;
+	}
+}
+
+/** Clicks an invisible link, which is still the only way to name a downloaded file. */
+export function download(href: string, filename: string, revoke = false): void {
+	const anchor = document.createElement('a');
+	anchor.href = href;
+	anchor.download = filename;
+	document.body.appendChild(anchor);
+	anchor.click();
+	anchor.remove();
+
+	// Revoked on the next turn of the loop: revoking synchronously races the download in
+	// Firefox and hands over an empty file.
+	if (revoke) setTimeout(() => URL.revokeObjectURL(href), 10_000);
+}
+
+/**
  * What the visitor is actually looking at.
  *
  * Deliberately `currentSrc` rather than the larger copy's URL. The deploy carries
