@@ -21,6 +21,7 @@
 import type { Archive } from './archive';
 import type { PlaceFamily } from './archive';
 import {
+	isPerson,
 	loadArchive,
 	photoAlt,
 	placesInFamily,
@@ -92,6 +93,14 @@ export interface PlaceSummary {
 	name: string;
 	count: number;
 	/**
+	 * Someone the archive photographed, not somewhere it photographed.
+	 *
+	 * Needed in the head rather than only on the page: the structured data used to tell
+	 * search engines that "Tajje de Kotter" was a Place with a postal address in Kapellen.
+	 * He was a man who turned a hundred in 1976.
+	 */
+	person: boolean;
+	/**
 	 * The photographs, in the order the page shows them.
 	 *
 	 * Here rather than left to the browser because these 121 pages are the only route to
@@ -123,7 +132,7 @@ export async function placeSummary(
 		...(photo.hn ? { houseNumber: photo.hn } : {})
 	}));
 
-	return { id: place.id, name: place.name, count: place.count, photos };
+	return { id: place.id, name: place.name, count: place.count, person: isPerson(place), photos };
 }
 
 /** Just enough of a photograph for the head tags. */

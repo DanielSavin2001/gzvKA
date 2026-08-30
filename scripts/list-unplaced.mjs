@@ -78,7 +78,9 @@ async function main() {
 
 	const entries = new Map(gazetteer.entries.map((entry) => [entry.id, entry]));
 
-	const withPhotos = archive.places.filter((place) => place.count > 0);
+	// People are not places and are never put on the map, so counting them among the places
+	// still to locate would ask somebody to find a man.
+	const withPhotos = archive.places.filter((place) => place.count > 0 && place.kind !== 'person');
 	const unplaced = withPhotos.filter(
 		(place) => !(place.id in geometry) && !(place.id in placed) && !drawable.has(place.id)
 	);

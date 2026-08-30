@@ -100,6 +100,16 @@ describe('isDrawable', () => {
 		expect(isDrawable(place({ display: 'punt', outsideKapellen: true }))).toBe(true);
 	});
 
+	it('never draws a person, however well located', () => {
+		// "Tajje de Kotter" was Matheus Janssens, and the 62 photographs are of the
+		// procession through Kapellen for his hundredth birthday. The record carries the
+		// Akkerstraat, where he was collected - but the parade ran from there down the
+		// Hoevensebaan to the centre, so a pin on one house number says something none of
+		// the photographs do.
+		expect(isDrawable(place({ display: 'punt', kind: 'persoon' }))).toBe(false);
+		expect(isDrawable(place({ display: 'benadering', kind: 'persoon', radius: 300 }))).toBe(false);
+	});
+
 	it('still needs a position, wherever the place is', () => {
 		expect(
 			isDrawable(place({ display: 'punt', outsideKapellen: true, lat: undefined, lng: undefined }))
@@ -210,7 +220,9 @@ describe('the generated file', () => {
 		expect(byDisplay('kandidaten')).toBe(5);
 		expect(byDisplay('niet_geplaatst')).toBe(0);
 
-		expect(places.filter((entry) => entry.correctable)).toHaveLength(23);
+		// 22 rather than 23: Tajje's open question was "where is this place?", and the answer
+		// is that it is not one. Nothing left for anybody to correct.
+		expect(places.filter((entry) => entry.correctable)).toHaveLength(22);
 	});
 
 	it('gives every correctable place something to read', () => {

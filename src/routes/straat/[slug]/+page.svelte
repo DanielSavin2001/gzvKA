@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive, ArchivePhoto, ArchivePlace } from '$lib/archive';
-	import { loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
+	import { isPerson, loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
 	import type { StoryIndex } from '$lib/stories';
@@ -57,12 +57,17 @@
 	$: named = data.summary?.name ?? place?.name ?? data.slug;
 	$: counted = data.summary?.count ?? place?.count ?? 0;
 
-	$: placeDescription = counted
-		? summarise(
-				`${counted} ${counted === 1 ? 'foto' : "foto's"} van ${named} in Kapellen, ` +
-					'uit het fotoarchief van de gemeente.'
-		  )
-		: `Foto's van ${named} in Kapellen, uit het fotoarchief van de gemeente.`;
+	/** From `load` first, so the prerendered head is right before the archive arrives. */
+	$: aboutAPerson = data.summary?.person ?? (place ? isPerson(place) : false);
+
+	$: placeDescription = !counted
+		? `Foto's van ${named} in Kapellen, uit het fotoarchief van de gemeente.`
+		: summarise(
+				aboutAPerson
+					? `${counted} foto's van ${named} uit het fotoarchief van Kapellen.`
+					: `${counted} ${counted === 1 ? 'foto' : "foto's"} van ${named} in Kapellen, ` +
+							'uit het fotoarchief van de gemeente.'
+		  );
 	$: photos = archive?.photosByPlace.get(data.slug) ?? [];
 
 	// Oldest first: this is a history archive, and the undated ones belong at the end. The
@@ -89,15 +94,17 @@
 		description: placeDescription,
 		inLanguage: 'nl-BE',
 		url: `${SITE}/straat/${data.slug}`,
-		about: {
-			'@type': 'Place',
-			name: named,
-			address: {
-				'@type': 'PostalAddress',
-				addressLocality: 'Kapellen',
-				addressCountry: 'BE'
-			}
-		}
+		about: aboutAPerson
+			? { '@type': 'Person', name: named }
+			: {
+					'@type': 'Place',
+					name: named,
+					address: {
+						'@type': 'PostalAddress',
+						addressLocality: 'Kapellen',
+						addressCountry: 'BE'
+					}
+			  }
 	}}
 />
 
@@ -135,6 +142,7 @@
 				<p class="mt-2 text-gray-600 dark:text-gray-400">
 					{data.summary.count}
 					{data.summary.count === 1 ? 'foto' : "foto's"} uit het fotoarchief van Kapellen.
+					{#if data.summary.person}&middot; persoon{/if}
 				</p>
 			</header>
 
@@ -197,8 +205,17 @@
 			<p class="mt-2 text-gray-600 dark:text-gray-400">
 				{sorted.length}
 				{sorted.length === 1 ? 'foto' : "foto's"}
-				{#if place.district !== 'unknown'}&middot; {place.district}{/if}
-				{#if withNumbers.length > 0}&middot; {withNumbers.length} met huisnummer{/if}
+				{#if isPerson(place)}
+					<!--
+						A person has no district and no house numbers. "Tajje de Kotter" was filed
+						among the buildings, so this line offered a parish and a count of house
+						numbers for a man.
+					-->
+					&middot; persoon
+				{:else}
+					{#if place.district !== 'unknown'}&middot; {place.district}{/if}
+					{#if withNumbers.length > 0}&middot; {withNumbers.length} met huisnummer{/if}
+				{/if}
 			</p>
 		</header>
 

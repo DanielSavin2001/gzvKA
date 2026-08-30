@@ -2044,14 +2044,17 @@
 		{
 			"id": "tajje",
 			"name": "Tajje",
-			"aliases": [],
-			"kind": "building",
+			"aliases": [
+				"Tajje de Kotter",
+				"Matheus Janssens"
+			],
+			"kind": "person",
 			"district": "unknown",
 			"inMunicipality": true,
 			"isStreet": false,
 			"allowHouseNumber": false,
 			"fuzzy": false,
-			"note": "A landmark; exact identity still to be confirmed.",
+			"note": "Not a place. \"Tajje de Kotter\" was the nickname of Matheus Janssens; the 58 photographs are of the procession through Kapellen for his hundredth birthday on 9 July 1976. Kept as an entry so the photographs stay findable under the name everybody knew him by, but it is a person and is not put on the map.",
 			"manualGeometry": null,
 			"evidence": {
 				"corpusHits": 61,
