@@ -92,10 +92,18 @@ describe('isDrawable', () => {
 		expect(isDrawable(place({ display: 'punt' }))).toBe(true);
 	});
 
-	it('never draws a place deliberately outside Kapellen', () => {
-		// Kasteel Ravenhof is in Stabroek on purpose. Searchable, but not on this map, and
-		// not to be "fixed" by nudging it inside the boundary.
-		expect(isDrawable(place({ display: 'punt', outsideKapellen: true }))).toBe(false);
+	it('draws a place just over the boundary, and says where it is', () => {
+		// Kasteel Ravenhof is in Putte-Stabroek and has eleven photographs in the archive.
+		// It was hidden for being outside Kapellen, which made a correctly located place
+		// look like one nobody had bothered to find. The flag stays on the record - the
+		// panel uses it to say where the place really is - but it no longer hides anything.
+		expect(isDrawable(place({ display: 'punt', outsideKapellen: true }))).toBe(true);
+	});
+
+	it('still needs a position, wherever the place is', () => {
+		expect(
+			isDrawable(place({ display: 'punt', outsideKapellen: true, lat: undefined, lng: undefined }))
+		).toBe(false);
 	});
 
 	it('never draws a place that was not found', () => {
@@ -189,16 +197,20 @@ describe('the generated file', () => {
 		const byDisplay = (display: string) =>
 			places.filter((entry) => entry.display === display).length;
 
-		expect(byDisplay('punt')).toBe(58);
+		// 59 rather than the research's 58: Blokjesweg was the one place nobody could find,
+		// and Daniel identified it as the local name for the Kalmthoutsesteenweg and gave
+		// the spot. Nothing in the archive is unplaced any more, which is what the zero
+		// below records.
+		expect(byDisplay('punt')).toBe(59);
 		// The research counted 7 doubted points and 11 approximations. The build moves Tajje
 		// out of `benadering`, because a circle around a person claims something the same
 		// record's doubt text denies - so 8 and 10 here.
 		expect(byDisplay('punt_met_twijfel')).toBe(8);
 		expect(byDisplay('benadering')).toBe(10);
 		expect(byDisplay('kandidaten')).toBe(5);
-		expect(byDisplay('niet_geplaatst')).toBe(1);
+		expect(byDisplay('niet_geplaatst')).toBe(0);
 
-		expect(places.filter((entry) => entry.correctable)).toHaveLength(24);
+		expect(places.filter((entry) => entry.correctable)).toHaveLength(23);
 	});
 
 	it('gives every correctable place something to read', () => {

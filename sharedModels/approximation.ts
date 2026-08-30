@@ -62,9 +62,16 @@ export interface ApproximationFile {
 	places: Record<string, Approximation>;
 }
 
-/** Whether this place should appear on a map of Kapellen at all. */
+/**
+ * Whether this place should appear on the map at all.
+ *
+ * A place just over the municipal boundary is still drawn. Kasteel Ravenhof is in
+ * Putte-Stabroek and the Moretusbos around it runs into Kapellen; the archive holds eleven
+ * photographs of it, and leaving it off the map made it read as a place nobody had bothered
+ * to locate. `outsideKapellen` stays on the record and the panel says where it really is -
+ * it is a fact about the place, not a reason to hide it.
+ */
 export function isDrawable(approximation: Approximation): boolean {
-	if (approximation.outsideKapellen) return false;
 	if (approximation.display === 'niet_geplaatst') return false;
 	if (approximation.display === 'kandidaten') return (approximation.candidates ?? []).length > 0;
 	return approximation.lat != null && approximation.lng != null;

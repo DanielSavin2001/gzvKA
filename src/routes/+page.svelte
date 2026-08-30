@@ -7,6 +7,7 @@
 	import type { StoryIndex } from '$lib/stories';
 	import { historyStories, loadStoryIndex, readingMinutes } from '$lib/stories';
 	import MapExplorer from './components/MapExplorer.svelte';
+	import PlaceList from './components/PlaceList.svelte';
 	import PhotoCard from './components/PhotoCard.svelte';
 	import SearchBox from './components/SearchBox.svelte';
 	import SearchResults from './components/SearchResults.svelte';
@@ -193,21 +194,7 @@
 				{data.summary.streets.length} straten en pleinen met foto's in het archief.
 			</p>
 
-			<ul class="mt-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
-				{#each data.summary.streets as street (street.id)}
-					<li>
-						<a
-							class="flex items-baseline justify-between gap-3 rounded px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950"
-							href="/straat/{street.id}"
-						>
-							<span class="font-medium text-gray-900 dark:text-gray-100">{street.name}</span>
-							<span class="shrink-0 text-sm tabular-nums text-gray-500 dark:text-gray-400"
-								>{street.count}</span
-							>
-						</a>
-					</li>
-				{/each}
-			</ul>
+			<PlaceList places={data.summary.streets} noun="straten" />
 		</section>
 
 		{#if data.summary.areas.length > 0}
@@ -215,21 +202,7 @@
 				<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
 					Kastelen, wijken en gehuchten
 				</h2>
-				<ul class="mt-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
-					{#each data.summary.areas as place (place.id)}
-						<li>
-							<a
-								class="flex items-baseline justify-between gap-3 rounded px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950"
-								href="/straat/{place.id}"
-							>
-								<span class="font-medium text-gray-900 dark:text-gray-100">{place.name}</span>
-								<span class="shrink-0 text-sm tabular-nums text-gray-500 dark:text-gray-400"
-									>{place.count}</span
-								>
-							</a>
-						</li>
-					{/each}
-				</ul>
+				<PlaceList places={data.summary.areas} noun="plaatsen" />
 			</section>
 		{/if}
 	{:else}
@@ -239,40 +212,14 @@
 				{streets.length} straten en pleinen met foto's in het archief.
 			</p>
 
-			<ul class="mt-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
-				{#each streets as street (street.id)}
-					<li>
-						<a
-							class="flex items-baseline justify-between gap-3 rounded px-2 py-1.5 hover:bg-blue-50 dark:hover:bg-blue-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-							href="/straat/{street.id}"
-						>
-							<span class="font-medium text-gray-900 dark:text-gray-100">{street.name}</span>
-							<span class="shrink-0 text-sm tabular-nums text-gray-500 dark:text-gray-400"
-								>{street.count}</span
-							>
-						</a>
-					</li>
-				{/each}
-			</ul>
+			<PlaceList places={streets} noun="straten" />
 		</section>
 
 		<section class="py-8">
 			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
 				Wijken, kastelen en gebouwen
 			</h2>
-			<ul class="mt-5 flex flex-wrap gap-2">
-				{#each areas as place (place.id)}
-					<li>
-						<a
-							class="inline-flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-800 dark:text-gray-200 transition hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-							href="/straat/{place.id}"
-						>
-							{place.name}
-							<span class="text-gray-500 dark:text-gray-400">{place.count}</span>
-						</a>
-					</li>
-				{/each}
-			</ul>
+			<PlaceList places={areas} noun="plaatsen" />
 		</section>
 
 		{#if stories.length > 0}

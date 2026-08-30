@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import {
 		FillLayer,
 		GeoJSON,
@@ -298,9 +298,41 @@
 		correctionError = null;
 	}
 
-	function choose(place: ArchivePlace): void {
+	/** The panel holding the photographs, so a tap on the map can bring it into view. */
+	let panel: HTMLElement | null = null;
+
+	async function choose(place: ArchivePlace): Promise<void> {
 		selected = place;
 		resetCorrection();
+
+		// The panel has to exist before it can be scrolled to: on the first tap it is only
+		// rendered once `selected` is set.
+		await tick();
+		revealPhotographs();
+	}
+
+	/**
+	 * Bring the photographs into view after a tap on the map.
+	 *
+	 * On a wide screen the panel sits beside the map and a tap visibly fills it. On a phone
+	 * or a tablet the layout stacks, so the panel is below the fold and tapping a marker
+	 * looked like it did nothing at all - people tapped again, and again, and concluded the
+	 * map was broken.
+	 *
+	 * Whether to scroll is decided by where the panel actually is, not by a breakpoint: a
+	 * tablet held sideways shows the two side by side and needs no scroll, and the same
+	 * tablet turned upright does. Measuring answers that for every screen there is.
+	 */
+	function revealPhotographs(): void {
+		if (!panel) return;
+
+		const box = panel.getBoundingClientRect();
+		// Already on screen, or nearly so. Scrolling here would move the page out from
+		// under somebody who can see perfectly well what just happened.
+		if (box.top < window.innerHeight * 0.7) return;
+
+		const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+		panel.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
 	}
 
 	/**
@@ -583,7 +615,8 @@
 		</div>
 
 		<aside
-			class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
+			bind:this={panel}
+			class="scroll-mt-20 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
 		>
 			{#if selected && archive}
 				<div class="flex items-start justify-between gap-2">

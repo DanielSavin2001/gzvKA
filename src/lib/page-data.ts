@@ -19,7 +19,15 @@
  */
 
 import type { Archive } from './archive';
-import { loadArchive, photoAlt, placesWithPhotos, sortForDisplay, thumbUrl } from './archive';
+import type { PlaceFamily } from './archive';
+import {
+	loadArchive,
+	photoAlt,
+	placesInFamily,
+	placesWithPhotos,
+	sortForDisplay,
+	thumbUrl
+} from './archive';
 
 /** The shape of the archive, for the home page: what there is, and what to call it. */
 export interface ArchiveSummary {
@@ -50,6 +58,22 @@ export async function archiveSummary(fetcher: typeof fetch): Promise<ArchiveSumm
 			.filter((place) => !place.isStreet && place.count >= 8)
 			.map(named)
 	};
+}
+
+/**
+ * One family of places - the streets, the castles, or the districts - for its index page.
+ *
+ * Names and counts only. These three pages are what the menu's "Alle ..." entries point at
+ * and the only complete lists on the site, so they have to be in the HTML rather than
+ * appear once the archive has downloaded.
+ */
+export async function placeFamily(
+	fetcher: typeof fetch,
+	family: PlaceFamily
+): Promise<{ id: string; name: string; count: number }[]> {
+	const archive = await loadArchive(fetcher);
+
+	return placesInFamily(archive, family).map(({ id, name, count }) => ({ id, name, count }));
 }
 
 /** One photograph as a place page lists it. */

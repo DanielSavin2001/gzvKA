@@ -3,7 +3,7 @@
 
 	import type { Archive, ArchivePlace } from '$lib/archive';
 	import ThemeToggle from './ThemeToggle.svelte';
-	import { loadArchive } from '$lib/archive';
+	import { familyOf, loadArchive } from '$lib/archive';
 	import logo_no_background from '$lib/images/logo/svg/logo-no-background.svg';
 	import logo_white from '$lib/images/logo/svg/logo-white-transparent.svg';
 	import flag_of_kapellen from '$lib/images/logo/kapellen-flag/Flag_of_Kapellen,_Belgium.svg';
@@ -42,6 +42,31 @@
 	$: streets = top(archive, (place) => place.isStreet, 10);
 	$: castles = top(archive, (place) => place.kind === 'castle-estate', 10);
 	$: areas = top(archive, (place) => place.kind === 'area', 8);
+
+	/**
+	 * The same three families the index pages use, for the phone menu.
+	 *
+	 * Built from `familyOf` rather than from the conditions above, so a place cannot be in
+	 * a menu group and missing from the page that group links to. The desktop menus keep
+	 * their own narrower picks - `area` only, `castle-estate` only - because they are a
+	 * shortcut to the obvious ones rather than a way through everything.
+	 */
+	$: groups = [
+		{
+			slug: 'straten',
+			label: 'Straten',
+			places: top(archive, (p) => familyOf(p) === 'straten', 10)
+		},
+		{
+			slug: 'kastelen',
+			label: 'Kastelen',
+			places: top(archive, (p) => familyOf(p) === 'kastelen', 10)
+		},
+		{ slug: 'wijken', label: 'Wijken', places: top(archive, (p) => familyOf(p) === 'wijken', 10) }
+	];
+
+	/** Which group is folded open. One at a time, so the menu stays a menu. */
+	let unfolded: string | null = null;
 </script>
 
 <header
@@ -94,7 +119,7 @@
 					<li class="mt-1 border-t border-gray-200 dark:border-gray-700">
 						<a
 							class="block px-4 py-2 font-medium text-blue-800 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950"
-							href="/"
+							href="/straten"
 						>
 							Alle straten &rarr;
 						</a>
@@ -124,6 +149,14 @@
 							</a>
 						</li>
 					{/each}
+					<li class="mt-1 border-t border-gray-200 dark:border-gray-700">
+						<a
+							class="block px-4 py-2 font-medium text-blue-800 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
+							href="/kastelen"
+						>
+							Alle kastelen &rarr;
+						</a>
+					</li>
 				</ul>
 			</div>
 
@@ -149,6 +182,14 @@
 							</a>
 						</li>
 					{/each}
+					<li class="mt-1 border-t border-gray-200 dark:border-gray-700">
+						<a
+							class="block px-4 py-2 font-medium text-blue-800 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
+							href="/wijken"
+						>
+							Alle wijken &rarr;
+						</a>
+					</li>
 				</ul>
 			</div>
 
@@ -207,23 +248,56 @@
 				on:click={() => (open = false)}>Foto insturen</a
 			>
 
-			{#if streets.length > 0}
-				<p
-					class="mt-3 px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
-				>
-					Straten
-				</p>
-				{#each streets.slice(0, 6) as street (street.id)}
-					<a
-						class="block rounded px-2 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-						href="/straat/{street.id}"
-						on:click={() => (open = false)}
+			<!--
+				Straten, Kastelen and Wijken, each folding open to the ten busiest.
+
+				This used to be a flat run of six street names under a heading, with no way to
+				reach the castles or the districts at all and nothing linking to a full list.
+				A phone menu that shows six of 121 places, chosen by one category, is not a
+				way into an archive.
+
+				"Alle ..." is the first entry inside each group rather than the last, because
+				somebody who opened the group wanting the whole list should not have to scroll
+				past ten names to find out there is one.
+			-->
+			{#each groups as group (group.slug)}
+				{#if group.places.length > 0}
+					<button
+						type="button"
+						class="mt-1 flex w-full items-center justify-between rounded px-2 py-2 font-medium text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+						aria-expanded={unfolded === group.slug}
+						aria-controls="menu-{group.slug}"
+						on:click={() => (unfolded = unfolded === group.slug ? null : group.slug)}
 					>
-						{street.name}
-						<span class="text-sm text-gray-500 dark:text-gray-400">{street.count}</span>
-					</a>
-				{/each}
-			{/if}
+						{group.label}
+						<span class="text-sm text-gray-500 dark:text-gray-400">
+							{unfolded === group.slug ? '\u2212' : '+'}
+						</span>
+					</button>
+
+					{#if unfolded === group.slug}
+						<div id="menu-{group.slug}" class="border-l border-gray-200 pl-2 dark:border-gray-700">
+							<a
+								class="block rounded px-2 py-2 font-medium text-blue-800 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
+								href="/{group.slug}"
+								on:click={() => (open = false)}
+							>
+								Alle {group.label.toLowerCase()} &rarr;
+							</a>
+							{#each group.places as place (place.id)}
+								<a
+									class="flex items-baseline justify-between gap-3 rounded px-2 py-2 text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+									href="/straat/{place.id}"
+									on:click={() => (open = false)}
+								>
+									<span>{place.name}</span>
+									<span class="text-sm text-gray-500 dark:text-gray-400">{place.count}</span>
+								</a>
+							{/each}
+						</div>
+					{/if}
+				{/if}
+			{/each}
 		</nav>
 	{/if}
 </header>
