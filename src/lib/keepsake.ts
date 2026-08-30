@@ -48,64 +48,77 @@ export function originalFormat(corpusPath: string): { extension: string; mime: s
 }
 
 /**
+ * What became of a save.
+ *
+ * Three outcomes rather than a boolean, because two of the failures need opposite
+ * handling. `unconvertible` means the bytes were a real photograph that could not be
+ * re-encoded - a blocked canvas, no `toBlob` - and handing them over unchanged is a fine
+ * answer. `not-an-image` means the server did not send a photograph at all, and handing
+ * *those* bytes over is the exact bug this function exists to prevent: a static host
+ * answers a missing file with the site's own HTML, so the fallback would save a web page
+ * renamed `.jpg`.
+ */
+export type SaveOutcome = 'saved' | 'unconvertible' | 'not-an-image';
+
+/**
  * Saves what is on screen, converted to `mime`.
  *
  * A plain `<a download>` would hand over the WebP the page happens to be showing. This
  * draws it into a canvas and re-encodes instead. Same origin, so the canvas is not tainted
  * and `toBlob` is allowed.
- *
- * Returns false rather than throwing when anything goes wrong - a blocked canvas, a failed
- * fetch, a browser without `toBlob` - so the caller can fall back to handing over the file
- * as it came. A download that is the wrong format beats no download.
  */
 export async function saveConverted(
 	source: string,
 	filename: string,
 	mime: string
-): Promise<boolean> {
+): Promise<SaveOutcome> {
+	let blob: Blob;
 	try {
 		const response = await fetch(source);
-		if (!response.ok) return false;
+		if (!response.ok) return 'not-an-image';
 
-		const blob = await response.blob();
-		// Guard against the fallback HTML a static host serves for a missing file: without
-		// this the "photograph" saved is a 2 KB copy of the site's shell renamed .jpg, which
-		// is exactly the bug this function was written to fix.
-		if (!blob.type.startsWith('image/')) return false;
-
-		const objectUrl = URL.createObjectURL(blob);
-		try {
-			const image = new Image();
-			image.src = objectUrl;
-			await image.decode();
-
-			const canvas = document.createElement('canvas');
-			canvas.width = image.naturalWidth;
-			canvas.height = image.naturalHeight;
-
-			const context = canvas.getContext('2d');
-			if (!context) return false;
-
-			// JPEG has no alpha, so a transparent PNG would composite onto black. White is
-			// what a scan's transparent margin is meant to be.
-			if (mime === 'image/jpeg') {
-				context.fillStyle = '#ffffff';
-				context.fillRect(0, 0, canvas.width, canvas.height);
-			}
-			context.drawImage(image, 0, 0);
-
-			const converted = await new Promise<Blob | null>((resolve) =>
-				canvas.toBlob(resolve, mime, 0.92)
-			);
-			if (!converted) return false;
-
-			download(URL.createObjectURL(converted), filename, true);
-			return true;
-		} finally {
-			URL.revokeObjectURL(objectUrl);
-		}
+		blob = await response.blob();
+		// The guard that matters: a static host answers a missing path with its own HTML,
+		// and 200 OK on a page is not a photograph.
+		if (!blob.type.startsWith('image/')) return 'not-an-image';
 	} catch {
-		return false;
+		return 'not-an-image';
+	}
+
+	const objectUrl = URL.createObjectURL(blob);
+	try {
+		const image = new Image();
+		image.src = objectUrl;
+		await image.decode();
+
+		const canvas = document.createElement('canvas');
+		canvas.width = image.naturalWidth;
+		canvas.height = image.naturalHeight;
+
+		const context = canvas.getContext('2d');
+		if (!context) return 'unconvertible';
+
+		// JPEG has no alpha, so a transparent PNG would composite onto black. White is
+		// what a scan's transparent margin is meant to be.
+		if (mime === 'image/jpeg') {
+			context.fillStyle = '#ffffff';
+			context.fillRect(0, 0, canvas.width, canvas.height);
+		}
+		context.drawImage(image, 0, 0);
+
+		const converted = await new Promise<Blob | null>((resolve) =>
+			canvas.toBlob(resolve, mime, 0.92)
+		);
+		if (!converted) return 'unconvertible';
+
+		download(URL.createObjectURL(converted), filename, true);
+		return 'saved';
+	} catch {
+		// Decoding failed on bytes that claimed to be an image. Whatever they are, they are
+		// not something to hand somebody as their grandparents' house.
+		return 'not-an-image';
+	} finally {
+		URL.revokeObjectURL(objectUrl);
 	}
 }
 

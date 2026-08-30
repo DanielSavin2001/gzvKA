@@ -249,6 +249,8 @@
 	})();
 
 	let saving = false;
+	/** Set when the archive could not produce the file, so the page says so out loud. */
+	let saveFailed = false;
 
 	/**
 	 * Hands over the photograph in the format the archive holds it in.
@@ -262,12 +264,20 @@
 		if (!keepsake || saving) return;
 
 		saving = true;
+		saveFailed = false;
 		try {
-			const converted = await saveConverted(keepsake.source, keepsake.name, keepsake.mime);
-			if (converted) return;
+			const outcome = await saveConverted(keepsake.source, keepsake.name, keepsake.mime);
+			if (outcome === 'saved') return;
 
-			const asLoaded = keepsakeName(photo!.t, photo!.y, extensionOf(keepsake.source));
-			download(keepsake.source, asLoaded);
+			// Only when the bytes really were a photograph. Falling back on `not-an-image`
+			// would hand over whatever the server sent instead - which, when the file is
+			// missing, is this page - and that is the bug the button had to begin with.
+			if (outcome === 'unconvertible') {
+				download(keepsake.source, keepsakeName(photo!.t, photo!.y, extensionOf(keepsake.source)));
+				return;
+			}
+
+			saveFailed = true;
 		} finally {
 			saving = false;
 		}
@@ -661,6 +671,12 @@
 						>
 							&#8681; {saving ? 'Bezig ...' : 'Bewaren'}
 						</button>
+					{/if}
+
+					{#if saveFailed}
+						<p class="w-full text-sm font-semibold text-red-800 dark:text-red-300">
+							Deze foto kon niet bewaard worden. Probeer het later opnieuw.
+						</p>
 					{/if}
 
 					<button
