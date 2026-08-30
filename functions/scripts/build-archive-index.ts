@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import type { Gazetteer } from '../../sharedModels/gazetteer';
+import { familyOfPlace } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { buildIndex, matchImagePath } from '../src/gazetteer/match';
 import { yearFromFilename } from '../src/utils/photo-year';
@@ -45,6 +46,19 @@ const CORPUS_DIR = path.join(REPO_ROOT, 'src', 'lib', 'images', 'history-images'
 const GAZETTEER_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'kapellen-gazetteer.json');
 const CORRECTIONS_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'photo-corrections.json');
 const OUTPUT_FILE = path.join(REPO_ROOT, 'static', 'data', 'archive-index.json');
+
+/**
+ * The header menus, as their own small file.
+ *
+ * The menus need about forty place names and counts. They used to get them by downloading
+ * the whole 1.1 MB index on every cold load - a megabyte to draw a dropdown, before the
+ * page it sits on could be considered loaded. This is the same answer in a couple of
+ * kilobytes.
+ *
+ * Generated here rather than assembled in the browser so that it cannot disagree with the
+ * index it came from.
+ */
+const MENU_FILE = path.join(REPO_ROOT, 'static', 'data', 'menu.json');
 
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
 
@@ -275,6 +289,26 @@ function main(): void {
 
 	fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
 	fs.writeFileSync(OUTPUT_FILE, `${JSON.stringify(output)}\n`, 'utf8');
+
+	// The menus: the biggest few of each family, which is all the header ever shows. The
+	// desktop dropdowns and the phone menu both read this, and `familyOfPlace` is the same
+	// rule the /straten, /kastelen and /wijken pages classify by - shared rather than
+	// copied, so a place cannot be under one heading here and another there.
+	const biggest = (family: string, limit: number) =>
+		places
+			.filter((place) => place.count > 0 && familyOfPlace(place) === family)
+			.slice(0, limit)
+			.map(({ id, name, count }) => ({ id, name, count }));
+
+	const menu = {
+		version: 1,
+		straten: biggest('straten', 10),
+		kastelen: biggest('kastelen', 10),
+		// Districts and parks, which is what the desktop menu calls "Wijken".
+		wijken: biggest('wijken', 10)
+	};
+
+	fs.writeFileSync(MENU_FILE, `${JSON.stringify(menu)}\n`, 'utf8');
 
 	const bytes = fs.statSync(OUTPUT_FILE).size;
 	const withStreet = photos.filter((photo) =>

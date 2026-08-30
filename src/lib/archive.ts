@@ -15,6 +15,8 @@
  */
 
 import { encodePath } from '../../sharedModels/image-path';
+import type { PlaceFamily } from '../../sharedModels/place-family';
+import { familyOfPlace, isPersonKind } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
 
@@ -290,32 +292,21 @@ export function suggestPlaces(archive: Archive, query: string, limit = 8): Archi
  * place with photographs: 44 streets, 26 castles and forts, and 51 districts, buildings
  * and parks.
  */
-export type PlaceFamily = 'straten' | 'kastelen' | 'wijken';
-
-const CASTLE_KINDS = new Set(['castle-estate', 'fort']);
+export type { PlaceFamily } from '../../sharedModels/place-family';
 
 /**
- * Someone the archive photographed, filed under the name people knew them by.
+ * Someone the archive photographed rather than somewhere it photographed.
  *
- * "Tajje de Kotter" was Matheus Janssens, and the 58 photographs under that name are of
- * the procession through Kapellen for his hundredth birthday. It was listed among the
- * buildings, so it appeared in the browse lists as somewhere you could go and on the map as
- * a single point - which put a parade that ran from the Akkerstraat down the Hoevensebaan
- * to the centre on one house number.
- *
- * The entry stays, because the photographs have to be findable under his name. It is simply
- * not a place, so it is not offered as one.
+ * The rule itself is in the shared models, because the build-time menu generator has to
+ * classify places exactly as these pages do and cannot import anything from here.
  */
 export function isPerson(place: ArchivePlace): boolean {
-	return place.kind === 'person';
+	return isPersonKind(place);
 }
 
 /** Which browse list a place belongs in, or null for anything that is not a place. */
 export function familyOf(place: ArchivePlace): PlaceFamily | null {
-	if (isPerson(place)) return null;
-	if (place.isStreet) return 'straten';
-	if (CASTLE_KINDS.has(place.kind)) return 'kastelen';
-	return 'wijken';
+	return familyOfPlace(place);
 }
 
 /** Places of one family, with photographs, in alphabetical order. */
