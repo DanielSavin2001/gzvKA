@@ -282,7 +282,25 @@ export type PlaceFamily = 'straten' | 'kastelen' | 'wijken';
 
 const CASTLE_KINDS = new Set(['castle-estate', 'fort']);
 
-export function familyOf(place: ArchivePlace): PlaceFamily {
+/**
+ * Someone the archive photographed, filed under the name people knew them by.
+ *
+ * "Tajje de Kotter" was Matheus Janssens, and the 58 photographs under that name are of
+ * the procession through Kapellen for his hundredth birthday. It was listed among the
+ * buildings, so it appeared in the browse lists as somewhere you could go and on the map as
+ * a single point - which put a parade that ran from the Akkerstraat down the Hoevensebaan
+ * to the centre on one house number.
+ *
+ * The entry stays, because the photographs have to be findable under his name. It is simply
+ * not a place, so it is not offered as one.
+ */
+export function isPerson(place: ArchivePlace): boolean {
+	return place.kind === 'person';
+}
+
+/** Which browse list a place belongs in, or null for anything that is not a place. */
+export function familyOf(place: ArchivePlace): PlaceFamily | null {
+	if (isPerson(place)) return null;
 	if (place.isStreet) return 'straten';
 	if (CASTLE_KINDS.has(place.kind)) return 'kastelen';
 	return 'wijken';
@@ -298,6 +316,6 @@ export function placesInFamily(archive: Archive, family: PlaceFamily): ArchivePl
 /** Every place that has at least one photograph, grouped for the street index. */
 export function placesWithPhotos(archive: Archive, onlyStreets = false): ArchivePlace[] {
 	return archive.places
-		.filter((place) => place.count > 0 && (!onlyStreets || place.isStreet))
+		.filter((place) => place.count > 0 && !isPerson(place) && (!onlyStreets || place.isStreet))
 		.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
 }

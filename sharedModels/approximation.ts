@@ -72,6 +72,11 @@ export interface ApproximationFile {
  * it is a fact about the place, not a reason to hide it.
  */
 export function isDrawable(approximation: Approximation): boolean {
+	// A person is not a location. "Tajje de Kotter" carried a point in the Akkerstraat,
+	// where Matheus Janssens was collected on his hundredth birthday - but the photographs
+	// are of a procession that ran from there down the Hoevensebaan to the centre, and
+	// pinning it to one house number says something none of them do.
+	if (approximation.kind === 'persoon') return false;
 	if (approximation.display === 'niet_geplaatst') return false;
 	if (approximation.display === 'kandidaten') return (approximation.candidates ?? []).length > 0;
 	return approximation.lat != null && approximation.lng != null;

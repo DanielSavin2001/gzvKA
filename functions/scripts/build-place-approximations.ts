@@ -37,6 +37,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import type { Approximation, Display } from '../../sharedModels/approximation';
+import { isDrawable } from '../../sharedModels/approximation';
 import { normalizeText } from '../../sharedModels/text';
 
 function findRepoRoot(startDirectory: string): string {
@@ -299,9 +300,10 @@ function main(): void {
 	fs.writeFileSync(OUTPUT_FILE, output + '\n');
 	fs.writeFileSync(FUNCTIONS_COPY, output + '\n');
 
-	const drawn = Object.values(approximations).filter(
-		(entry) => entry.display !== 'niet_geplaatst' && !entry.outsideKapellen
-	).length;
+	// `isDrawable` rather than a second copy of the rule here. This count had drifted twice:
+	// it still excluded places just over the boundary after they started being drawn, and it
+	// never knew that a person is not drawn at all.
+	const drawn = Object.values(approximations).filter(isDrawable).length;
 	const correctable = Object.values(approximations).filter((entry) => entry.correctable);
 	const photos = correctable.reduce((total, entry) => total + entry.priority, 0);
 
