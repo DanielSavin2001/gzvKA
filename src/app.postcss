@@ -29,3 +29,16 @@
 :global(.dark) .maplibregl-ctrl-attrib a {
 	color: rgb(147, 197, 253);
 }
+
+/*
+ * In-page jumps glide rather than teleport.
+ *
+ * The timeline's decade strip is navigation: clicking 1960 should feel like travelling to
+ * the sixties, not like the page being replaced. Anyone who has asked their system for
+ * less motion keeps the instant jump.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}

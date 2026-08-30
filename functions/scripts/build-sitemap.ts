@@ -65,6 +65,7 @@ function main(): void {
 		{ path: '/straten', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/kastelen', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/wijken', priority: 0.9, changefreq: 'monthly' },
+		{ path: '/tijdlijn', priority: 0.8, changefreq: 'monthly' },
 		{ path: '/upload', priority: 0.6, changefreq: 'yearly' },
 		{ path: '/over-ons', priority: 0.5, changefreq: 'yearly' },
 		{ path: '/contact', priority: 0.5, changefreq: 'yearly' },

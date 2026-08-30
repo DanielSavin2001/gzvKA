@@ -22,6 +22,7 @@ import * as path from 'path';
 import type { Gazetteer } from '../../sharedModels/gazetteer';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { buildIndex, matchImagePath } from '../src/gazetteer/match';
+import { yearFromFilename } from '../src/utils/photo-year';
 import { looksLikePersonName, splitFilename, splitPathContext } from '../src/gazetteer/segment';
 
 function findRepoRoot(startDirectory: string): string {
@@ -231,10 +232,10 @@ function main(): void {
 		if (parts.dateOfAcquisition) photo.a = parts.dateOfAcquisition;
 		if (context.topicalOnly) photo.ev = true;
 
-		const yearFromFilename = fileName.match(/\b(18\d{2}|19\d{2}|20[0-1]\d)\b/);
+		const named = yearFromFilename(fileName);
 		if (correction?.year) photo.y = correction.year;
-		else if (yearFromFilename && !parts.dateOfAcquisition?.includes(yearFromFilename[1])) {
-			photo.y = yearFromFilename[1];
+		else if (named && !parts.dateOfAcquisition?.includes(named)) {
+			photo.y = named;
 		}
 
 		photos.push(photo);

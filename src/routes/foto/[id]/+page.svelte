@@ -8,6 +8,8 @@
 	import { SITE, summarise } from '$lib/seo';
 	import Seo from '../../components/Seo.svelte';
 	import { swipe } from '$lib/gestures';
+	import { extensionOf, keepsakeName, loadedSource, shareOrCopy } from '$lib/keepsake';
+	import { showErrorToast, showSuccessToast } from '../../../services/toaster-service';
 	import Lightbox from '../../components/Lightbox.svelte';
 	import type { LightboxItem } from '../../components/Lightbox.svelte';
 	import type { PhotoContext } from '$lib/stories';
@@ -152,6 +154,39 @@
 
 	function step(to: ArchivePhoto | null): void {
 		if (to) goto(`/foto/${to.id}${neighbourQuery}`);
+	}
+
+	/**
+	 * The element showing the photograph, so saving it saves what is on screen.
+	 *
+	 * The deploy carries thumbnails only, so the page asks for the 1400 px copy and falls
+	 * back when it is not there. Pointing a download at the larger copy would hand people a
+	 * 404 on the live site while working perfectly in development.
+	 */
+	let shown: HTMLImageElement | null = null;
+
+	$: keepsake = ((): { href: string; name: string } | null => {
+		const source = loadedSource(shown);
+		if (!source || !photo) return null;
+
+		return { href: source, name: keepsakeName(photo.t, photo.y, extensionOf(source)) };
+	})();
+
+	async function share(): Promise<void> {
+		if (!photo) return;
+
+		const outcome = await shareOrCopy({
+			title: photo.t,
+			text: `${photo.t} - uit het fotoarchief van Kapellen`,
+			url: `${SITE}/foto/${data.id}`
+		});
+
+		if (outcome === 'copied') {
+			showSuccessToast('Link gekopieerd', 'Plak hem waar u wil.');
+		}
+		if (outcome === 'failed') {
+			showErrorToast('Kopiëren lukte niet', 'Kopieer het adres uit de adresbalk.');
+		}
 	}
 
 	/**
@@ -405,6 +440,7 @@
 						on:click={() => (openAt = lightboxStart)}
 					>
 						<img
+							bind:this={shown}
 							src={detailUrl(archive, photo)}
 							on:error={fallBackToThumbnail}
 							alt={photoAlt(archive, photo)}
@@ -478,6 +514,33 @@
 
 			<figcaption class="mt-4">
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">{photo.t}</h1>
+
+				<!--
+					Take it with you, or send it to somebody.
+
+					The two things a visitor most obviously wanted and could not do: somebody
+					finds their grandparents' house and the only way to keep it was a long-press
+					on a file called `... .jpg.thumb.webp`.
+				-->
+				<div class="mt-4 flex flex-wrap gap-2">
+					{#if keepsake}
+						<a
+							class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+							href={keepsake.href}
+							download={keepsake.name}
+						>
+							&#8681; Bewaren
+						</a>
+					{/if}
+
+					<button
+						type="button"
+						class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+						on:click={share}
+					>
+						&#8631; Delen
+					</button>
+				</div>
 
 				{#if description}
 					<!--

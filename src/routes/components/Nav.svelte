@@ -93,6 +93,10 @@
 				class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 				href="/verhalen">Verhalen</a
 			>
+			<a
+				class="rounded px-3 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				href="/tijdlijn">Tijdlijn</a
+			>
 
 			<div class="group relative">
 				<button
@@ -241,6 +245,11 @@
 				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
 				href="/verhalen"
 				on:click={() => (open = false)}>Verhalen</a
+			>
+			<a
+				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+				href="/tijdlijn"
+				on:click={() => (open = false)}>Tijdlijn</a
 			>
 			<a
 				class="block rounded px-2 py-2 font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"

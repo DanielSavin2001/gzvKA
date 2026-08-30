@@ -18,7 +18,7 @@
  * the head says the same thing the page does about a photograph a curator has corrected.
  */
 
-import type { Archive } from './archive';
+import type { Archive, ArchivePhoto } from './archive';
 import type { PlaceFamily } from './archive';
 import {
 	isPerson,
@@ -75,6 +75,84 @@ export async function placeFamily(
 	const archive = await loadArchive(fetcher);
 
 	return placesInFamily(archive, family).map(({ id, name, count }) => ({ id, name, count }));
+}
+
+/** One decade of the archive, for the timeline. */
+export interface Decade {
+	/** Anchor and key, e.g. `1960` or `voor-1900`. */
+	key: string;
+	/** The big numeral: `1960`, or `Voor 1900`. */
+	label: string;
+	/** The years actually present in this band, e.g. `1960 – 1969`. */
+	span: string;
+	count: number;
+	photos: PhotoLink[];
+}
+
+/**
+ * The archive arranged by decade.
+ *
+ * 608 of the 4,504 photographs carry a year. That is the honest denominator and the page
+ * says so: a timeline that quietly showed an eighth of the archive as though it were all
+ * of it would be worse than no timeline.
+ *
+ * Everything before 1900 is one band. Seven photographs are spread across seventy years
+ * there - maps from 1841 and 1846, a barn dated 1886 - and a row of decade bars each
+ * holding one photograph says nothing except that the archive is old, which the single
+ * band says better.
+ */
+export async function decades(fetcher: typeof fetch): Promise<{
+	decades: Decade[];
+	dated: number;
+	total: number;
+}> {
+	const archive = await loadArchive(fetcher);
+
+	const dated = archive.photos
+		.filter((photo) => /^\d{4}$/.test(photo.y ?? ''))
+		.map((photo) => ({ photo, year: Number(photo.y) }));
+
+	const bands = new Map<string, { year: number; photo: ArchivePhoto }[]>();
+	for (const entry of dated) {
+		const key = entry.year < 1900 ? 'voor-1900' : String(Math.floor(entry.year / 10) * 10);
+		const band = bands.get(key);
+		if (band) band.push(entry);
+		else bands.set(key, [entry]);
+	}
+
+	const ordered = [...bands.entries()].sort(([a], [b]) => {
+		if (a === 'voor-1900') return -1;
+		if (b === 'voor-1900') return 1;
+		return Number(a) - Number(b);
+	});
+
+	return {
+		dated: dated.length,
+		total: archive.photos.length,
+		decades: ordered.map(([key, entries]) => {
+			const years = entries.map((entry) => entry.year);
+			const from = Math.min(...years);
+			const to = Math.max(...years);
+
+			return {
+				key,
+				label: key === 'voor-1900' ? 'Voor 1900' : key,
+				span: from === to ? String(from) : `${from} \u2013 ${to}`,
+				count: entries.length,
+				photos: entries
+					// Oldest first inside a decade, as everywhere else in the archive.
+					.sort((a, b) => a.year - b.year || a.photo.t.localeCompare(b.photo.t))
+					.map(({ photo }) => ({
+						id: photo.id,
+						title: photo.t,
+						alt: photoAlt(archive, photo),
+						image: thumbUrl(archive, photo),
+						...(photo.y ? { year: photo.y } : {}),
+						...(photo.hn ? { houseNumber: photo.hn } : {})
+					}))
+			};
+		})
+	};
 }
 
 /** One photograph as a place page lists it. */
