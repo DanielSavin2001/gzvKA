@@ -16,7 +16,17 @@
  *     are explicit flags rather than something inferred from the name's shape.
  */
 
-/** What kind of place an entry describes. */
+/**
+ * What kind of place an entry describes.
+ *
+ * `person` is the odd one out and is deliberately here: "Tajje" is a man, not a place, and
+ * the archive files 59 photographs of his hundredth-birthday procession under that name.
+ * Keeping him as an entry is what makes those findable under the name everybody used; the
+ * kind is what keeps him off the map.
+ *
+ * It was missing from this union for a while even though the data used it, because the
+ * gazetteer is read with a cast rather than parsed - so the compiler never saw the lie.
+ */
 export type PlaceKind =
 	| 'street'
 	| 'square'
@@ -24,7 +34,8 @@ export type PlaceKind =
 	| 'castle-estate'
 	| 'fort'
 	| 'building'
-	| 'area';
+	| 'area'
+	| 'person';
 
 /** A district of the municipality of Kapellen, or `unknown` when it is not established. */
 export type District = 'kapellen' | 'hoogboom' | 'putte-kapellen' | 'ertbrand' | 'unknown';

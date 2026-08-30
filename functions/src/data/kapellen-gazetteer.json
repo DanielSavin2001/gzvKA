@@ -1,6 +1,6 @@
 {
 	"version": 1,
-	"updatedAt": "2026-08-29",
+	"updatedAt": "2026-08-30",
 	"entries": [
 		{
 			"id": "akkerstraat",
@@ -103,6 +103,31 @@
 			"evidence": {
 				"corpusHits": 16,
 				"sampleFile": "src/lib/images/history-images/Café Pancras/Cafe De Pancras - Marc Brans - 10.04.2014.jpg"
+			}
+		},
+		{
+			"id": "cafe-de-vrede",
+			"name": "Café De Vrede",
+			"aliases": [
+				"De Vrede"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"negativeContext": [
+				"vredestraat",
+				"van vrede",
+				"o\\.?l\\.?v",
+				"onze[- ]lieve[- ]vrouw"
+			],
+			"note": "Appears across four different folders, which is what marks it as a real establishment rather than a folder name. Photographed for the Tajje procession of 1976.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 9,
+				"sampleFile": "src/lib/images/history-images/Station en omgeving/Café De Vrede - Albert en Anita - Romain Van Deuren - 26.02.2015.JPG"
 			}
 		},
 		{
@@ -356,6 +381,26 @@
 			}
 		},
 		{
+			"id": "ertbrandbos",
+			"name": "Ertbrandbos",
+			"aliases": [],
+			"kind": "area",
+			"district": "ertbrand",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"ertbrand",
+				"fort-van-ertbrand"
+			],
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 30,
+				"sampleFile": "src/lib/images/history-images/Ertbrandbos/Ertbrandbos - An Stokmans - 12.05.2018.jpg"
+			}
+		},
+		{
 			"id": "ertbrandstraat",
 			"name": "Ertbrandstraat",
 			"aliases": [],
@@ -385,6 +430,26 @@
 			"evidence": {
 				"corpusHits": 1,
 				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Klooster Paters Oblaten Essenhout - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "essenhoutstraat",
+			"name": "Essenhoutstraat",
+			"aliases": [],
+			"kind": "street",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": true,
+			"allowHouseNumber": true,
+			"fuzzy": true,
+			"relatedIds": [
+				"essenhout"
+			],
+			"note": "Not in the imported street register, so its geometry has to come from a map click. The photographs are of the Erfgoedcentrum in Hoeve Van Paesschen and of the Smoldersklok.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 14,
+				"sampleFile": "src/lib/images/history-images/Essenhoutstraat/Essenhoutstraat - Erfgoedcentrum - Hoeve Van Paesschen - Gemeente Kapellen - zd.jpg"
 			}
 		},
 		{
@@ -1001,6 +1066,25 @@
 			}
 		},
 		{
+			"id": "kasteel-ekenhof",
+			"name": "Kasteel Ekenhof",
+			"aliases": [
+				"Ekenhof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": false,
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 3,
+				"sampleFile": "src/lib/images/history-images/Kasteel Ekenhof/Kasteel Ekenhof - Hoelen 6406 - zd.JPG"
+			},
+			"note": "Fuzzy matching is off: \"Ekenhof\" is within edit distance of the existing Kasteel Beukenhof, so a fuzzy hit could file a photograph of one under the other. All three filenames spell it exactly, so exact matching loses nothing."
+		},
+		{
 			"id": "kasteel-haezeldonck",
 			"name": "Kasteel Haezeldonck",
 			"aliases": [
@@ -1097,6 +1181,26 @@
 			}
 		},
 		{
+			"id": "kasteel-larikshof",
+			"name": "Kasteel Larikshof",
+			"aliases": [
+				"Villa Larikshof",
+				"Larikshof"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "The folder calls it a kasteel, every filename inside calls it a villa.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 6,
+				"sampleFile": "src/lib/images/history-images/Kasteel Larikshof/Villa Larikshof 1 - Paul Arren - zd.jpg"
+			}
+		},
+		{
 			"id": "kasteel-les-chataigniers",
 			"name": "Kasteel Les Chataigniers",
 			"aliases": [
@@ -1177,6 +1281,44 @@
 			"evidence": {
 				"corpusHits": 35,
 				"sampleFile": "src/lib/images/history-images/Kasteel Op den Wal/Kasteel Op de Wal - U Gent - z.d..jpg"
+			}
+		},
+		{
+			"id": "kasteel-oude-gracht",
+			"name": "Kasteel Oude Gracht",
+			"aliases": [
+				"Oude Gracht"
+			],
+			"kind": "castle-estate",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "Filenames place it in Hoogboom (\"Hoogboom - Kasteel Oude Gracht\"). The corpus also photographs its boothuis, brug and vijver separately.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 59,
+				"sampleFile": "src/lib/images/history-images/Kasteel Oude Gracht/Hoogboom - Kasteel Oude Gracht - Jan Verhelst - z.d.jpg"
+			}
+		},
+		{
+			"id": "kasteel-pannenhuys",
+			"name": "Kasteel Pannenhuys",
+			"aliases": [
+				"Pannenhuis"
+			],
+			"kind": "castle-estate",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "District not established by any filename. The alias \"Pannenhuis\" is the other spelling seen in the corpus.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 35,
+				"sampleFile": "src/lib/images/history-images/Kasteel Pannenhuys/Kasteel Pannenhuys - Frederic Van Blerk 1 - zd.jpg"
 			}
 		},
 		{
@@ -1300,6 +1442,25 @@
 			"evidence": {
 				"corpusHits": 12,
 				"sampleFile": "src/lib/images/history-images/Kerken en kapellen/Kerk O.L.V. van Vrede Luciferdoosje - Robert Vingerhoed - z.d..jpg"
+			}
+		},
+		{
+			"id": "klein-bos",
+			"name": "Het Klein Bos",
+			"aliases": [
+				"Klein Bos"
+			],
+			"kind": "area",
+			"district": "kapellen",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "One photograph is filed under Gemeentepark Beaulieu, so the two may adjoin. Worth confirming before placing.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 37,
+				"sampleFile": "src/lib/images/history-images/Klein Bos/Het Klein Bos - Hugo De Hoon - zd.JPG"
 			}
 		},
 		{
@@ -2096,6 +2257,28 @@
 			}
 		},
 		{
+			"id": "villa-eikenhoeve",
+			"name": "Villa Eikenhoeve",
+			"aliases": [
+				"Eikenhoeve"
+			],
+			"kind": "building",
+			"district": "hoogboom",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"relatedIds": [
+				"jagersdreef"
+			],
+			"note": "Filenames give the address: Hoogboomsteenweg 77 (one says 79), Hoogboom, with an entrance on Jagersdreef. That is enough to place it from the street register rather than by guesswork.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 13,
+				"sampleFile": "src/lib/images/history-images/Hoogboom Hoogboomsteenweg/Hoogboom - Hoogboomsteenweg 77 - Villa Eikenhoeve 1 -  Swatti Alix - zd.jpg"
+			}
+		},
+		{
 			"id": "villa-heirust",
 			"name": "Villa Heirust",
 			"aliases": [
@@ -2111,6 +2294,25 @@
 			"evidence": {
 				"corpusHits": 4,
 				"sampleFile": "src/lib/images/history-images/Putte Index/Putte NL - Heirust - Swatti Alix - z.d..jpg"
+			}
+		},
+		{
+			"id": "villa-palmaro",
+			"name": "Villa Palmaro",
+			"aliases": [
+				"Palmaro"
+			],
+			"kind": "building",
+			"district": "unknown",
+			"inMunicipality": true,
+			"isStreet": false,
+			"allowHouseNumber": false,
+			"fuzzy": true,
+			"note": "One of the six is a voorontwerp - a design drawing - so the villa may never have been built as drawn.",
+			"manualGeometry": null,
+			"evidence": {
+				"corpusHits": 6,
+				"sampleFile": "src/lib/images/history-images/Villa Palmaro/Villa Palmaro - HH - zd.jpg"
 			}
 		},
 		{
