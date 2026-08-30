@@ -8,6 +8,8 @@
 	import { SITE, summarise } from '$lib/seo';
 	import Seo from '../../components/Seo.svelte';
 	import { swipe } from '$lib/gestures';
+	import Lightbox from '../../components/Lightbox.svelte';
+	import type { LightboxItem } from '../../components/Lightbox.svelte';
 	import type { PhotoContext } from '$lib/stories';
 	import { loadStory, loadStoryPhotos, photoContext } from '$lib/stories';
 
@@ -152,6 +154,42 @@
 		if (to) goto(`/foto/${to.id}${neighbourQuery}`);
 	}
 
+	/**
+	 * The photograph, full screen.
+	 *
+	 * The page shows it at whatever size is left over after the heading, the neighbours and
+	 * the details - which on a phone is a postcard. These are scans of photographs people
+	 * want to look *at*, so there has to be a way to fill the screen with one, and once it
+	 * fills the screen the obvious way to reach the next is to swipe.
+	 *
+	 * The same `Lightbox` the stories use: it already handles the swipe, the pinch-zoom, the
+	 * arrow keys, Escape, and preloading the neighbours so stepping through is instant. A
+	 * second one written for this page would drift from it.
+	 */
+	let openAt = -1;
+
+	/** The list the arrows walk, so full screen steps through exactly the same order. */
+	$: lightboxItems = ((): LightboxItem[] => {
+		if (siblings.length > 0) return siblings.map((item) => ({ photo: item }));
+		return photo ? [{ photo }] : [];
+	})();
+
+	/** Where the open photograph sits in that list. */
+	$: lightboxStart = position >= 0 ? position : 0;
+
+	/**
+	 * Closing leaves you on the photograph you ended on.
+	 *
+	 * Moving inside the lightbox is local, so a swipe is instant rather than a page load.
+	 * That would strand somebody who swiped five photographs along and closed - the page
+	 * behind would still be the one they opened - so the navigation happens once, here.
+	 */
+	function closeLightbox(): void {
+		const landed = lightboxItems[openAt]?.photo;
+		openAt = -1;
+		if (landed && landed.id !== data.id) step(landed);
+	}
+
 	function onKey(event: KeyboardEvent): void {
 		// Not while someone is typing in the search box in the header.
 		const target = event.target as HTMLElement | null;
@@ -191,6 +229,16 @@
 </script>
 
 <svelte:window on:keydown={onKey} />
+
+{#if archive && lightboxItems.length > 0}
+	<Lightbox
+		{archive}
+		items={lightboxItems}
+		index={openAt}
+		on:close={closeLightbox}
+		on:move={(event) => (openAt = event.detail)}
+	/>
+{/if}
 
 <!--
 	A photograph is the thing people actually search for and the thing they share, so this
@@ -350,14 +398,35 @@
 				{/if}
 
 				<div class="relative flex h-full min-w-0 flex-1 items-center justify-center">
-					<img
-						src={detailUrl(archive, photo)}
-						on:error={fallBackToThumbnail}
-						alt={photoAlt(archive, photo)}
-						{...{ fetchpriority: 'high' }}
-						draggable="false"
-						class="max-h-full max-w-full select-none rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 object-contain"
-					/>
+					<button
+						type="button"
+						class="group flex h-full max-h-full max-w-full items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+						aria-label="Bekijk {photo.t} op volledig scherm"
+						on:click={() => (openAt = lightboxStart)}
+					>
+						<img
+							src={detailUrl(archive, photo)}
+							on:error={fallBackToThumbnail}
+							alt={photoAlt(archive, photo)}
+							{...{ fetchpriority: 'high' }}
+							draggable="false"
+							class="max-h-full max-w-full cursor-zoom-in select-none rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+						/>
+					</button>
+
+					<!--
+						A visible way in. `cursor-zoom-in` says "this opens" on a desktop and says
+						nothing at all on a phone, which is where filling the screen matters most.
+					-->
+					<button
+						type="button"
+						class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lg text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:bg-gray-900/85 dark:text-gray-100"
+						aria-label="Volledig scherm"
+						title="Volledig scherm"
+						on:click={() => (openAt = lightboxStart)}
+					>
+						&#9974;
+					</button>
 
 					{#if previous}
 						<a
