@@ -18,6 +18,37 @@
 
 const YEAR = '(?:18\\d{2}|19\\d{2}|20[0-1]\\d)';
 
+/**
+ * The year Belgium became a country.
+ *
+ * Hard-coded because it is a fact, and because it is the only base year in this archive
+ * that can be relied on. "50 jarig huwelijk" is somebody's golden wedding and the archive
+ * does not say whose or when, so no equivalent rule exists for it - guessing a base year
+ * there would invent a date rather than read one.
+ */
+const BELGIAN_INDEPENDENCE = 1830;
+
+/**
+ * An anniversary of Belgium: "100 jaar Belgie", "75 jaar België".
+ *
+ * This has to beat both rules below, because those read the *subject* year rather than the
+ * year the photograph was taken:
+ *
+ *   100 jaar Belgie - Eeuwfeest - vrijwilligers 1830   ->  1930, not 1830
+ *   75 jaar Belgie - ... - eerste trein Kapellen 1854  ->  1905, not 1854
+ *
+ * The first is a photograph of the 1930 centenary parade, in which men dressed as the
+ * volunteers of 1830. The second is a float at the 1905 festivities depicting the first
+ * train, which ran in 1854. In both the older year is what the picture is *about*; the
+ * anniversary is when somebody stood there with a camera.
+ *
+ * The corpus agrees with itself here, which is what makes this safe rather than clever:
+ * of the 31 photographs naming an anniversary of Belgium, 24 already carry the derived
+ * year in their own filename ("100 jaar Belgie - Eeuwfeesten 1930"). This rule brings the
+ * other seven into line instead of leaving two in a decade that had no photography.
+ */
+const BELGIAN_ANNIVERSARY = /\b(\d{1,3})\s*jaar\s+belgi[e\u00eb]/i;
+
 /** A period: two years joined by a dash, with or without spaces around it. */
 const RANGE = new RegExp(`\\b(${YEAR})\\s*-\\s*(${YEAR})\\b`);
 
@@ -26,9 +57,20 @@ const SINGLE = new RegExp(`\\b(${YEAR})\\b`);
 /**
  * The year to file a photograph under, or undefined when the name gives none.
  *
- * A range yields its later year. Everything else yields the first year in the name.
+ * An anniversary of Belgium yields the anniversary itself. A range yields its later year.
+ * Everything else yields the first year in the name.
  */
 export function yearFromFilename(fileName: string): string | undefined {
+	// First, because the other two rules would read the year the photograph is *about*.
+	const anniversary = BELGIAN_ANNIVERSARY.exec(fileName);
+	if (anniversary) {
+		const years = Number(anniversary[1]);
+		// A sanity bound rather than a blind sum: "200 jaar Belgie" has not happened yet,
+		// and whatever such a filename meant, it is not a photograph from 2030.
+		const when = BELGIAN_INDEPENDENCE + years;
+		if (years > 0 && when <= new Date().getFullYear()) return String(when);
+	}
+
 	const range = RANGE.exec(fileName);
 	if (range) {
 		const [, from, to] = range;

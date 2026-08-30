@@ -40,3 +40,56 @@ describe('yearFromFilename', () => {
 		expect(yearFromFilename('Matheus Janssens - 09.07.1976.jpg')).toBe('1976');
 	});
 });
+
+describe('anniversaries of Belgium', () => {
+	it('reads the centenary as 1930, not as the year it commemorates', () => {
+		expect(
+			yearFromFilename('100 jaar Belgie - Eeuwfeest - vrijwilligers 1830 - Hoghescote - zd.png')
+		).toBe('1930');
+	});
+
+	it('reads the 75th as 1905, even when the picture is about an 1854 train', () => {
+		expect(
+			yearFromFilename(
+				'75 jaar Belgie - Onafhankelijkheidsfeesten - eerste trein Kapellen 1854 - Hoghescote - zd.png'
+			)
+		).toBe('1905');
+	});
+
+	it('agrees with the filenames that already say the year themselves', () => {
+		expect(yearFromFilename('100 jaar Belgie - Eeuwfeesten 1930 - Stationsstraat.jpg')).toBe(
+			'1930'
+		);
+		expect(yearFromFilename('75 jaar Belgie - Onafhankelijkheidsfeest 1830-1905.jpg')).toBe('1905');
+	});
+
+	it('dates the ones that carried no year at all', () => {
+		expect(
+			yearFromFilename('100 jaar Belgie - Eeuwfeest - oude herberg - Hoghescote - zd.png')
+		).toBe('1930');
+	});
+
+	it('handles the accented spelling the corpus also uses', () => {
+		expect(yearFromFilename('100 jaar België_1 - Hugo De Hoon - 26.04.2015.jpg')).toBe('1930');
+	});
+
+	it('finds it mid-name, not only at the start', () => {
+		expect(yearFromFilename('Kasteel Beaulieu - 100 jaar Belgie 1930 - Yolande.jpg')).toBe('1930');
+	});
+
+	it('refuses an anniversary that has not happened yet', () => {
+		// Whatever "200 jaar Belgie" meant, it is not a photograph from 2030.
+		expect(yearFromFilename('200 jaar Belgie - zn - zd.jpg')).toBeUndefined();
+	});
+
+	it('leaves other anniversaries alone, having no base year to add to', () => {
+		// A golden wedding: the archive does not say whose, or when they married.
+		expect(yearFromFilename('Frans Van Lent - 50 jarig huwelijk - zd.jpg')).toBeUndefined();
+		// The festival year is already in the name and is the right answer.
+		expect(yearFromFilename('Fanfare St Cecilia - Festival 1913 - 50 jaar.jpg')).toBe('1913');
+	});
+
+	it('does not fire on a person turning a hundred', () => {
+		expect(yearFromFilename('Tajje 100 - 09.07.1976 01 - Hugo De Hoon - zd.jpg')).toBe('1976');
+	});
+});

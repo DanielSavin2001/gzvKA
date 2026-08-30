@@ -10,7 +10,15 @@
 	import Seo from '../../components/Seo.svelte';
 	import DatePhoto from '../../components/DatePhoto.svelte';
 	import { swipe } from '$lib/gestures';
-	import { extensionOf, keepsakeName, loadedSource, shareOrCopy } from '$lib/keepsake';
+	import {
+		download,
+		extensionOf,
+		keepsakeName,
+		loadedSource,
+		originalFormat,
+		saveConverted,
+		shareOrCopy
+	} from '$lib/keepsake';
 	import { showErrorToast, showSuccessToast } from '../../../services/toaster-service';
 	import Lightbox from '../../components/Lightbox.svelte';
 	import type { LightboxItem } from '../../components/Lightbox.svelte';
@@ -152,6 +160,14 @@
 		if (kind === 'schenker') {
 			return sortForDisplay(archive.photos.filter((other) => slugify(other.d) === value));
 		}
+		// The timeline has linked photographs with `jaren:` since it was built, and nothing
+		// here read it - so arriving from the sixties walked the photograph's street
+		// instead, and the counter said "1 van 401" of a decade holding eighty-three.
+		if (kind === 'jaren') {
+			return archive.photos
+				.filter((other) => decadeKeyOf(other.y) === value)
+				.sort((a, b) => Number(a.y) - Number(b.y) || a.t.localeCompare(b.t));
+		}
 
 		const street = places.find((place) => place.isStreet) ?? places[0];
 		return street ? sortForDisplay(archive.photosByPlace.get(street.id) ?? []) : [];
@@ -163,6 +179,25 @@
 
 	/** Keeps the `lijst` parameter across a step, or the next arrow would lose the thread. */
 	$: neighbourQuery = listKey ? `?lijst=${encodeURIComponent(listKey)}` : '';
+
+	/**
+	 * Which timeline band a year falls in - the same rule `decades()` bands by.
+	 *
+	 * Everything before 1900 is one band there, so it has to be one band here too, or the
+	 * arrows would walk a decade the timeline never drew.
+	 */
+	function decadeKeyOf(year: string | undefined): string | null {
+		if (!year || !/^\d{4}$/.test(year)) return null;
+		const value = Number(year);
+		return value < 1900 ? 'voor-1900' : String(Math.floor(value / 10) * 10);
+	}
+
+	/** What the band is called in a breadcrumb. */
+	$: decadeLabel = ((): string | null => {
+		const [kind, value] = listKey.includes(':') ? splitOnce(listKey, ':') : ['', ''];
+		if (kind !== 'jaren') return null;
+		return value === 'voor-1900' ? 'Voor 1900' : value;
+	})();
 
 	function splitOnce(value: string, separator: string): [string, string] {
 		const at = value.indexOf(separator);
@@ -182,12 +217,71 @@
 	 */
 	let shown: HTMLImageElement | null = null;
 
-	$: keepsake = ((): { href: string; name: string } | null => {
-		const source = loadedSource(shown);
-		if (!source || !photo) return null;
+	/**
+	 * The URL that actually loaded, tracked rather than read once.
+	 *
+	 * `bind:this` fires when the element is created, which is *before* the browser has
+	 * finished trying the 1400 px file. Reading `currentSrc` at that moment gave the URL
+	 * being attempted, and because the reference never changes afterwards, the reactive
+	 * statement below never re-ran when the error handler swapped in the thumbnail.
+	 *
+	 * So on the live site, where the larger copy is absent, the save button pointed at a
+	 * URL that 404s. Static hosting answers a missing path with the site's own HTML shell,
+	 * so what people actually downloaded was a 2 KB copy of the page renamed `.webp` - a
+	 * broken image, which is exactly what it looked like. It worked perfectly in
+	 * development, where the larger copies do exist.
+	 */
+	let settledSource: string | null = null;
 
-		return { href: source, name: keepsakeName(photo.t, photo.y, extensionOf(source)) };
+	function noteSource(event: Event): void {
+		settledSource = loadedSource(event.currentTarget as HTMLImageElement);
+	}
+
+	$: keepsake = ((): { source: string; name: string; mime: string } | null => {
+		if (!settledSource || !photo) return null;
+
+		const format = originalFormat(photo.p);
+		return {
+			source: settledSource,
+			name: keepsakeName(photo.t, photo.y, format.extension),
+			mime: format.mime
+		};
 	})();
+
+	let saving = false;
+	/** Set when the archive could not produce the file, so the page says so out loud. */
+	let saveFailed = false;
+
+	/**
+	 * Hands over the photograph in the format the archive holds it in.
+	 *
+	 * The page shows WebP because it is half the bytes; a file in somebody's downloads
+	 * folder should be a JPEG, because that is what it was and because it opens anywhere.
+	 * If the conversion cannot be done the file is handed over exactly as it loaded, which
+	 * is worse than a JPEG and much better than nothing.
+	 */
+	async function keep(): Promise<void> {
+		if (!keepsake || saving) return;
+
+		saving = true;
+		saveFailed = false;
+		try {
+			const outcome = await saveConverted(keepsake.source, keepsake.name, keepsake.mime);
+			if (outcome === 'saved') return;
+
+			// Only when the bytes really were a photograph. Falling back on `not-an-image`
+			// would hand over whatever the server sent instead - which, when the file is
+			// missing, is this page - and that is the bug the button had to begin with.
+			if (outcome === 'unconvertible') {
+				download(keepsake.source, keepsakeName(photo!.t, photo!.y, extensionOf(keepsake.source)));
+				return;
+			}
+
+			saveFailed = true;
+		} finally {
+			saving = false;
+		}
+	}
 
 	async function share(): Promise<void> {
 		if (!photo) return;
@@ -399,19 +493,42 @@
 			</a>
 		</div>
 	{:else}
+		<!--
+			The trail follows the way in, not the photograph's street.
+			
+			Coming from the timeline and being offered "Startpagina / Hoogboom" is a dead end:
+			the decade you were reading is nowhere on the page, and going back means finding
+			the timeline again and scrolling to where you were. The `lijst` parameter already
+			says where somebody came from - it is what the arrows walk - so the trail says it
+			too.
+		-->
 		<nav class="text-sm text-gray-600 dark:text-gray-400">
-			<a class="text-blue-800 dark:text-blue-300 underline hover:no-underline" href="/"
+			<a class="text-blue-800 underline hover:no-underline dark:text-blue-300" href="/"
 				>Startpagina</a
 			>
-			{#each places.filter((p) => p.isStreet).slice(0, 1) as street (street.id)}
+			{#if decadeLabel}
+				<span class="mx-2">/</span>
+				<a class="text-blue-800 underline hover:no-underline dark:text-blue-300" href="/tijdlijn"
+					>Tijdlijn</a
+				>
 				<span class="mx-2">/</span>
 				<a
-					class="text-blue-800 dark:text-blue-300 underline hover:no-underline"
-					href="/straat/{street.id}"
+					class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+					href="/tijdlijn#jaren-{decadeLabel === 'Voor 1900' ? 'voor-1900' : decadeLabel}"
 				>
-					{street.name}
+					{decadeLabel}
 				</a>
-			{/each}
+			{:else}
+				{#each places.filter((p) => p.isStreet).slice(0, 1) as street (street.id)}
+					<span class="mx-2">/</span>
+					<a
+						class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+						href="/straat/{street.id}"
+					>
+						{street.name}
+					</a>
+				{/each}
+			{/if}
 		</nav>
 
 		<figure class="mt-4">
@@ -459,6 +576,7 @@
 						<img
 							bind:this={shown}
 							src={detailUrl(archive, photo)}
+							on:load={noteSource}
 							on:error={fallBackToThumbnail}
 							alt={photoAlt(archive, photo)}
 							{...{ fetchpriority: 'high' }}
@@ -541,13 +659,24 @@
 				-->
 				<div class="mt-4 flex flex-wrap gap-2">
 					{#if keepsake}
-						<a
-							class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
-							href={keepsake.href}
-							download={keepsake.name}
+						<!--
+							A button rather than a link: the file is re-encoded before it is handed
+							over, and `<a download>` can only pass on the bytes as they came.
+						-->
+						<button
+							type="button"
+							class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+							disabled={saving}
+							on:click={keep}
 						>
-							&#8681; Bewaren
-						</a>
+							&#8681; {saving ? 'Bezig ...' : 'Bewaren'}
+						</button>
+					{/if}
+
+					{#if saveFailed}
+						<p class="w-full text-sm font-semibold text-red-800 dark:text-red-300">
+							Deze foto kon niet bewaard worden. Probeer het later opnieuw.
+						</p>
 					{/if}
 
 					<button
