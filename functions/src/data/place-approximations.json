@@ -503,7 +503,7 @@
 			"name": "Kasteel Ravenhof",
 			"grade": "A",
 			"display": "punt",
-			"note": "Ligt in Stabroek, zoals het archief al aangeeft. Doorzoekbaar, niet op de Kapelse kaart.",
+			"note": "Ligt in Putte-Stabroek, net over de gemeentegrens. Het park loopt door tot in Kapellen, en het archief heeft er foto's van, dus het staat wel op de kaart.",
 			"correctable": false,
 			"priority": 0,
 			"kind": "plaats",
@@ -1215,15 +1215,16 @@
 		"blokjesweg": {
 			"id": "blokjesweg",
 			"name": "Blokjesweg",
-			"grade": "?",
-			"display": "niet_geplaatst",
-			"note": "Niet gevonden in OSM of het register.",
-			"correctable": true,
-			"priority": 1,
+			"grade": "A",
+			"display": "punt",
+			"note": "De volksnaam voor de Kalmthoutsesteenweg (N122). Het punt is de plek op de foto, aan de spoorwegovergang bij De Pretlaan.",
+			"correctable": false,
+			"priority": 0,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"doubt": "Geen enkel spoor — niet in OSM, niet in het adressenregister, niet in Onroerend Erfgoed, niet op de 48 doorzochte gzvka-pagina's.",
-			"research": "Kijk naar de foto zelf en naar de originele bestands- of mapnaam. Bij één enkele foto zegt de archiefcontext meestal meer dan welke externe bron ook."
+			"lat": 51.32881,
+			"lng": 4.416,
+			"radius": 25
 		},
 		"denneburgdreef": {
 			"id": "denneburgdreef",
@@ -1242,16 +1243,16 @@
 		"putsesteenweg": {
 			"id": "putsesteenweg",
 			"name": "Putsesteenweg",
-			"grade": "B",
+			"grade": "A",
 			"display": "punt",
-			"note": "Bestaat, maar ligt in Kalmthout, niet Kapellen. Het gegeven punt is het zuidelijkste stuk, het dichtst bij de Kapelse grens.",
+			"note": "Ligt in Kalmthout, niet in Kapellen. Punt aangewezen door de beheerder.",
 			"correctable": false,
 			"priority": 0,
 			"kind": "hernoemde_straat",
 			"outsideKapellen": true,
-			"lat": 51.36238,
-			"lng": 4.43306,
-			"radius": 120
+			"lat": 51.37478,
+			"lng": 4.44731,
+			"radius": 25
 		}
 	}
 }

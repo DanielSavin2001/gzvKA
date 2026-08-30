@@ -1,0 +1,15 @@
+import { placeFamily } from '$lib/page-data';
+
+/**
+ * The straten index, prerendered.
+ *
+ * One of the three places the whole archive can be browsed from, and where the menu's
+ * "Alle straten" points. The list comes from `load` so it is in the HTML: these pages exist to
+ * be a route into the archive, and a route that only appears after a 1.1 MB download is
+ * not one.
+ */
+export const prerender = true;
+
+export async function load({ fetch }) {
+	return { places: await placeFamily(fetch, 'straten') };
+}

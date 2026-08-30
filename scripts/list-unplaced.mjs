@@ -58,20 +58,67 @@ async function main() {
 	const archive = await readJson('static/data/archive-index.json');
 	const geometry = (await readJson('static/data/street-geometry.json')).streets;
 	const placed = (await readJson('static/data/place-coordinates.json')).places;
+
+	// The researched placements, which is where nearly every place actually got located.
+	// This file used to count only the street register and the handful of pins placed by
+	// hand, so it kept reporting 82 places still to find long after they had been found -
+	// a document whose whole purpose is to ask somebody for work, asking for work already
+	// done. A place counts as placed once the map can draw it.
+	const approximations = (await readJson('static/data/place-approximations.json')).places;
+	const drawable = new Set(
+		Object.values(approximations)
+			.filter((entry) => {
+				if (entry.display === 'niet_geplaatst') return false;
+				if (entry.display === 'kandidaten') return (entry.candidates ?? []).length > 0;
+				return entry.lat != null && entry.lng != null;
+			})
+			.map((entry) => entry.id)
+	);
 	const gazetteer = await readJson('functions/src/data/kapellen-gazetteer.json');
 
 	const entries = new Map(gazetteer.entries.map((entry) => [entry.id, entry]));
 
 	const withPhotos = archive.places.filter((place) => place.count > 0);
-	const unplaced = withPhotos.filter((place) => !(place.id in geometry) && !(place.id in placed));
+	const unplaced = withPhotos.filter(
+		(place) => !(place.id in geometry) && !(place.id in placed) && !drawable.has(place.id)
+	);
 
 	const photographs = unplaced.reduce((sum, place) => sum + place.count, 0);
 
-	const lines = [
+	const header = [
 		'# Plaatsen die nog op de kaart moeten',
 		'',
 		'Gegenereerd door `node scripts/list-unplaced.mjs`. Niet met de hand aanpassen.',
-		'',
+		''
+	];
+
+	// Nothing left to ask for. A document whose entire purpose is to request work should
+	// say so plainly when the work is done, rather than repeating the whole explanation of
+	// what it needs above an empty list.
+	if (unplaced.length === 0) {
+		await writeFile(
+			OUTPUT_FILE,
+			[
+				...header,
+				`Alle **${withPhotos.length}** plaatsen met foto's staan op de kaart. Er is niets meer`,
+				'aan te vullen.',
+				'',
+				'Komen er nieuwe plaatsen bij, dan verschijnen ze hier vanzelf weer: draai',
+				'`node scripts/list-unplaced.mjs` opnieuw nadat de index opnieuw gebouwd is.',
+				''
+			].join('\n'),
+			'utf8'
+		);
+
+		console.log(`Places with photographs   ${withPhotos.length}`);
+		console.log(`On the map                ${withPhotos.length}`);
+		console.log('Still to place            0');
+		console.log(`\nWrote ${path.relative(REPO_ROOT, OUTPUT_FILE)}`);
+		return;
+	}
+
+	const lines = [
+		...header,
 		`Van de ${withPhotos.length} plaatsen met foto's staan er **${
 			withPhotos.length - unplaced.length
 		}** op`,

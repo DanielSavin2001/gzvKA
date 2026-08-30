@@ -60,6 +60,11 @@ function main(): void {
 	const entries: SitemapEntry[] = [
 		{ path: '/', priority: 1.0, changefreq: 'weekly' },
 		{ path: '/verhalen', priority: 0.8, changefreq: 'monthly' },
+		// The three ways into the archive. High priority: between them they link to every
+		// one of the 121 places, which is how a crawler reaches the photographs.
+		{ path: '/straten', priority: 0.9, changefreq: 'monthly' },
+		{ path: '/kastelen', priority: 0.9, changefreq: 'monthly' },
+		{ path: '/wijken', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/upload', priority: 0.6, changefreq: 'yearly' },
 		{ path: '/over-ons', priority: 0.5, changefreq: 'yearly' },
 		{ path: '/contact', priority: 0.5, changefreq: 'yearly' },

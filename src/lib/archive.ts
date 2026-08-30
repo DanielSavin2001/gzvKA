@@ -270,6 +270,31 @@ export function suggestPlaces(archive: Archive, query: string, limit = 8): Archi
 		.slice(0, limit);
 }
 
+/**
+ * The three families the archive is browsed by.
+ *
+ * The menu and the three index pages have to agree about which places belong where, or a
+ * place is reachable from one and missing from the other. Between them these cover every
+ * place with photographs: 44 streets, 26 castles and forts, and 51 districts, buildings
+ * and parks.
+ */
+export type PlaceFamily = 'straten' | 'kastelen' | 'wijken';
+
+const CASTLE_KINDS = new Set(['castle-estate', 'fort']);
+
+export function familyOf(place: ArchivePlace): PlaceFamily {
+	if (place.isStreet) return 'straten';
+	if (CASTLE_KINDS.has(place.kind)) return 'kastelen';
+	return 'wijken';
+}
+
+/** Places of one family, with photographs, in alphabetical order. */
+export function placesInFamily(archive: Archive, family: PlaceFamily): ArchivePlace[] {
+	return archive.places
+		.filter((place) => place.count > 0 && familyOf(place) === family)
+		.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+}
+
 /** Every place that has at least one photograph, grouped for the street index. */
 export function placesWithPhotos(archive: Archive, onlyStreets = false): ArchivePlace[] {
 	return archive.places
