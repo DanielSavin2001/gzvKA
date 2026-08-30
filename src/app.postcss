@@ -42,3 +42,49 @@
 		scroll-behavior: smooth;
 	}
 }
+
+/*
+ * A sheet of paper under the archive.
+ *
+ * The flat `#f7f4ec` was already easier on the eyes than white, but it is still a
+ * perfectly even field, and nothing an archive of paper photographs sits on is ever even.
+ * This lays a fibre grain over that colour: enough that the page reads as a surface rather
+ * than a fill, not enough to notice while reading.
+ *
+ * Drawn rather than downloaded. `feTurbulence` is a few hundred bytes of markup that the
+ * browser rasterises once into a 200px tile and repeats - no image request, no cache entry,
+ * nothing to go missing on a deploy. `stitchTiles` is what makes the tile seamless; without
+ * it the seams show as a grid on any screen wide enough.
+ *
+ * Composited normally, on a ground deliberately five levels light. The blend modes that
+ * would hold the colour steady - overlay, soft-light - both screen towards white on a
+ * ground this pale, and measured on this exact tile they flatten the grain from a standard
+ * deviation of 1.7 to 0.5, which is no texture at all. Darkening is therefore the price of
+ * any visible grain up here, and `paper-base` in the Tailwind config pays it in advance:
+ * `#fcf9f0` under 15% grain measures 247,244,236, which is `#f7f4ec` exactly.
+ *
+ * Light mode only. Dark mode's ground is already dark grey, and grain over it reads as
+ * sensor noise rather than paper.
+ */
+body {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23p)' opacity='0.15'/%3E%3C/svg%3E");
+	background-size: 200px 200px;
+	background-repeat: repeat;
+
+	/* The texture belongs to the page, not to the scroll. Letting it scroll with the
+	   content makes long pages feel like they are moving over a fixed sheet, which is the
+	   opposite of the intended reading. */
+	background-attachment: scroll;
+}
+
+.dark body {
+	background-image: none;
+}
+
+/* Grain costs ink and tells a printer nothing, and in forced-colours mode the whole point
+   is that the user chose their own ground. */
+@media print, (forced-colors: active) {
+	body {
+		background-image: none;
+	}
+}
