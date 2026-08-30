@@ -38,6 +38,12 @@
 			is not a way of browsing photographs - it is who to thank for them.
 		-->
 		<FooterLink href="/schenker">Schenkers</FooterLink>
+		<!--
+			Here rather than in the header until there are pairings to show. The header is
+			already six items wide and this page is currently an invitation rather than a
+			feature; promote it once `static/data/toen-en-nu.json` has something in it.
+		-->
+		<FooterLink href="/toen-en-nu">Toen &amp; nu</FooterLink>
 		<FooterLink href="/contact">Contact</FooterLink>
 		<!--
 			The way back to the cookie question. Without a route to it the banner asked once

@@ -19,6 +19,7 @@
  */
 
 import type { Archive, ArchivePhoto } from './archive';
+import { loadPairs } from './then-and-now';
 import type { PlaceFamily } from './archive';
 import {
 	isPerson,
@@ -420,5 +421,58 @@ export async function donorSummary(
 				? String(years[0])
 				: `${years[0]} \u2013 ${years[years.length - 1]}`
 			: null
+	};
+}
+
+/** One curated pairing, with both photographs resolved. */
+export interface ThenAndNowView {
+	then: PhotoLink & { label: string };
+	now: PhotoLink & { label: string };
+	note?: string;
+}
+
+/**
+ * The curated then-and-now pairings.
+ *
+ * A pair whose photographs are not both in the archive is dropped rather than half-drawn -
+ * an id can go stale when the index is rebuilt, and half a comparison is worse than none.
+ */
+export async function thenAndNow(fetcher: typeof fetch): Promise<{
+	pairs: ThenAndNowView[];
+	card: string | null;
+}> {
+	const [archive, curated] = await Promise.all([loadArchive(fetcher), loadPairs(fetcher)]);
+
+	// The thumbnail, not the larger copy. The deploy ships thumbnails and cards only, so
+	// `detailUrl` is a 404 on the live site - and unlike the photo page, which falls back
+	// when the large file is missing, a slider would simply show two broken images. It is
+	// the same trap the share image fell into.
+	const link = (photo: ArchivePhoto) => ({
+		id: photo.id,
+		title: photo.t,
+		alt: photoAlt(archive, photo),
+		image: thumbUrl(archive, photo),
+		...(photo.y ? { year: photo.y } : {}),
+		// The year if there is one, the title if there is not. A slider handle labelled
+		// "toen" and "nu" says less than one labelled "1912" and "2018".
+		label: photo.y ?? photo.t
+	});
+
+	const pairs: ThenAndNowView[] = [];
+	for (const pair of curated) {
+		const before = archive.photoById.get(pair.then);
+		const after = archive.photoById.get(pair.now);
+		if (!before || !after) continue;
+
+		pairs.push({
+			then: link(before),
+			now: link(after),
+			...(pair.note ? { note: pair.note } : {})
+		});
+	}
+
+	return {
+		pairs,
+		card: pairs[0] ? cardUrl(archive, archive.photoById.get(curated[0].then)!) : null
 	};
 }

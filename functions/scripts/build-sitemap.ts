@@ -68,6 +68,7 @@ function main(): void {
 		{ path: '/wijken', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/tijdlijn', priority: 0.8, changefreq: 'monthly' },
 		{ path: '/schenker', priority: 0.7, changefreq: 'monthly' },
+		{ path: '/toen-en-nu', priority: 0.7, changefreq: 'monthly' },
 		{ path: '/upload', priority: 0.6, changefreq: 'yearly' },
 		{ path: '/over-ons', priority: 0.5, changefreq: 'yearly' },
 		{ path: '/contact', priority: 0.5, changefreq: 'yearly' },
