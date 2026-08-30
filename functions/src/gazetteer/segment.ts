@@ -36,6 +36,21 @@ const DATE_TOKEN = /^(?:z\.?d\.?|\d{1,2}\.\d{1,2}\.\d{4}|\d{1,2}\.\d{4}|\d{4})$/
 /** The archive's "anonymous donor" marker. */
 const ANONYMOUS_TOKEN = /^z\.?n\.?$/i;
 
+/**
+ * Contributors that are institutions rather than people, keyed by their normalized form.
+ *
+ * {@link looksLikePersonName} requires two capitalised words, so a single-word credit like
+ * "Hoghescote" was never recognised as the donor. It then stayed in the place text, where
+ * it matched the gazetteer alias for Hoogboom - 53 photographs carried a district they are
+ * not of, only because of who donated them. The values are the archive's canonical donor
+ * spelling, so "Heemkring Hoghescote", bare "Hoghescote" and "HH" all land on one donor.
+ */
+const INSTITUTIONAL_CONTRIBUTORS = new Map<string, string>([
+	['hoghescote', 'Heemkring Hoghescote'],
+	['heemkring hoghescote', 'Heemkring Hoghescote'],
+	['hh', 'Heemkring Hoghescote']
+]);
+
 /** A full donation date, which is the only form that yields dateOfAcquisition. */
 const FULL_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
 
@@ -151,7 +166,13 @@ export function splitFilename(filename: string): FilenameParts {
 			continue;
 		}
 
-		if (looksLikePersonName(segment)) {
+		const institution = INSTITUTIONAL_CONTRIBUTORS.get(
+			normalizePlace(stripTrailingIndex(segment))
+		);
+		if (institution) {
+			contributor = institution;
+			consumed.add(i);
+		} else if (looksLikePersonName(segment)) {
 			contributor = stripTrailingIndex(segment);
 			consumed.add(i);
 		}

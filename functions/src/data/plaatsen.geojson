@@ -9,11 +9,11 @@
 	},
 	"metadata": {
 		"gegenereerd": "2026-08-29",
-		"totaal": 82,
-		"met_coordinaten": 79,
-		"te_corrigeren": 24,
-		"fotos_totaal": 3644,
-		"fotos_onzeker": 615,
+		"totaal": 91,
+		"met_coordinaten": 89,
+		"te_corrigeren": 27,
+		"fotos_totaal": 3792,
+		"fotos_onzeker": 668,
 		"zekerheidsschaal": {
 			"A": "Exact: geokodeerd adres of OSM-object met dezelfde naam. Gebouwniveau.",
 			"B": "Straat of kruispunt vast uit een geschreven bron. Circa 50-150 m.",
@@ -33,7 +33,8 @@
 			"Vlaams Adressenregister",
 			"gzvka.be / Heemkring Hoghescote",
 			"kapellen.be"
-		]
+		],
+		"aangevuld": "2026-08-30 (tweede reeks: 9 plaatsen; Essenhoutstraat bleek een registerstraat en staat niet in dit bestand)"
 	},
 	"features": [
 		{
@@ -41,9 +42,9 @@
 			"properties": {
 				"categorie": "Wijken en gehuchten",
 				"plaats": "Hoogboom",
-				"fotos": 401,
+				"fotos": 349,
 				"zekerheid": "A",
-				"toelichting": "OSM place=hamlet. Kern rond Hoogboomsteenweg.",
+				"toelichting": "OSM place=hamlet. Kern rond Hoogboomsteenweg. Telling 2026-08-30: 52 foto's verloren de tag hoogboom toen 'Hoghescote' als schenker (Heemkring Hoghescote) herkend werd in plaats van als plaatsnaam.",
 				"onzeker": false,
 				"straal_m": 25,
 				"twijfel": "",
@@ -1977,9 +1978,9 @@
 			"properties": {
 				"categorie": "Parken",
 				"plaats": "Gemeentepark Beaulieu",
-				"fotos": 92,
+				"fotos": 90,
 				"zekerheid": "A",
-				"toelichting": "OSM leisure=park. Het vroegere kasteelpark Beaulieu, door de gemeente gekocht.",
+				"toelichting": "OSM leisure=park. Het vroegere kasteelpark Beaulieu, door de gemeente gekocht. Telling 2026-08-30: twee verkeerd geklasseerde foto's ('Het Klein Bos 23', 'Ertbrandbos 2') zijn via photo-corrections.json naar hun eigen plaats verhuisd.",
 				"onzeker": false,
 				"straal_m": 25,
 				"twijfel": "",
@@ -2372,6 +2373,258 @@
 				"coordinates": [
 					4.447306,
 					51.374778
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Wijken en gehuchten",
+				"plaats": "Het Klein Bos",
+				"fotos": 37,
+				"zekerheid": "A",
+				"straal_m": 25,
+				"weergave": "punt",
+				"toelichting": "OSM-bos 'Het Klein Bos', tussen Wilgenstraat, Knotwilgstraat en Akkerstraat (gzvka.be). Speel- en wandelbos, watergevoelig gebied. Grenst NIET aan het Gemeentepark Beaulieu (900 m ertussen); de ene foto die daar gearchiveerd was ('Het Klein Bos 23') is op 2026-08-30 via photo-corrections.json gecorrigeerd.",
+				"twijfel": "",
+				"onderzoek": "",
+				"kandidaten": [],
+				"onzeker": false,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": false,
+				"prioriteit": 0
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.422635,
+					51.308324
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Wijken en gehuchten",
+				"plaats": "Ertbrandbos",
+				"fotos": 30,
+				"zekerheid": "A",
+				"straal_m": 25,
+				"weergave": "punt",
+				"toelichting": "OSM-bos 'Ertbrandbos', direct naast het Fort van Ertbrand. Eigen pagina op gzvka.be.",
+				"twijfel": "",
+				"onderzoek": "",
+				"kandidaten": [],
+				"onzeker": false,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": false,
+				"prioriteit": 0
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.426761,
+					51.354123
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Kastelen en domeinen",
+				"plaats": "Kasteel Oude Gracht",
+				"fotos": 59,
+				"zekerheid": "C",
+				"straal_m": 700,
+				"weergave": "benadering",
+				"toelichting": "Domein 'De Oude Gracht' op de grens Kapellen-Brasschaat, langs de gelijknamige weg in Hoogboom. Neorenaissancekasteel van baron Osy de Zegwaert (ca. 1880), na WO II afgebroken wegens oorlogsschade. Bebost domein met vijvers, dreven en weiland (Onroerend Erfgoed 101846/135370) - vandaar de aparte foto's van boothuis, brug en vijver. De Sint-Jozefkerk (1871) stond bij de westelijke toegang.",
+				"twijfel": "De straat en het domein zijn zeker, maar de exacte plek van het afgebroken kasteel binnen het beboste domein is niet vastgesteld. Het punt is het midden van de weg Oude Gracht aan Kapelse zijde; het domein loopt door tot in Brasschaat.",
+				"onderzoek": "Topografische kaarten van voor WO II tonen het kasteel nog: geopunt.be (Vandermaelen, Popp) en cartesius.be. Onroerend Erfgoed 101846 heeft de domeinbeschrijving.",
+				"kandidaten": [],
+				"onzeker": true,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": true,
+				"prioriteit": 59
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.46962,
+					51.323239
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Kastelen en domeinen",
+				"plaats": "Kasteel Pannenhuys",
+				"fotos": 35,
+				"zekerheid": "C",
+				"straal_m": 700,
+				"weergave": "benadering",
+				"toelichting": "Sierlijk kasteeltje in rode baksteen aan de Heidestraat-Noord (Kapellenbos, richting Kalmthout), gebouwd 1908, park van tuinarchitect Petry. Na WO I ook 'Ladyloan' genoemd - extra alias voor het archief. Eigenaars Van de Put - Paternostre de Domon.",
+				"twijfel": "Geen huisnummer bekend; de Heidestraat-Noord is lang. Het punt is het midden van de straat.",
+				"onderzoek": "gzvka.be gebruikt de tegenwoordige tijd ('ligt'), dus het staat er vermoedelijk nog: een luchtfoto langs de Heidestraat-Noord vindt een rood bakstenen kasteeltje in een park.",
+				"kandidaten": [],
+				"onzeker": true,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": true,
+				"prioriteit": 35
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.453565,
+					51.339893
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Kastelen en domeinen",
+				"plaats": "Kasteel Larikshof",
+				"fotos": 6,
+				"zekerheid": "B",
+				"straal_m": 80,
+				"weergave": "punt_met_twijfel",
+				"toelichting": "Kasteeltje in Engelse cottagestijl, 'op de hoek van de Heidestraat-Noord en de Larikslaan, nabij de grens met Kalmthout' (gzvka.be). Punt = berekend kruispunt. Afgebroken ('stond'). Map zegt kasteel, bestandsnamen zeggen villa; gzvka zegt kasteeltje.",
+				"twijfel": "De hoek is expliciet benoemd, maar welk kwadrant van het kruispunt is onbekend, en het gebouw is verdwenen.",
+				"onderzoek": "Luchtfoto's van voor de afbraak (geopunt.be orthofoto's, cartesius.be) tonen welk kwadrant.",
+				"kandidaten": [],
+				"onzeker": false,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": true,
+				"prioriteit": 6
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.456649,
+					51.348246
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Kastelen en domeinen",
+				"plaats": "Kasteel Ekenhof",
+				"fotos": 3,
+				"zekerheid": "B",
+				"straal_m": 150,
+				"weergave": "punt_met_twijfel",
+				"toelichting": "Gebouwd 1908 door Gustave Martens; via Thornton (1928), Grisar-Good (1930), Van Damme (1946), Neuckens (1960) naar Pelckmans. Op het domein verrees het gebouw van De Nederlandsche Boekhandel / Pelckmans Uitgevers, nu CVO campus De Masten, Kapelsestraat 222A - dat adres is het punt. De archiefwaarschuwing klopt: Ekenhof en Beukenhof liggen 1,6 km uit elkaar; exact matchen.",
+				"twijfel": "Het opvolgergebouw (CVO De Masten) is exact gelokaliseerd, maar het kasteel zelf kan ernaast op het domein hebben gestaan.",
+				"onderzoek": "Kaart of luchtfoto van voor de bouw van het DNB-kantoor toont waar op het domein het kasteel stond.",
+				"kandidaten": [],
+				"onzeker": false,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": true,
+				"prioriteit": 3
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.412458,
+					51.333571
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Gebouwen, cafés, kerken en kapellen",
+				"plaats": "Villa Eikenhoeve",
+				"fotos": 13,
+				"zekerheid": "A",
+				"straal_m": 25,
+				"weergave": "punt",
+				"toelichting": "Hoogboomsteenweg 79 (geokodeerd; Onroerend Erfgoed fiche 13337 beslecht de twijfel 77/79 uit de bestandsnamen: 79). Hoek Hoogboomsteenweg-Jagersdreef, gebouwd 1905 in cottagestijl, 1950-1960 rieten daken (gzvka.be).",
+				"twijfel": "",
+				"onderzoek": "",
+				"kandidaten": [],
+				"onzeker": false,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": false,
+				"prioriteit": 0
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.446569,
+					51.309018
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Gebouwen, cafés, kerken en kapellen",
+				"plaats": "Café De Vrede",
+				"fotos": 9,
+				"zekerheid": "B",
+				"straal_m": 150,
+				"weergave": "punt_met_twijfel",
+				"toelichting": "Aan de Stationsstraat: drie gzvka-foto's dragen het bijschrift 'Stationsstraat - Café De Vrede' (1960, 2015, 2023). Duikt ook op in de fotoreeks van de Tajje-optocht van 1976, precies zoals het archief zei.",
+				"twijfel": "Geen huisnummer; punt = midden van de Stationsstraat (260 m, dus kleine marge).",
+				"onderzoek": "De gzvka-foto's van 2015/2023 suggereren dat het pand er nog staat of stond - straatbeeld vergelijken volstaat.",
+				"kandidaten": [],
+				"onzeker": false,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": true,
+				"prioriteit": 9
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.431551,
+					51.31418
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"categorie": "Gebouwen, cafés, kerken en kapellen",
+				"plaats": "Villa Palmaro",
+				"fotos": 6,
+				"zekerheid": "A",
+				"straal_m": 25,
+				"weergave": "punt",
+				"toelichting": "'Vroeger Lindenstraat 112, later Philippe Spethstraat 112' (gzvka.be), architect Marcel Van Ginneken, buitenverblijf van de familie De Pret. Punt = geokodeerd Philippe Spethstraat 112. Let op: een van de zes foto's is een voorontwerp - mogelijk nooit zo gebouwd. Bonus-alias voor het register: Lindenstraat is de oude naam van de Philippe Spethstraat.",
+				"twijfel": "",
+				"onderzoek": "",
+				"kandidaten": [],
+				"onzeker": false,
+				"type": "plaats",
+				"alias_van": "",
+				"buiten_kapellen": false,
+				"corrigeerbaar": false,
+				"prioriteit": 0
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					4.429619,
+					51.321985
 				]
 			}
 		}

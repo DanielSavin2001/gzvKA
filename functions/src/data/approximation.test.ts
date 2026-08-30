@@ -202,27 +202,30 @@ describe('the generated file', () => {
 		};
 		const places = Object.values(file.places);
 
-		expect(places).toHaveLength(82);
+		// 91 = the 82 of the first research round plus the second round's 9: the ten places
+		// that were still unplaced, minus the Essenhoutstraat, which turned out to be in the
+		// official street register all along and gets its geometry from `npm run streets`.
+		expect(places).toHaveLength(91);
 
 		const byDisplay = (display: string) =>
 			places.filter((entry) => entry.display === display).length;
 
-		// 59 rather than the research's 58: Blokjesweg was the one place nobody could find,
-		// and Daniel identified it as the local name for the Kalmthoutsesteenweg and gave
-		// the spot. Nothing in the archive is unplaced any more, which is what the zero
-		// below records.
-		expect(byDisplay('punt')).toBe(59);
-		// The research counted 7 doubted points and 11 approximations. The build moves Tajje
-		// out of `benadering`, because a circle around a person claims something the same
-		// record's doubt text denies - so 8 and 10 here.
-		expect(byDisplay('punt_met_twijfel')).toBe(8);
-		expect(byDisplay('benadering')).toBe(10);
+		// 63 = the first round's 59 plus the second round's four A-grades (Het Klein Bos,
+		// Ertbrandbos, Villa Eikenhoeve, Villa Palmaro). Blokjesweg's story is in the git
+		// history: it was the one place nobody could find until Daniel identified it.
+		expect(byDisplay('punt')).toBe(63);
+		// The first round built 8 and 10 (Tajje moved out of `benadering`, because a circle
+		// around a person claims something the same record's doubt text denies). The second
+		// round adds 3 doubted points (Larikshof, Ekenhof, Café De Vrede) and 2 approximations
+		// (Kasteel Oude Gracht, Kasteel Pannenhuys - street certain, spot not).
+		expect(byDisplay('punt_met_twijfel')).toBe(11);
+		expect(byDisplay('benadering')).toBe(12);
 		expect(byDisplay('kandidaten')).toBe(5);
 		expect(byDisplay('niet_geplaatst')).toBe(0);
 
-		// 22 rather than 23: Tajje's open question was "where is this place?", and the answer
-		// is that it is not one. Nothing left for anybody to correct.
-		expect(places.filter((entry) => entry.correctable)).toHaveLength(22);
+		// The first round left 22 (Tajje's open question was "where is this place?", and the
+		// answer is that it is not one); the second round's 5 correctable rows make 27.
+		expect(places.filter((entry) => entry.correctable)).toHaveLength(27);
 	});
 
 	it('gives every correctable place something to read', () => {

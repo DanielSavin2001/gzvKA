@@ -2,7 +2,7 @@
 
 Gegenereerd door `node scripts/list-placeless-photos.mjs`. Niet met de hand aanpassen.
 
-**795** van de 4.504 foto's (17.7%) hangen aan geen
+**796** van de 4.504 foto's (17.7%) hangen aan geen
 enkele plaats. Ze staan niet op de kaart, niet op een straatpagina, en zijn alleen via
 de zoekbalk te vinden - je moet dus al weten dat ze bestaan.
 
@@ -29,7 +29,7 @@ zijn.
 
 ## Waarschijnlijk géén plaats
 
-9 mappen, 772 foto's.
+9 mappen, 773 foto's.
 
 Een klasfoto en een wedstrijd zijn een gebeurtenis, geen locatie. Die ergens op de
 kaart prikken zou een feit verzinnen, dus dat doen we niet. Wat ze wél nodig hebben is
@@ -46,8 +46,8 @@ Enkele die daarop lijken: "Hoogboom Spoorwegbataljon" (Hoogboom kent het archief
 | 204 | **Klasfoto's** | Broederschool St. Jozef - 1ste leerjaar - 1969-1970 - meester Dirckx - Jan Verstraete - 26.10.2016.jpg<br>Broedersschool 1964 - Juf. Lathouwers - Gerard Jansen - 13.03.2016.jpg<br>Broedersschool 1ste lj 1966-1967.jpg |  |
 | 18 | **Sport in Kapellen** | ACC - FC Capellen - 1946 - Hugo De Hoon - 02.11.2014.jpg<br>FC Cappellen - Bruno Brunclair - 21.12.2014.jpg<br>FC Cappellen - Vicky Staal -  08.01.2015.jpg |  |
 | 17 | **GZVKA Klinkt - Nieuwjaarsdrink - 04.01.2015** | GZVKA Klinkt - 04.01.2015 - De Polder.jpg<br>GZVKA Klinkt - 04.01.2015 - Herman.jpg<br>GZVKA Klinkt_1 - 04.01.2015 - Nieuwsblad.jpg |  |
+| 7 | **Op weg naar Putte** | OWNP -  Portierswoning Dennenburg 1909 - Johan Van Elst - 13.11.2014.jpg<br>OWNP -  Portierswoning Dennenburg 1911 - Johan Van Elst - 13.11.2014.jpg<br>OWNP - Cafe In den Nieuwen Buiten - Hoghescote - z.d.jpg |  |
 | 6 | **Frans Van Lent - 50 jarig huwelijk** | Frans Van Lent 1 - Gustaaf Donckers - 27.08.2014.PNG<br>Frans Van Lent 2 - Gustaaf Donckers - 27.08.2014.PNG<br>Frans Van Lent 4 - Gustaaf Donckers - 29.08.2014.JPG |  |
-| 6 | **Op weg naar Putte** | OWNP -  Portierswoning Dennenburg 1909 - Johan Van Elst - 13.11.2014.jpg<br>OWNP -  Portierswoning Dennenburg 1911 - Johan Van Elst - 13.11.2014.jpg<br>OWNP - Café De Welkom - Johan Van Elst - 21.11.2014.jpg |  |
 | 6 | **Putte Index** | Putte - Grensstraat - Kleedkamers Voetbal SK Putte - Els Van Dessel - 07.03.2014.JPG<br>Putte - Kleedkamers Voetbal SK Putte - Els Van Dessel - 07.03.2014.jpg<br>Putte NL - Villa Heirust - zn - zd.png |  |
 | 2 | **Hoogboom Spoorwegbataljon** | Hoogboom - Spoorwegtroepen - Heemkring Hoghescote - 05.10.2023.JPG<br>Hoogboom - Spoorwegtroepen 10 - Heemkring Hoghescote - zd.jpg |  |
 | 1 | **Kaarten en Luchtfoto's** | Luchtfoto - zn - zd.jpg |  |

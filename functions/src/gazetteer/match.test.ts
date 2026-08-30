@@ -114,6 +114,26 @@ describe('splitFilename', () => {
 		expect(parts.contributor).toBe('Johan Van Elst');
 	});
 
+	it('recognises the heritage society as the donor, in all three of its spellings', () => {
+		// "Hoghescote" and "HH" are single words, so looksLikePersonName can never accept
+		// them; without the institutional list they stayed in the place text and matched
+		// the gazetteer alias for Hoogboom.
+		expect(splitFilename('Stationsstraat - Cafe Transport - Hoghescote - z.d.jpg').contributor).toBe(
+			'Heemkring Hoghescote'
+		);
+		expect(splitFilename('Villa Palmaro - HH - zd.jpg').contributor).toBe('Heemkring Hoghescote');
+		expect(
+			splitFilename('Station en Nieuwstraat - Heemkring Hoghescote - 25.01.2018.jpg').contributor
+		).toBe('Heemkring Hoghescote');
+	});
+
+	it('keeps the institutional donor out of the place text', () => {
+		const parts = splitFilename('Station Kapellen - Hoghescote_4 - 31.03.2016.jpg');
+
+		expect(parts.contributor).toBe('Heemkring Hoghescote');
+		expect(parts.placeSegments.map((s) => s.text)).toEqual(['Station Kapellen']);
+	});
+
 	it('handles a filename with no separators at all', () => {
 		const parts = splitFilename('Broedersschool 2de lj 1969-1970.jpg');
 
@@ -198,6 +218,15 @@ describe('matchImagePath - the false positives that must be rejected', () => {
 	it('does not read the heritage society as the hamlet of Hoogboom', () => {
 		const ids = idsIn(
 			`${CORPUS}/Postkaarten - Groeten uit Kapellen/Groeten - Heemkring Hoghescote - zd.jpg`
+		);
+
+		expect(ids).not.toContain('hoogboom');
+	});
+
+	it('does not read a bare "Hoghescote" donor credit as Hoogboom either', () => {
+		// 53 photographs carried the hoogboom place only because the heemkring donated them.
+		const ids = idsIn(
+			`${CORPUS}/Feesten in Kapellen/100 jaar Belgie - Eeuwfeest - oude herberg - Hoghescote - zd.png`
 		);
 
 		expect(ids).not.toContain('hoogboom');

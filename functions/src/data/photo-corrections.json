@@ -2,6 +2,24 @@
 	"_comment": "Corrections to what the filename matcher worked out about a photograph. Everything else in the archive is derived from a filename by a machine; this file is the one place a person overrules it, and the only place a claim about a photograph may be entered by hand. Each correction records who made it, so a doubtful one can be asked about. Applied by `npm run archive:index`.",
 	"_format": "{ \"<photo-id>\": { \"places\": [\"gazetteer-id\", ...], \"houseNumber\": 144, \"note\": \"why\", \"by\": \"who\", \"on\": \"YYYY-MM-DD\" } }",
 	"corrections": {
+		"station-en-omgeving-station-eerste-stoomtrein-kapellen-1854-hoghescote-z-d": {
+			"year": "1905",
+			"note": "Not a photograph of 1854: the 'locomotive' is a parade float drawn by horses, past a beenhouwer's shopfront - the Onafhankelijkheidsfeesten float of 1905 depicting the first train of 1854. Same event as '75 jaar Belgie - Onafhankelijkheidsfeesten - eerste trein Kapellen 1854'. The 1854 in the name is what the float depicts, not when the camera stood there.",
+			"by": "Daniel Savin",
+			"on": "2026-08-30"
+		},
+		"gemeentepark-beaulieu-het-klein-bos-23-vicky-staal-zd": {
+			"places": ["klein-bos"],
+			"note": "Number 23 of Vicky Staal's 'Het Klein Bos 1-36' series; every other number sits in the Klein Bos folder. Het Klein Bos lies between Wilgenstraat, Knotwilgstraat and Akkerstraat, 900 m from the Gemeentepark Beaulieu - the two do not adjoin, so the park tag from the folder is wrong.",
+			"by": "Daniel Savin",
+			"on": "2026-08-30"
+		},
+		"gemeentepark-beaulieu-ertbrandbos-2-gaby-faes-18-11-2018": {
+			"places": ["ertbrandbos"],
+			"note": "The filename says Ertbrandbos, which lies next to the Fort van Ertbrand, 4.5 km north of the Gemeentepark Beaulieu. Filed in the wrong folder; the park tag comes from the folder, not the photograph.",
+			"by": "Daniel Savin",
+			"on": "2026-08-30"
+		},
 		"station-en-omgeving-station-en-nieuwstraat-heemkring-hoghescote-25-01-2018": {
 			"places": ["rubensheide"],
 			"houseNumber": 144,
