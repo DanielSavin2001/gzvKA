@@ -591,7 +591,7 @@
 					-->
 					<button
 						type="button"
-						class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lg text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:bg-gray-900/85 dark:text-gray-100"
+						class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lg text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:bg-gray-900/85 dark:text-gray-100 dark:hover:bg-gray-700"
 						aria-label="Volledig scherm"
 						title="Volledig scherm"
 						on:click={() => (openAt = lightboxStart)}
@@ -602,7 +602,7 @@
 					{#if previous}
 						<a
 							href="/foto/{previous.id}{neighbourQuery}"
-							class="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Vorige foto"
 						>
 							&#8592;
@@ -611,7 +611,7 @@
 					{#if next}
 						<a
 							href="/foto/{next.id}{neighbourQuery}"
-							class="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Volgende foto"
 						>
 							&#8594;

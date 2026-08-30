@@ -474,7 +474,7 @@
 					id="wie"
 					bind:value={placingBy}
 					placeholder="bv. Daniel"
-					class="rounded border border-orange-300 px-2 py-1 text-sm"
+					class="rounded border border-orange-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-orange-800 dark:bg-gray-900 dark:text-gray-100"
 				/>
 				<button
 					type="button"

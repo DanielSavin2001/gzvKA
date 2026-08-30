@@ -584,7 +584,7 @@
 								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Titel</span>
 								<input
 									bind:value={edits[item.id].title}
-									class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+									class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 								/>
 							</label>
 
@@ -596,7 +596,7 @@
 									<input
 										type="number"
 										bind:value={edits[item.id].houseNumber}
-										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
 								<label class="block">
@@ -604,7 +604,7 @@
 									<input
 										bind:value={edits[item.id].year}
 										placeholder="1935"
-										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
 								<label class="block">
@@ -613,7 +613,7 @@
 									>
 									<input
 										bind:value={edits[item.id].donor}
-										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
 							</div>
@@ -645,7 +645,7 @@
 								{/if}
 
 								<select
-									class="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+									class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									on:change={(event) => {
 										if (event.currentTarget.value) togglePlace(item, event.currentTarget.value);
 										event.currentTarget.value = '';

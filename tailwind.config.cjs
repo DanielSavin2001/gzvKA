@@ -1,11 +1,14 @@
 const config = {
     content: [
         "./src/**/*.{html,js,svelte,ts}",
-        "./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}",
     ],
-    plugins: [
-        require('flowbite/plugin')
-    ],
+    /*
+     * No flowbite plugin any more. Its base styles forced `background-color: #fff` onto
+     * every typed input and textarea, which in dark mode meant near-white text on a white
+     * field - the theme sets `color-scheme` and the components carry explicit dark:
+     * variants, and both were being overridden by a plugin that only the old footer used.
+     */
+    plugins: [],
     darkMode: 'class',
     theme: {
         extend: {
