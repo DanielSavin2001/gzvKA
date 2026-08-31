@@ -19,6 +19,7 @@ import type { PlaceFamily } from '../../sharedModels/place-family';
 import { familyOfPlace, isPersonKind } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
+import { loadPublished } from './published';
 
 /** One photograph. The keys are short because the file holds 2948 of them. */
 export interface ArchivePhoto {
@@ -46,6 +47,14 @@ export interface ArchivePhoto {
 	 * sentence - and laid over it by `loadPhotoEdits` when somebody has written one.
 	 */
 	desc?: string;
+	/**
+	 * An absolute image URL, for a photograph that is not in the corpus on disk: one a
+	 * visitor sent in and a curator approved since the last build. The image functions
+	 * return this rather than composing `imageBase + p`.
+	 */
+	u?: string;
+	/** True for such a photograph, so a page can say where it came from. */
+	nieuw?: boolean;
 }
 
 /** A place in Kapellen, with how many photographs it has. */
@@ -109,12 +118,18 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 
 		// A curator's corrections are laid over the generated index before anything else
 		// sees it, so every page, the search and the map all agree about a photograph
-		// without each having to remember to ask. Failing to fetch them is not an error:
-		// `loadPhotoEdits` returns nothing and the archive is exactly what it always was.
-		const edits = await loadPhotoEdits(fetcher);
-		const photos = index.photos.map((photo) => applyPhotoEdit(photo, edits[photo.id]));
+		// without each having to remember to ask. Failing to fetch either of these is not an
+		// error: both return nothing and the archive is exactly what it always was.
+		//
+		// The approved uploads are concatenated rather than overlaid: they are photographs
+		// the generated index has never heard of, and appending them here is what puts them
+		// in the search, on their street's page, on the map and on the donor's page at once.
+		const [edits, published] = await Promise.all([loadPhotoEdits(fetcher), loadPublished(fetcher)]);
+		const photos = [...index.photos, ...published].map((photo) =>
+			applyPhotoEdit(photo, edits[photo.id])
+		);
 
-		cached = buildArchive({ ...index, photos });
+		cached = buildArchive({ ...index, imageCount: photos.length, photos });
 		return cached;
 	})();
 
@@ -126,7 +141,6 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 }
 
 function buildArchive(index: ArchiveIndex): Archive {
-	const placeById = new Map(index.places.map((place) => [place.id, place]));
 	const photoById = new Map(index.photos.map((photo) => [photo.id, photo]));
 	const photosByPlace = new Map<string, ArchivePhoto[]>();
 
@@ -138,21 +152,46 @@ function buildArchive(index: ArchiveIndex): Archive {
 		}
 	}
 
+	// Counted from the photographs in hand rather than carried from the generated file,
+	// because the two can differ: an approved upload is a photograph the generator has
+	// never seen. A street page listing 217 photographs under a heading that says 216 is
+	// the kind of small lie that makes a reader distrust the rest of the page.
+	const places = index.places.map((place) => ({
+		...place,
+		count: photosByPlace.get(place.id)?.length ?? 0
+	}));
+	const placeById = new Map(places.map((place) => [place.id, place]));
+
 	// One normalized string per photograph, searched directly. Built once so that typing
-	// costs nothing: 2948 substring checks are well under a millisecond.
+	// costs nothing: 4504 substring checks are well under a millisecond.
+	//
+	// The path is in here as well as the title, and that is the point: a display title is
+	// the filename with its donor and date trimmed off, and the trimmer is not perfect.
+	// 894 photographs carry a word in their filename that reaches no other field -
+	// "Garage Meyvis", "Hotel-Cafe De Zwaan", "St. Jozefkapel", "Familie Bourlet-Luyckx".
+	// Somebody searching for the café their grandfather kept was told the archive has no
+	// such photograph while it held one. Whatever a volunteer typed is searchable.
 	const haystacks = index.photos.map((photo) => {
 		const placeNames = photo.st.map((id) => placeById.get(id)?.name ?? '').join(' ');
 		return normalizeText(
-			[photo.t, photo.s, placeNames, photo.d ?? '', photo.y ?? '', photo.hn ?? ''].join(' ')
+			[photo.t, photo.s, placeNames, photo.d ?? '', photo.y ?? '', photo.hn ?? '', photo.p].join(
+				' '
+			)
 		);
 	});
 
-	return { ...index, placeById, photoById, photosByPlace, haystacks };
+	return { ...index, places, placeById, photoById, photosByPlace, haystacks };
 }
 
-/** The URL of a photograph's browse-sized image. */
+/**
+ * The URL of a photograph's browse-sized image.
+ *
+ * A photograph a visitor sent in carries its own absolute URL: it lives in Cloud Storage
+ * rather than in `static/foto/`, and no thumbnail was ever generated beside it, so all
+ * three sizes are the one file.
+ */
 export function thumbUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
-	return `${archive.imageBase}/${encodePath(photo.p)}.thumb.webp`;
+	return photo.u ?? `${archive.imageBase}/${encodePath(photo.p)}.thumb.webp`;
 }
 
 /**
@@ -194,7 +233,7 @@ export function photoAlt(archive: Archive, photo: ArchivePhoto): string {
 
 /** The URL of a photograph's larger image. */
 export function detailUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
-	return `${archive.imageBase}/${encodePath(photo.p)}.web.webp`;
+	return photo.u ?? `${archive.imageBase}/${encodePath(photo.p)}.web.webp`;
 }
 
 /**
@@ -206,7 +245,7 @@ export function detailUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
  * produced rendered as the small one.
  */
 export function cardUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
-	return `${archive.imageBase}/${encodePath(photo.p)}.card.webp`;
+	return photo.u ?? `${archive.imageBase}/${encodePath(photo.p)}.card.webp`;
 }
 
 /** A photograph with its relevance, for a result list. */

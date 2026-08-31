@@ -23,6 +23,7 @@
 	import { searchPhotos, thumbUrl } from '$lib/archive';
 	import type { PhotoEdit } from '$lib/photo-edits';
 	import { forgetPhotoEdits, loadPhotoEdits } from '$lib/photo-edits';
+	import { forgetPublished } from '$lib/published';
 	import type { CoordinateSource, PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import {
 		forgetCoordinates,
@@ -415,6 +416,9 @@
 			}
 
 			await review(decision);
+			// The site merges the approved photographs into the archive; forget what was
+			// fetched so a curator who opens the site next sees the one they just approved.
+			forgetPublished();
 			delete edits[item.id];
 			edits = edits;
 			items = items.filter((other) => other.id !== item.id);

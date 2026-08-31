@@ -145,8 +145,15 @@ function listCorpusFiles(directory: string): string[] {
 /**
  * The part of a filename worth showing to a visitor: the descriptive segments, with the
  * donor and the date removed. "Dorpsstraat 15 - Swatti Alix - zd" reads as "Dorpsstraat 15".
+ *
+ * `donors` is every name the corpus itself identifies as a contributor, normalized. It is
+ * what stops the trimmer eating captions: "Garage Meyvis", "Hotel-Cafe De Zwaan" and
+ * "Familie Bourlet-Luyckx" are all two capitalised words, which is also what a person's
+ * name looks like - but only one of those is somebody who donated a photograph. A trailing
+ * name nobody in this archive ever donated under is a caption, and the caption is often the
+ * only thing the photograph says about itself.
  */
-function displayTitle(fileName: string, folderName: string): string {
+function displayTitle(fileName: string, folderName: string, donors: Set<string>): string {
 	const parts = splitFilename(fileName);
 	const segments = parts.placeSegments.map((segment) => segment.text.trim()).filter(Boolean);
 
@@ -159,8 +166,9 @@ function displayTitle(fileName: string, folderName: string): string {
 		const last = segments[segments.length - 1].replace(/(?:_\d{1,3}|\s*\(\d{1,3}\))$/, '').trim();
 		const isPartialDate = /^\d{1,2}[.\-/]\d{1,2}$/.test(last);
 		const isBareIndex = /^\d{1,3}$/.test(last) && segments.length > 2;
+		const isDonor = looksLikePersonName(last) && donors.has(normalizeText(last));
 
-		if (isPartialDate || isBareIndex || looksLikePersonName(last)) segments.pop();
+		if (isPartialDate || isBareIndex || isDonor) segments.pop();
 		else break;
 	}
 
@@ -205,6 +213,16 @@ function main(): void {
 		}
 	}
 
+	// Everybody the corpus identifies as a donor, gathered before any title is built: the
+	// title trimmer needs to know whether a trailing name is a person who gave photographs
+	// to this archive or the name of a shop on a street corner, and it can only know that
+	// by looking at the whole corpus first.
+	const donors = new Set<string>();
+	for (const relativePath of files) {
+		const contributor = splitFilename(relativePath.split('/').pop() ?? '').contributor;
+		if (contributor) donors.add(normalizeText(contributor));
+	}
+
 	const applied = new Set<string>();
 	const takenIds = new Set<string>();
 	const photos: IndexedPhoto[] = [];
@@ -235,7 +253,7 @@ function main(): void {
 		const photo: IndexedPhoto = {
 			id,
 			p: relativePath,
-			t: correction?.title ?? displayTitle(fileName, folderName),
+			t: correction?.title ?? displayTitle(fileName, folderName, donors),
 			s: folderName,
 			st: placeIds
 		};
