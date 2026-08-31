@@ -6,7 +6,9 @@
 	import type { Archive, ArchivePhoto, ArchivePlace } from '$lib/archive';
 	import { isPerson, loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
-	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
+	import { loadCoordinates, loadStreetGeometry, locate } from '$lib/coordinates';
+	import type { Approximation } from '$lib/approximations';
+	import { hasCircle, loadApproximations } from '$lib/approximations';
 	import type { StoryIndex } from '$lib/stories';
 	import { loadStoryIndex, storiesForPlace } from '$lib/stories';
 	import ArchiveMap from '../../components/ArchiveMap.svelte';
@@ -20,6 +22,16 @@
 	let storyIndex: StoryIndex | null = null;
 	let placed: Record<string, PlacedCoordinate> = {};
 	let geometry: Record<string, StreetGeometry> = {};
+	/**
+	 * The researched places, which this page used not to load at all.
+	 *
+	 * Without them it placed every place from the register alone, so Kasteel Oude Gracht -
+	 * a castle whose alias matched a 2.3 km road of the same name - got the road's midpoint,
+	 * the road drawn through it in blue, and a caption reading "2259 meter lang. De ligging
+	 * komt uit het officiële stratenregister." Three false statements about a house
+	 * demolished in 1952.
+	 */
+	let approximations: Record<string, Approximation> = {};
 	let error: string | null = null;
 
 	onMount(async () => {
@@ -37,9 +49,14 @@
 			storyIndex = null;
 		}
 
-		const [coordinates, streets] = await Promise.all([loadCoordinates(), loadStreetGeometry()]);
+		const [coordinates, streets, researched] = await Promise.all([
+			loadCoordinates(),
+			loadStreetGeometry(),
+			loadApproximations()
+		]);
 		placed = coordinates.places;
 		geometry = streets;
+		approximations = researched;
 	});
 
 	let place: ArchivePlace | undefined;
@@ -80,6 +97,34 @@
 
 	/** The street's own shape, when the official register knows it. */
 	$: shape = geometry[data.slug];
+
+	/** Where this place actually is, and which of the three tiers answered. */
+	$: at = locate(data.slug, placed, geometry, approximations);
+
+	/**
+	 * Whether the register is what positioned this place - not merely whether it holds a
+	 * street of the same name.
+	 *
+	 * The centreline and the "2259 meter lang" only describe the place when the register is
+	 * the answer. For Kasteel Oude Gracht it is not: the research outranks it, and drawing
+	 * the road anyway would put a blue line through a castle it has nothing to do with.
+	 */
+	$: fromRegister = at?.source === 'register';
+
+	/** The research behind this place, when a curator has not overruled it with a pin. */
+	$: research = placed[data.slug] ? undefined : approximations[data.slug];
+
+	/**
+	 * Whether a circle is actually drawn, which is not the same as carrying a radius.
+	 *
+	 * 74 of the 91 researched places have a `radius` and no circle: `straal_m` is filled in
+	 * for nearly everything, but `hasCircle` draws one only for `benadering`. Writing the
+	 * caption off the radius alone promised "ergens binnen de rode cirkel" on all 74 - on
+	 * Hoogboom and Kasteel Ravenhof, both grade A, both drawn as a plain point. Sending a
+	 * reader to look for a ring that is not there is the same defect as drawing the ring
+	 * somewhere the marker is not.
+	 */
+	$: circled = research ? hasCircle(research) : false;
 </script>
 
 <Seo
@@ -250,21 +295,40 @@
 			</section>
 		{/if}
 
-		{#if shape}
+		{#if at && place}
 			<section class="mt-6">
+				<!--
+					`focusId` draws the register's centreline and opens on it, so it is passed
+					only when the register is what placed this - see `fromRegister`. The
+					approximations go in either way: without them the map cannot draw the circle
+					of doubt, and a researched place would appear here as certain as a street.
+				-->
 				<ArchiveMap
 					{archive}
 					{placed}
 					{geometry}
-					places={place ? [place] : []}
-					focusId={data.slug}
+					{approximations}
+					places={[place]}
+					focusId={fromRegister ? data.slug : null}
 					selectedId={data.slug}
 					height="320px"
-					zoom={15}
+					zoom={fromRegister ? 15 : 14}
 				/>
 				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-					{place.name} op de kaart{#if shape.length}, {shape.length} meter lang{/if}. De ligging
-					komt uit het officiële stratenregister.
+					{#if fromRegister}
+						{place.name} op de kaart{#if shape?.length}, {shape.length} meter lang{/if}. De ligging
+						komt uit het officiële stratenregister.
+					{:else if at.source === 'placed'}
+						{place.name} op de kaart. De ligging is met de hand aangeduid.
+					{:else if circled}
+						{place.name} bij benadering op de kaart: ergens binnen de rode cirkel, ongeveer {research?.radius}
+						meter rond dit punt. De ligging is opgezocht, niet uit een adres afgeleid.
+					{:else if research?.display === 'punt_met_twijfel'}
+						{place.name} op de kaart, maar de ligging is niet zeker. Ze is opgezocht, niet uit een adres
+						afgeleid.
+					{:else}
+						{place.name} op de kaart. De ligging is opgezocht.
+					{/if}
 				</p>
 			</section>
 		{/if}
