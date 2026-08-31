@@ -23,7 +23,7 @@ const index = JSON.parse(
 		path.join(__dirname, '..', '..', '..', 'static', 'data', 'archive-index.json'),
 		'utf8'
 	)
-) as { photos: { id: string; p: string; t: string; s: string; st: string[]; d?: string }[] };
+) as { photos: { id: string; p: string; t: string; s: string; st: string[]; d?: string; k?: string }[] };
 
 describe('display titles', () => {
 	it('keeps a caption that only looks like a person', () => {
@@ -53,10 +53,28 @@ describe('display titles', () => {
 	});
 
 	it('leaves no word in a filename that the search cannot reach', () => {
-		// The site searches title, subject, place names, donor, year, house number and the
-		// path (src/lib/archive.ts). This asserts the last of those is actually enough: every
-		// word a volunteer typed into a filename must be reachable by typing it back.
-		const ignorable = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'zd', 'zn']);
+		// The site searches title, subject, place names, donor, year, house number and `k`
+		// (src/lib/archive.ts). The path itself is deliberately NOT among them, so this test
+		// must not include it either - building the haystack from `p` and then asserting that
+		// every word of `p` is in it can never fail, and would leave the regression it exists
+		// to catch invisible. Measured: without `k`, 586 photographs would fail here.
+		// Extensions, the "no date" and "anonymous" markers, and the subject prefix codes
+		// whose meaning the archive never recorded (KNOWN_PREFIX_CODES in segment.ts). The
+		// last of those are set aside on purpose - nobody searches for "OWNP" - and a word
+		// nobody would type is not a word the archive lost.
+		const ignorable = new Set([
+			'jpg',
+			'jpeg',
+			'png',
+			'webp',
+			'gif',
+			'zd',
+			'zn',
+			'ownp',
+			'kape',
+			'acc',
+			'gzvka'
+		]);
 		const words = (text: string): string[] =>
 			normalizeText(text)
 				.split(' ')
@@ -64,11 +82,22 @@ describe('display titles', () => {
 
 		const unreachable = index.photos.filter((photo) => {
 			const haystack = new Set(
-				words([photo.t, photo.s, photo.d ?? '', photo.p].join(' '))
+				words([photo.t, photo.s, photo.d ?? '', photo.k ?? ''].join(' '))
 			);
 			return words(photo.p).some((word) => !haystack.has(word));
 		});
 
-		expect(unreachable).toEqual([]);
+		expect(unreachable.map((photo) => photo.p)).toEqual([]);
+	});
+
+	it('keeps the acquisition date and the extension out of the search index', () => {
+		// The blunt version of the fix above indexed the whole path, and nearly every filename
+		// ends in the date the archive received the photograph: searching "2015" then answered
+		// with the 602 photographs donated that year rather than the 36 taken in it, and "jpg"
+		// matched all 4,504.
+		const keywords = index.photos.map((photo) => photo.k ?? '').join(' ');
+
+		expect(keywords).not.toMatch(/\bjpe?g\b|\bpng\b|\bwebp\b/i);
+		expect(keywords).not.toMatch(/\b\d+\b/);
 	});
 });

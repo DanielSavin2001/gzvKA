@@ -166,6 +166,13 @@ export function splitFilename(filename: string): FilenameParts {
 			continue;
 		}
 
+		// "z.n." already said the donor is unknown, so whatever precedes it is not the donor.
+		// Consuming it anyway ate the caption twice over: the segment was taken as a
+		// contributor and then discarded by the `contributorKnown` check below, so
+		// "Nieuwe Wijk - St. Jozefkapel - zn - zd" lost the chapel from its title and from
+		// everything derived from it.
+		if (!contributorKnown) break;
+
 		const institution = INSTITUTIONAL_CONTRIBUTORS.get(
 			normalizePlace(stripTrailingIndex(segment))
 		);

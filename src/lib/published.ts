@@ -30,23 +30,38 @@ let cache: ArchivePhoto[] | null = null;
  * `static/foto/` and no thumbnail was ever generated for them - the image functions return
  * this instead of composing a path.
  */
-function asArchivePhoto(published: PublishedPhoto): ArchivePhoto {
+function asArchivePhoto(published: PublishedPhoto): ArchivePhoto | null {
+	// Validated rather than trusted. This runs outside the fetch's try/catch, and a payload
+	// that is valid JSON but the wrong shape - `places` missing, say - would put an
+	// ArchivePhoto with no `st` into the array that `buildArchive` iterates, throwing where
+	// nothing catches it and taking down every page that awaits the archive. The contract
+	// this file promises is "a nonsense answer means nothing new since the build".
+	if (typeof published?.id !== 'string' || typeof published.url !== 'string') return null;
+
 	const photo: ArchivePhoto = {
 		id: published.id,
 		p: published.url,
 		u: published.url,
-		t: published.title,
+		t: typeof published.title === 'string' ? published.title : published.id,
 		// Its own heading in the browse pages, so a photograph that arrived this way is never
 		// silently mixed into a subject folder that does not contain it.
 		s: 'Ingestuurd door bezoekers',
-		st: published.places,
-		nieuw: true
+		st: Array.isArray(published.places)
+			? published.places.filter((place): place is string => typeof place === 'string')
+			: []
 	};
 
-	if (published.houseNumber != null) photo.hn = published.houseNumber;
-	if (published.donor) photo.d = published.donor;
-	if (published.year) photo.y = published.year;
-	if (published.description) photo.desc = published.description;
+	if (typeof published.houseNumber === 'number') photo.hn = published.houseNumber;
+	if (typeof published.donor === 'string') photo.d = published.donor;
+	if (typeof published.year === 'string') photo.y = published.year;
+	if (typeof published.description === 'string') photo.desc = published.description;
+	// The date it was approved, shown where a corpus photograph shows the date the archive
+	// received it - so an uploaded photograph does not sit among them with a blank there.
+	if (typeof published.publishedAt === 'string') photo.a = published.publishedAt.slice(0, 10);
+	if (typeof published.lat === 'number' && typeof published.lng === 'number') {
+		photo.lat = published.lat;
+		photo.lng = published.lng;
+	}
 
 	return photo;
 }
@@ -64,7 +79,9 @@ export async function loadPublished(fetcher: typeof fetch = fetch): Promise<Arch
 		if (!response.ok) return [];
 
 		const parsed = (await response.json()) as { photos?: PublishedPhoto[] };
-		cache = (parsed.photos ?? []).map(asArchivePhoto);
+		cache = (Array.isArray(parsed?.photos) ? parsed.photos : [])
+			.map(asArchivePhoto)
+			.filter((photo): photo is ArchivePhoto => photo !== null);
 		return cache;
 	} catch {
 		return [];

@@ -43,6 +43,11 @@ export interface ArchivePhoto {
 	/** Prize-draw photography, browsed by event rather than by place. */
 	ev?: boolean;
 	/**
+	 * Words from the path that no other field carries - a sub-folder, a caption the title
+	 * trimmer dropped, a donor the filename never separated out. Searched, never shown.
+	 */
+	k?: string;
+	/**
 	 * A curator's description. Never present in the generated index - no filename can hold a
 	 * sentence - and laid over it by `loadPhotoEdits` when somebody has written one.
 	 */
@@ -53,8 +58,9 @@ export interface ArchivePhoto {
 	 * return this rather than composing `imageBase + p`.
 	 */
 	u?: string;
-	/** True for such a photograph, so a page can say where it came from. */
-	nieuw?: boolean;
+	/** A coordinate a curator placed for this photograph alone. */
+	lat?: number;
+	lng?: number;
 }
 
 /** A place in Kapellen, with how many photographs it has. */
@@ -140,6 +146,16 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 	}
 }
 
+/**
+ * Forgets the built archive, so the next `loadArchive` rebuilds it.
+ *
+ * Needed by /beheer: clearing the published-photo cache alone changes nothing while this
+ * module still holds the Archive it built before the curator approved anything.
+ */
+export function forgetArchive(): void {
+	cached = null;
+}
+
 function buildArchive(index: ArchiveIndex): Archive {
 	const photoById = new Map(index.photos.map((photo) => [photo.id, photo]));
 	const photosByPlace = new Map<string, ArchivePhoto[]>();
@@ -165,16 +181,20 @@ function buildArchive(index: ArchiveIndex): Archive {
 	// One normalized string per photograph, searched directly. Built once so that typing
 	// costs nothing: 4504 substring checks are well under a millisecond.
 	//
-	// The path is in here as well as the title, and that is the point: a display title is
-	// the filename with its donor and date trimmed off, and the trimmer is not perfect.
-	// 894 photographs carry a word in their filename that reaches no other field -
-	// "Garage Meyvis", "Hotel-Cafe De Zwaan", "St. Jozefkapel", "Familie Bourlet-Luyckx".
-	// Somebody searching for the café their grandfather kept was told the archive has no
-	// such photograph while it held one. Whatever a volunteer typed is searchable.
+	// `k` is in here as well as the title, and that is the point: a display title is the
+	// filename with its donor and date trimmed off, and the trimmer is not perfect. 586
+	// photographs carry a word in their path that reaches no other field - "St. Jozefkapel",
+	// "Houten Woning", "Begraafplaats", a sub-folder like "Fietszoektocht 2014". Somebody
+	// searching for the chapel at the end of their street was told the archive has no such
+	// photograph while it held one.
+	//
+	// It is `k` and not `p`: the build leaves the acquisition date and the extension out,
+	// and indexing the raw path would answer "2015" with the 602 photographs donated that
+	// year rather than the 36 taken in it.
 	const haystacks = index.photos.map((photo) => {
 		const placeNames = photo.st.map((id) => placeById.get(id)?.name ?? '').join(' ');
 		return normalizeText(
-			[photo.t, photo.s, placeNames, photo.d ?? '', photo.y ?? '', photo.hn ?? '', photo.p].join(
+			[photo.t, photo.s, placeNames, photo.d ?? '', photo.y ?? '', photo.hn ?? '', photo.k ?? ''].join(
 				' '
 			)
 		);

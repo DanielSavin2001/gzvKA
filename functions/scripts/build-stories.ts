@@ -29,6 +29,7 @@ import * as path from 'path';
 import type { Gazetteer, PlaceMatch } from '../../sharedModels/gazetteer';
 import { normalizeText } from '../../sharedModels/text';
 import { buildIndex, matchPlacesInText } from '../src/gazetteer/match';
+import { looksLikePersonName } from '../src/gazetteer/segment';
 import type { StoryPart } from '../src/legacy/parse';
 import { parseLegacyHtml } from '../src/legacy/parse';
 import { buildPhotoLookup, resolvePhoto, unambiguousFolders } from '../src/legacy/link';
@@ -213,12 +214,12 @@ function placesIn(text: string, index: ReturnType<typeof buildIndex>): string[] 
 }
 
 /**
- * A person's name as the standings write it: "Van Gerwen Annick", "Poedts Marceline".
- * Surname first, one or two given names, optionally with a Dutch particle.
+ * A person's name as the standings write it: surname first, then one or two given names,
+ * optionally with a Dutch particle - "Achternaam Voornaam", "Van Achternaam Voornaam".
+ *
+ * Written as a shape rather than with examples on purpose: the examples to hand would be
+ * two of the private individuals this very function exists to keep off the site.
  */
-const NAME_SHAPED =
-	/^(?:van|de|den|der|ten|ter|vande|vanden|op|'t)?\s*[A-ZÀ-Þ][\p{L}'-]+(?:\s+(?:van|de|den|der|ten|ter|den)\b)?(?:\s+[A-ZÀ-Þ][\p{L}'-]+){1,2}$/u;
-
 /**
  * A ranked roll of names, stripped out of a section that also contains writing.
  *
@@ -237,20 +238,35 @@ const NAME_SHAPED =
  *
  * Returns the parts to keep, and how many were withheld.
  */
-function withoutRollOfNames(parts: StoryPart[]): { parts: StoryPart[]; withheld: number } {
+function withoutRollOfNames(parts: StoryPart[]): {
+	parts: StoryPart[];
+	withheld: number;
+	characters: number;
+} {
 	const texts = parts.map((part) => (part.kind === 'paragraph' ? part.text.trim() : null));
 	const isNumber = (text: string): boolean => /^\d{1,5}(?:[.,]\d+)?$/.test(text);
 
 	const numbers = texts.filter((text) => text !== null && isNumber(text)).length;
-	if (parts.length < 20 || numbers <= parts.length / 3) return { parts, withheld: 0 };
+	if (parts.length < 20 || numbers <= parts.length / 3) {
+		return { parts, withheld: 0, characters: 0 };
+	}
 
 	const kept = parts.filter((part, i) => {
 		const text = texts[i];
 		if (text === null || text.length > 60) return true;
-		return !isNumber(text) && !NAME_SHAPED.test(text);
+		return !isNumber(text) && !looksLikePersonName(text);
 	});
 
-	return { parts: kept, withheld: parts.length - kept.length };
+	// The characters go back to the caller too: `prose` drives the reading time, the
+	// site-wide total and the "longest pieces first" ordering, and counting text the reader
+	// will never see makes all three wrong.
+	const dropped = parts.filter((part) => !kept.includes(part));
+	const characters = dropped.reduce(
+		(sum, part) => sum + (part.kind === 'paragraph' ? part.text.length : 0),
+		0
+	);
+
+	return { parts: kept, withheld: parts.length - kept.length, characters };
 }
 
 /** The first sentence or so of a section, used wherever a story is listed rather than read. */
@@ -384,7 +400,15 @@ function main(): void {
 			});
 		}
 
-		if (sections.every((section) => section.parts.length === 0)) continue;
+		if (sections.every((section) => section.parts.length === 0)) {
+			// The photographs of a skipped story already registered a pointer at it. Left
+			// behind, they send a photo page to /verhaal/<slug>, which was never written -
+			// the story that holds them exists nowhere but in that broken link.
+			for (const [photoId, ref] of Object.entries(byPhoto)) {
+				if (ref.slug === slug) delete byPhoto[photoId];
+			}
+			continue;
+		}
 
 		const storyPlaces = [...new Set([...titlePlaces, ...sections.flatMap((s) => s.places)])];
 
@@ -421,7 +445,15 @@ function main(): void {
 			slug,
 			title: page.title,
 			excerpt: excerptOf(sections.flatMap((section) => section.parts)),
-			prose: page.proseLength,
+			// Counted from the sections as stored, not from what the parser read: a story
+			// whose roll of names was withheld must not be advertised, ranked or given a
+			// reading time by a length the reader will never see.
+			prose: sections.reduce(
+				(sum, section) =>
+					sum +
+					section.parts.reduce((n, part) => n + (part.k === 'p' ? part.t.length : 0), 0),
+				0
+			),
 			photos: photosResolved,
 			kind,
 			places: storyPlaces

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
-	import { loadArchive } from '$lib/archive';
+	import { forgetArchive, loadArchive } from '$lib/archive';
 	import type { Curator, Decision, QueuedSubmission } from '$lib/admin';
 	import {
 		corrections,
@@ -416,9 +416,12 @@
 			}
 
 			await review(decision);
-			// The site merges the approved photographs into the archive; forget what was
-			// fetched so a curator who opens the site next sees the one they just approved.
+			// The site merges the approved photographs into the archive, and the archive is
+			// built once and kept. Both caches have to go, or a curator who walks from here to
+			// the street page in the same tab sees it without the photograph they just
+			// approved.
 			forgetPublished();
+			forgetArchive();
 			delete edits[item.id];
 			edits = edits;
 			items = items.filter((other) => other.id !== item.id);
