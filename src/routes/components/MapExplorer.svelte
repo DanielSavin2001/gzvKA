@@ -109,10 +109,10 @@
 	 * one that can be wrong by hundreds of metres, so it is kept distinguishable rather than
 	 * merged in - `researchFor` is what decides how each marker is drawn.
 	 *
-	 * Both rules live in `$lib/map-places` because five maps now ask them - this one, and the
-	 * castles, districts, stories and donor pages, each drawing a subset. A place that one map
-	 * shows and another silently drops, with nothing to explain the difference, is exactly
-	 * what a second copy of the rule would produce.
+	 * Both rules live in `$lib/map-places` because six maps now ask them - this one, and the
+	 * castles, streets, districts, stories and donor pages, each drawing a subset. A place that
+	 * one map shows and another silently drops, with nothing to explain the difference, is
+	 * exactly what a second copy of the rule would produce.
 	 */
 	$: locatedPlaces = allPlaces.filter(
 		(place) =>

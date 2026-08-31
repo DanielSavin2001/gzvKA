@@ -1,11 +1,11 @@
 /**
  * Which places end up on a map, and which cannot.
  *
- * The rule is small and it is asked in five different places - the front page's map, and now
- * the castles, districts, stories and donor pages, each of which draws a subset. It reads a
- * curator's pin, the street register and the research together, and getting it slightly
- * different in one of them would mean a place that is on one map and missing from another
- * with nothing to explain the difference.
+ * The rule is small and six maps ask it: the front page's, and now the castles, streets,
+ * districts, stories and donor pages, each of which draws a subset. It reads a curator's pin,
+ * the street register and the research together, and getting it slightly different in one of
+ * them would mean a place that is on one map and missing from another with nothing to explain
+ * the difference.
  *
  * Every function here takes the two records as arguments rather than reading them from a
  * module-level cache, and that is deliberate: a Svelte reactive statement re-runs only when
@@ -70,8 +70,10 @@ export function isOnMap(
  * The places a map can draw, and the ones it cannot, split.
  *
  * Both halves are returned because a page that shows only the first half quietly loses the
- * rest: a caption reading "18 kastelen op de kaart" above a list of 21 is the one honest way
- * to say that three are still missing, and it is what invites somebody to say where they are.
+ * rest. Every one of the 30 castles happens to be placed today, so the caption reads "Alle 30
+ * kastelen staan op de kaart" - but the moment one is not, "29 van de 30" above a list naming
+ * the odd one out is the only honest thing to print, and it is what invites the person who
+ * knows where it stood to say so.
  */
 export function splitPlaces(
 	places: ArchivePlace[],

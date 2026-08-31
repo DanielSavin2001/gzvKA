@@ -398,12 +398,17 @@ export interface DonorSummary {
 	/** The first of them, as a link-preview card. */
 	card: string | null;
 	/**
-	 * The places they photographed, biggest first - what this person's giving amounts to.
+	 * The places in what they gave, biggest first - what this person's giving amounts to.
+	 *
+	 * "In what they gave" rather than "that they photographed": a schenker is whoever handed
+	 * the photographs over, and a great many of them are postcards or family pictures from a
+	 * generation before the person who kept them. The archive records who gave a photograph
+	 * and never who took it, so neither this field nor the page built on it may say so.
 	 *
 	 * All of them, not the dozen the chips under the heading show: the map below draws from
 	 * the same list, and a map that stops at twelve would leave a donor's quieter streets off
-	 * it with nothing to say they were missing. The count is this person's photographs of that
-	 * place, not the archive's.
+	 * it with nothing to say they were missing. The count is this collection's photographs of
+	 * that place, not the archive's.
 	 */
 	places: MappablePlace[];
 	/** The years their photographs span, when enough of them are dated to say. */
@@ -420,9 +425,10 @@ export async function donorSummary(
 
 	const ordered = sortForDisplay(donor.photos);
 
-	// Which places this person photographed. A donor page that is only a grid of pictures
-	// says what they gave; this says what they were interested in, which is the more
-	// human fact about them.
+	// Which places turn up in what this person gave. A donor page that is only a grid of
+	// pictures says how much they gave; this says what they kept pictures of, which is the
+	// more human fact about them - and it is a fact, where "what they photographed" would
+	// not be: the archive knows who handed a photograph over, never who took it.
 	const counts = new Map<string, number>();
 	for (const photo of donor.photos) {
 		for (const placeId of photo.st) counts.set(placeId, (counts.get(placeId) ?? 0) + 1);

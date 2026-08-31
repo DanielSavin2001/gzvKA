@@ -135,14 +135,23 @@
 		<div class="mt-2 space-y-2 text-sm text-red-900 dark:text-red-200">
 			{#if isPerson}
 				<!--
-					This branch has to come first. Without it the page told a visitor that the
-					real location was somewhere inside the circle, directly above the archive's
-					own sentence saying there is no location at all - which is the exact
-					mistake this whole panel exists to prevent.
+					This branch has to come first, and what it is guarding against has changed.
+					It used to be the circle: the page told a visitor the real location was
+					somewhere inside it, directly above the archive's own sentence saying there
+					is no location at all. Tajje is `punt_met_twijfel` with no radius, so no
+					circle is drawn for him and that is no longer the risk. Without this branch
+					he now falls through to the last one, which would print "De straat klopt,
+					maar het punt erop is een schatting" about a man. Either way: first.
+
+					It used to say the photographs stood "op de plaats waar het verhaal begint".
+					That was never quite true and is now plainly false: Tajje's procession began
+					in the Akkerstraat and his pin sits on the Hoevensebaan, part-way along the
+					route. A pin for a person is an agreed point and nothing more, so that is
+					what this says. The route itself is in `twijfel`, printed just below.
 				-->
 				<p>
-					Deze naam hoort bij een persoon, niet bij een plek. De foto's staan hier op de plaats waar
-					het verhaal begint, maar ze zijn niet allemaal op één plek genomen.
+					Deze naam hoort bij een persoon, niet bij een plek. De speld is een afspraak: ze staat er
+					zodat de foto's vanaf de kaart te vinden zijn, niet omdat ze daar genomen zijn.
 				</p>
 			{:else if isMissing}
 				<p>Deze plek staat niet op de kaart. We hebben ze nergens teruggevonden.</p>

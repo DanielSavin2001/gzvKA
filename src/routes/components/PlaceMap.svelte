@@ -2,10 +2,11 @@
 	/**
 	 * A map of one part of the archive, for the pages that list that part.
 	 *
-	 * The castles page named twenty-one castles and showed no hint of where any of them were,
-	 * which is an odd thing for a page about castles: half of them are gone and the only
-	 * question a reader has is where they stood. The same page existed for the districts, for
-	 * the stories, and for each of the 298 people who gave the archive photographs.
+	 * The castles page named thirty castles and forts and showed no hint of where any of them
+	 * were, which is an odd thing for a page about castles: several are demolished - Kasteel
+	 * Oude Gracht, Kasteel Les Chataigniers - and the only question a reader has about those
+	 * is where they stood. The same page existed for the 55 districts and buildings, for the
+	 * stories, and for each of the 295 people who gave the archive photographs.
 	 *
 	 * Deliberately not the front page's map. That one draws every place in Kapellen and
 	 * carries the curator's placing tool; this draws the handful the page is about, and its
@@ -38,7 +39,7 @@
 	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
 	import type { Approximation } from '$lib/approximations';
 	import { loadApproximations } from '$lib/approximations';
-	import { splitPlaces } from '$lib/map-places';
+	import { researchFor, splitPlaces } from '$lib/map-places';
 	import ArchiveMap from './ArchiveMap.svelte';
 
 	/**
@@ -48,7 +49,7 @@
 	 * everything else - so a page whose places are all of one kind can leave it off.
 	 */
 	export let places: { id: string; name: string; count: number; isStreet?: boolean }[] = [];
-	/** Wording for the captions, e.g. "kastelen" -> "18 van de 21 kastelen". */
+	/** Wording for the caption, e.g. "kastelen" -> "Alle 30 kastelen staan op de kaart." */
 	export let noun = 'plaatsen';
 	/** What the marker numbers count, for the legend. */
 	export let counting = "foto's";
@@ -139,6 +140,19 @@
 	/** The photographs of the open place, once the index has arrived. */
 	$: shownPhotos =
 		selected && archive ? sortForDisplay(archive.photosByPlace.get(selected.id) ?? []) : [];
+
+	/**
+	 * Whether any place here is drawn with a circle of doubt around it.
+	 *
+	 * The legend explains what the red dashed circle means, and on most of these maps there
+	 * is one - six of the thirty castles are known only to within a few hundred metres. On a
+	 * donor page with two well-placed streets there is none, and a legend describing a mark
+	 * the reader cannot find is worse than no legend: it sends them looking for a doubt the
+	 * map is not expressing.
+	 */
+	$: anyApproximate = split.on.some(
+		(place) => researchFor(approximations, placed, place.id)?.display === 'benadering'
+	);
 
 	async function choose(place: ArchivePlace): Promise<void> {
 		selectedId = place.id;
@@ -253,9 +267,11 @@
 		{:else}
 			<p class="text-sm text-gray-600 dark:text-gray-400">
 				Klik een bol aan om te zien wat er is. Hoe groter de bol, hoe meer {counting}.
-				<span class="text-red-700 dark:text-red-300"
-					>Een rode stippellijn betekent dat we de plek maar bij benadering kennen</span
-				> &mdash; weet u het beter, laat het weten.
+				{#if anyApproximate}
+					<span class="text-red-700 dark:text-red-300"
+						>Een rode stippellijn betekent dat we de plek maar bij benadering kennen</span
+					> &mdash; weet u het beter, laat het weten.
+				{/if}
 			</p>
 		{/if}
 	</div>

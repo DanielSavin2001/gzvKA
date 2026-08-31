@@ -9,7 +9,7 @@
 	$: summary = data.summary;
 
 	/**
-	 * The dozen places this person photographed most, as chips under the heading.
+	 * The dozen places this collection holds most of, as chips under the heading.
 	 *
 	 * The summary carries all of them because the map below draws from the same list, but a
 	 * heading followed by forty chips is a wall rather than a summary.
@@ -17,11 +17,12 @@
 	$: chips = (summary?.places ?? []).slice(0, 12);
 
 	/**
-	 * A map is worth the space once somebody photographed more than one place.
+	 * A map is worth the space once a collection covers more than one place.
 	 *
 	 * With a single place it says exactly what the chip above it already says, at the cost of
 	 * half a screen and a tile download. With two or more it starts saying something the list
-	 * cannot: that this person photographed one corner of Kapellen, or all of it.
+	 * cannot: that this collection is of one corner of Kapellen, or of all of it. 127 of the
+	 * 295 donor pages clear the bar.
 	 */
 	$: mapWorthIt = (summary?.places.length ?? 0) >= 2;
 
@@ -94,8 +95,9 @@
 
 			{#if summary.places.length > 0}
 				<!--
-					What they photographed, not just how much. A grid of pictures says what
-					somebody gave; this says what they cared about, which is the more human fact.
+					What the pictures are of, not just how many. A grid says how much somebody
+					gave; this says what they kept pictures of, which is the more human fact -
+					and, unlike "what they photographed", it is one the archive actually knows.
 				-->
 				<div class="mt-4 flex flex-wrap gap-2">
 					{#each chips as place (place.id)}
@@ -113,18 +115,25 @@
 
 		{#if mapWorthIt}
 			<!--
-				Where this person's Kapellen was.
+				Which Kapellen this collection is of.
 
-				The bubbles count their photographs of each place, not the archive's - on this
-				page that is the number worth showing, and the legend says so rather than
-				leaving a reader to assume the total.
+				Not "waar X fotografeerde", which was the first wording and says something the
+				archive does not know. A schenker is whoever handed the photographs over: a
+				great many of them are postcards, or family pictures from a generation before
+				the person who kept them. The page's own heading says "gaf", and the map has to
+				agree with it - naming somebody as the photographer of a 1907 postcard is the
+				kind of invented fact this archive exists not to make.
+
+				The bubbles count the photographs in this collection, not the archive's total
+				for the place - on this page that is the number worth showing, and both the
+				legend and the panel say so rather than leaving a reader to assume otherwise.
 			-->
 			<div class="mt-8">
 				<PlaceMap
 					places={summary.places}
 					noun="plaatsen"
-					counting="foto's van {summary.name}"
-					title="Waar {summary.name} fotografeerde"
+					counting="foto's uit deze schenking"
+					title="De plekken in de collectie van {summary.name}"
 					height="420px"
 					zoom={12.4}
 				>
@@ -138,7 +147,7 @@
 							{place.name}
 							<span class="font-normal text-gray-600 dark:text-gray-400">
 								&middot; {place.count}
-								{place.count === 1 ? 'foto' : "foto's"} van {summary.name}
+								{place.count === 1 ? 'foto' : "foto's"} uit deze schenking
 							</span>
 						</h3>
 						<a

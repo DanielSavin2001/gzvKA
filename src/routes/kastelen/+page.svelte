@@ -35,8 +35,8 @@
 	</header>
 
 	<!--
-		The map above the list, because on this page it answers the first question. Half of
-		these castles were demolished - Oude Gracht, Les Chataigniers, Middelbeek - and a
+		The map above the list, because on this page it answers the first question. Several of
+		these castles were demolished - Kasteel Oude Gracht, Kasteel Les Chataigniers - and a
 		reader who has heard the name wants to know where it stood before they want to know
 		how many photographs there are.
 	-->
