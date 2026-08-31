@@ -27,13 +27,16 @@
 	import type { CoordinateSource, PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import {
 		forgetCoordinates,
+		forgetStreetGeometry,
 		loadCommittedPlaces,
 		loadStreetGeometry,
 		locate
 	} from '$lib/coordinates';
 	import { isPersonKind } from '../../../sharedModels/place-family';
 	import type { Approximation } from '$lib/approximations';
-	import { loadApproximations } from '$lib/approximations';
+	import { forgetApproximations, loadApproximations } from '$lib/approximations';
+	import type { PlaceRecord } from '$lib/place-records';
+	import { forgetPlaceRecords, loadPlaceRecords } from '$lib/place-records';
 	import type { PlacePin } from '$lib/place-pins';
 	import { forgetPlacePins, loadPlacePins } from '$lib/place-pins';
 	import { normalizeText } from '../../../sharedModels/text';
@@ -43,6 +46,7 @@
 	import PhotoEditor from '../components/PhotoEditor.svelte';
 	import DatingDesk from '../components/DatingDesk.svelte';
 	import PinPicker from '../components/PinPicker.svelte';
+	import PlaceDesk from '../components/PlaceDesk.svelte';
 
 	/**
 	 * The curator's desk.
@@ -88,6 +92,8 @@
 	let streetGeometry: Record<string, StreetGeometry> = {};
 	let approximations: Record<string, Approximation> = {};
 	let picking: ArchivePlace | null = null;
+	let managing: ArchivePlace | null = null;
+	let placeRecords: Record<string, PlaceRecord> = {};
 	let pinBusy = false;
 
 	async function loadPlacesData(): Promise<void> {
@@ -95,6 +101,20 @@
 		// sees their own last pin rather than the answer of up to a minute ago.
 		forgetPlacePins();
 		forgetCoordinates();
+		// The place records feed both the research and the register through their loaders, so
+		// they are forgotten first and re-fetched fresh - otherwise a curator who has just
+		// redrawn a shape reads it back from the up-to-a-minute-old answer they started from.
+		forgetPlaceRecords();
+		forgetApproximations();
+		forgetStreetGeometry();
+
+		// Awaited before the two that read it, not raced alongside them. Both call
+		// `loadPlaceRecords` themselves, and theirs would go through the browser's cache while
+		// this one bypasses it - so a parallel fetch can leave the map holding a minute-old
+		// answer while the desk beside it shows the new one.
+		const records = await loadPlaceRecords(fetch, { fresh: true });
+		placeRecords = records ?? {};
+
 		const [committed, geometry, research, livePins] = await Promise.all([
 			loadCommittedPlaces(),
 			loadStreetGeometry(),
@@ -177,6 +197,36 @@
 		} finally {
 			pinBusy = false;
 		}
+	}
+
+	/**
+	 * After a place has been edited or reverted, both halves are rebuilt.
+	 *
+	 * The places data, because the desk changes the point, the circle and the shape at once
+	 * and each of the three is read from a different loader. The archive, because a name, a
+	 * kind or a parent changed is a change to the list every other desk searches - and that
+	 * list is built once and cached.
+	 */
+	/**
+	 * A blank place for the desk to fill in. The id stays empty on purpose: the server derives
+	 * it from the name, the same way the gazetteer build does, so a place made here and the
+	 * same place added to the seed later land on one id rather than two.
+	 */
+	function newPlace(): void {
+		managing = {
+			id: '',
+			name: '',
+			kind: 'building',
+			district: 'unknown',
+			isStreet: false,
+			count: 0
+		};
+	}
+
+	async function placeChanged(): Promise<void> {
+		managing = null;
+		error = null;
+		await Promise.all([loadPlacesData(), reloadArchive()]);
 	}
 
 	/**
@@ -797,6 +847,13 @@
 				>
 					Bewaar als place-coordinates.json
 				</button>
+				<button
+					type="button"
+					class="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900"
+					on:click={newPlace}
+				>
+					Nieuwe plaats
+				</button>
 			</div>
 
 			<input
@@ -836,6 +893,20 @@
 							>
 								{sourceLabel(row)}
 							</span>
+							{#if placeRecords[row.place.id]?.geometry}
+								<span
+									class="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+									title="Er is een vorm getekend voor deze plaats"
+								>
+									Vorm getekend
+								</span>
+							{/if}
+							{#if row.place.parentId}
+								<span class="text-xs text-gray-500 dark:text-gray-400">
+									onder {archive?.places.find((entry) => entry.id === row.place.parentId)?.name ??
+										row.place.parentId}
+								</span>
+							{/if}
 							<button
 								type="button"
 								class="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -843,9 +914,31 @@
 							>
 								{row.located === null ? 'Plaats' : 'Verplaats'}
 							</button>
+							<button
+								type="button"
+								class="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+								on:click={() => (managing = row.place)}
+								title="Naam, soort, twijfel, straal en de getekende vorm"
+							>
+								Beheer
+							</button>
 						</li>
 					{/each}
 				</ul>
+			{/if}
+
+			{#if managing && archive}
+				<PlaceDesk
+					place={managing}
+					{archive}
+					approximation={approximations[managing.id]}
+					located={locate(managing.id, allCoordinates, streetGeometry, approximations)}
+					geometry={streetGeometry[managing.id]}
+					record={placeRecords[managing.id]}
+					on:saved={placeChanged}
+					on:reverted={placeChanged}
+					on:close={() => (managing = null)}
+				/>
 			{/if}
 
 			{#if picking}

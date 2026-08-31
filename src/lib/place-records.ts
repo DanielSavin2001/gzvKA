@@ -8,6 +8,7 @@
  */
 
 import type { PlaceKind } from '../../sharedModels/gazetteer';
+import { readCuratorApproximation, readCuratorGeometry } from '../../sharedModels/place-overlay';
 import type { PlaceRecord, PlaceRecordFile } from '../../sharedModels/place-record';
 import { CURATOR_KINDS } from '../../sharedModels/place-record';
 
@@ -18,6 +19,7 @@ import { CURATOR_KINDS } from '../../sharedModels/place-record';
 const KNOWN_KINDS: PlaceKind[] = [...CURATOR_KINDS, 'person'];
 
 export type { PlaceRecord } from '../../sharedModels/place-record';
+export { withApproximationRecords, withGeometryRecords } from '../../sharedModels/place-overlay';
 
 const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
 
@@ -45,6 +47,37 @@ function usable(value: unknown): value is PlaceRecord {
 	return text(record.id) && text(record.name) && KNOWN_KINDS.includes(record.kind as PlaceKind);
 }
 
+/**
+ * A record with anything unreadable in its two optional blocks dropped from it.
+ *
+ * The same readers the endpoint validates with, run again on the way out. Not belt and
+ * braces: a stored record predates the reader that is running now - a field renamed, a
+ * ceiling lowered - and the merges downstream build a marker and a circle out of these
+ * without guarding. Dropping one block is much better than dropping the place, because the
+ * place is what the photographs point at.
+ */
+function readable(record: PlaceRecord): PlaceRecord {
+	const kept: PlaceRecord = { ...record };
+
+	try {
+		const approximation = readCuratorApproximation(record.approximation);
+		if (approximation) kept.approximation = approximation;
+		else delete kept.approximation;
+	} catch {
+		delete kept.approximation;
+	}
+
+	try {
+		const geometry = readCuratorGeometry(record.geometry);
+		if (geometry) kept.geometry = geometry;
+		else delete kept.geometry;
+	} catch {
+		delete kept.geometry;
+	}
+
+	return kept;
+}
+
 /** The records, or null when they could not be fetched - null is "unknown", not "none". */
 export async function loadPlaceRecords(
 	fetcher: typeof fetch = fetch,
@@ -65,7 +98,7 @@ export async function loadPlaceRecords(
 		const parsed = (await response.json()) as Partial<PlaceRecordFile>;
 		const kept: Record<string, PlaceRecord> = {};
 		for (const [id, record] of Object.entries(parsed.places ?? {})) {
-			if (usable(record)) kept[id] = record;
+			if (usable(record)) kept[id] = readable(record);
 		}
 
 		cache = kept;

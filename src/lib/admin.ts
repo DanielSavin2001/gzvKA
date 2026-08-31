@@ -14,6 +14,7 @@
 import type { PlaceCorrection } from '../../sharedModels/correction';
 import type { PhotoFact } from '../../sharedModels/photo-fact';
 import type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
+import type { CuratorApproximation, CuratorGeometry } from '../../sharedModels/place-overlay';
 import type { PlaceRecord } from '../../sharedModels/place-record';
 import type { Submission } from '../../sharedModels/submission';
 
@@ -235,6 +236,13 @@ export function savePlaceRecord(fields: {
 	kind: string;
 	parentId?: string;
 	district?: string;
+	/**
+	 * Where the place is and how sure we are. Sent whole, because the record is stored with a
+	 * plain `set` - omitting the block is how "the site should fall back to the shipped
+	 * research" is said, so a caller that only means to rename must send what it already has.
+	 */
+	approximation?: CuratorApproximation;
+	geometry?: CuratorGeometry;
 }): Promise<PlaceRecord> {
 	return call<PlaceRecord>('savePlaceRecord', {
 		method: 'POST',

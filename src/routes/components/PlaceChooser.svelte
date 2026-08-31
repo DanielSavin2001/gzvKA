@@ -145,7 +145,9 @@
 <svelte:window on:click={onWindowClick} />
 
 <div class="relative" bind:this={box}>
-	<p class="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</p>
+	{#if label}
+		<p class="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</p>
+	{/if}
 
 	{#if chosen.length > 0}
 		<ul class="mt-2 flex flex-wrap gap-2">

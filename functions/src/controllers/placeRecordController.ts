@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { https, HttpsFunction } from 'firebase-functions';
 import * as logger from 'firebase-functions/logger';
 
+import { PlaceOverlayError } from '../../../sharedModels/place-overlay';
 import { PlaceRecordError, readPlaceRecord } from '../../../sharedModels/place-record';
 import { NotAuthorised, requireAdmin } from '../services/admin-auth';
 import * as places from '../services/placeRecordService';
@@ -21,7 +22,9 @@ function fail(response: Response, error: unknown): Response {
 		return response.status(error.status).send(error.message);
 	}
 
-	if (error instanceof PlaceRecordError) {
+	// Both carry a sentence written for the curator - "Kies een straal, of toon de plaats als
+	// punt" - so both are shown rather than swallowed into a generic 400.
+	if (error instanceof PlaceRecordError || error instanceof PlaceOverlayError) {
 		logger.warn('Rejected: ', error.message);
 		return response.status(400).send(error.message);
 	}

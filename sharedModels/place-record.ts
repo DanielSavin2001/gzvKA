@@ -30,6 +30,8 @@
  */
 
 import type { District, PlaceKind } from './gazetteer';
+import type { CuratorApproximation, CuratorGeometry } from './place-overlay';
+import { readCuratorApproximation, readCuratorGeometry } from './place-overlay';
 
 /** The kinds a curator may choose. `person` is excluded: it is not a place, and the one entry that uses it was a judgement about an existing record rather than something to create more of. */
 export const CURATOR_KINDS: PlaceKind[] = [
@@ -62,6 +64,14 @@ export interface PlaceRecord {
 	 */
 	parentId?: string;
 	district?: District;
+	/**
+	 * Where the place is and how sure we are, when a curator has said so. Read and written by
+	 * `place-overlay.ts`, which explains why this is a subset of `Approximation` rather than
+	 * one: a curator sets the judgement, the build keeps the counts.
+	 */
+	approximation?: CuratorApproximation;
+	/** A shape drawn by hand, laid over whatever the street register says. */
+	geometry?: CuratorGeometry;
 	/** The curator's email. */
 	by: string;
 	/** ISO date. */
@@ -125,6 +135,16 @@ export function readPlaceRecord(input: Record<string, unknown>): Omit<PlaceRecor
 		if (!DISTRICTS.includes(district)) throw new PlaceRecordError('Onbekende deelgemeente.');
 		record.district = district;
 	}
+
+	// Both optional and both all-or-nothing: an omitted block means "this record says nothing
+	// about that", and the site falls back to the shipped research or the street register.
+	// Clearing one is therefore expressible, which matters because `save` writes the whole
+	// record - see the note on the `set` there.
+	const approximation = readCuratorApproximation(input.approximation);
+	if (approximation) record.approximation = approximation;
+
+	const geometry = readCuratorGeometry(input.geometry);
+	if (geometry) record.geometry = geometry;
 
 	return record;
 }

@@ -175,16 +175,12 @@
 		</div>
 
 		<div class="mt-3">
-			<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-				Plaats
-				{#if places.length > 0}
-					<span class="font-normal text-gray-500 dark:text-gray-400">
-						({places.length} gekozen)
-					</span>
-				{/if}
-			</p>
-
-			<PlaceChooser bind:chosen={places} {archive} label="" on:created />
+			<PlaceChooser
+				bind:chosen={places}
+				{archive}
+				label={places.length > 0 ? `Plaats (${places.length} gekozen)` : 'Plaats'}
+				on:created
+			/>
 		</div>
 
 		{#if error}
