@@ -128,8 +128,7 @@
 			}))
 			.sort(
 				(a, b) =>
-					Number(a.located !== null) - Number(b.located !== null) ||
-					b.place.count - a.place.count
+					Number(a.located !== null) - Number(b.located !== null) || b.place.count - a.place.count
 			);
 	})();
 
@@ -655,8 +654,8 @@
 				<p class="py-8 text-center text-gray-600 dark:text-gray-400">
 					Geen meldingen.
 					{#if correctableCount > 0}
-						{correctableCount} plaatsen staan bij benadering op de kaart en wachten op iemand die
-						het beter weet &mdash; die kunt u hieronder zelf zetten.
+						{correctableCount} plaatsen staan bij benadering op de kaart en wachten op iemand die het
+						beter weet &mdash; die kunt u hieronder zelf zetten.
 					{/if}
 				</p>
 			{:else}
@@ -760,8 +759,8 @@
 				<div>
 					<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Alle plaatsen</h2>
 					<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-						Elke plaats, met waar ze nu staat en waar dat vandaan komt. Klik en zet de pin
-						&mdash; die staat er meteen, voor iedereen.
+						Elke plaats, met waar ze nu staat en waar dat vandaan komt. Klik en zet de pin &mdash;
+						die staat er meteen, voor iedereen.
 					</p>
 				</div>
 				<button
@@ -788,7 +787,9 @@
 			{:else if placeRows.length === 0}
 				<p class="py-8 text-center text-gray-600 dark:text-gray-400">Geen plaats gevonden.</p>
 			{:else}
-				<ul class="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-300 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900">
+				<ul
+					class="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-300 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
+				>
 					{#each placeRows as row (row.place.id)}
 						<li class="flex flex-wrap items-center gap-3 px-4 py-2.5">
 							<div class="min-w-0 flex-1">
@@ -847,11 +848,37 @@
 						class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 lg:flex lg:gap-6"
 					>
 						<div class="lg:w-80 lg:shrink-0">
-							<img
-								src={item.previewUrl}
-								alt={item.originalName}
-								class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 object-contain"
-							/>
+							{#if item.previewUrl}
+								<img
+									src={item.previewUrl}
+									alt={item.originalName}
+									class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 object-contain"
+								/>
+							{:else}
+								<!--
+									The photograph arrived; only the link to look at it did not. Saying so
+									beats an empty box with a broken-image icon, which reads as a corrupt
+									upload rather than a permission the archive's own server is missing.
+								-->
+								<div
+									class="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-amber-400 bg-amber-50 p-4 text-center dark:border-amber-700 dark:bg-amber-950"
+								>
+									<p class="text-sm font-semibold text-amber-900 dark:text-amber-200">
+										Voorbeeld niet beschikbaar
+									</p>
+									<p class="text-xs text-amber-900 dark:text-amber-200">
+										De foto is goed aangekomen en kan gewoon beoordeeld worden &mdash; alleen het
+										tijdelijke kijk-linkje kon niet gemaakt worden.
+									</p>
+									<p
+										class="text-[11px] leading-snug text-amber-800 dark:text-amber-300"
+										title="SigningError: Permission 'iam.serviceAccounts.signBlob' denied"
+									>
+										De server mist het recht <code>iam.serviceAccounts.signBlob</code>. Geef het
+										service-account van de functies de rol <em>Service Account Token Creator</em>.
+									</p>
+								</div>
+							{/if}
 							<p
 								class="mt-2 truncate text-sm text-gray-500 dark:text-gray-400"
 								title={item.originalName}
