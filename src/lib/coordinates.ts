@@ -12,6 +12,7 @@
  */
 
 import type { Approximation } from '../../sharedModels/approximation';
+import { loadPlacePins } from './place-pins';
 
 /** One placed coordinate, with who placed it and when. */
 export interface PlacedCoordinate {
@@ -63,20 +64,37 @@ export interface StreetGeometryFile {
 let cached: PlaceCoordinates | null = null;
 let geometryCache: Record<string, StreetGeometry> | null = null;
 
-/** Loads the placed coordinates. Missing or unreadable means "none placed yet", not an error. */
+/**
+ * Loads the placed coordinates. Missing or unreadable means "none placed yet", not an error.
+ *
+ * Two layers merged into one answer: the committed file, and the live pins a curator placed
+ * on /beheer since the last deploy. A pin wins over the file - it is the newer judgement of
+ * the same kind of person. Both halves fail soft, so the map draws whatever is reachable.
+ */
 export async function loadCoordinates(fetcher: typeof fetch = fetch): Promise<PlaceCoordinates> {
 	if (cached) return cached;
 
-	try {
-		const response = await fetcher('/data/place-coordinates.json');
-		if (!response.ok) return { places: {} };
+	const committed = await (async (): Promise<Record<string, PlacedCoordinate>> => {
+		try {
+			const response = await fetcher('/data/place-coordinates.json');
+			if (!response.ok) return {};
 
-		const parsed = (await response.json()) as Partial<PlaceCoordinates>;
-		cached = { places: parsed.places ?? {} };
-		return cached;
-	} catch {
-		return { places: {} };
-	}
+			const parsed = (await response.json()) as Partial<PlaceCoordinates>;
+			return parsed.places ?? {};
+		} catch {
+			return {};
+		}
+	})();
+
+	const pins = await loadPlacePins(fetcher);
+
+	cached = { places: { ...committed, ...pins } };
+	return cached;
+}
+
+/** Forgets what was fetched, so a curator sees their own pin without a reload. */
+export function forgetCoordinates(): void {
+	cached = null;
 }
 
 /**
