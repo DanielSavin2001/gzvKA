@@ -581,15 +581,17 @@
 		"tajje": {
 			"id": "tajje",
 			"name": "Tajje",
-			"grade": "A",
+			"grade": "B",
 			"display": "punt_met_twijfel",
-			"note": "Geen plaats maar een persoon. \"Tajje de Kotter\" was de bijnaam van Matheus Janssens; de foto's tonen de optocht door Kapellen voor zijn honderdste verjaardag op 9 juli 1976. Het punt is de Akkerstraat, waar hij werd opgehaald, maar de stoet liep verder over de Hoevensebaan naar het centrum - daarom staat hij niet op de kaart.",
-			"correctable": false,
-			"priority": 0,
+			"note": "Geen plaats maar een persoon: 'Tajje de Kotter' was de bijnaam van Matheus Janssens, en de foto's tonen de optocht door Kapellen voor zijn honderdste verjaardag op 9 juli 1976. De stoet haalde hem op in de Akkerstraat en liep via de Hoevensebaan naar het centrum, dus hij hoort bij de hele gemeente en niet bij een huisnummer. Op vraag van het archief staat hij in het centrum van Kapellen: niet omdat de foto's daar genomen zijn, maar zodat de 62 foto's van die dag vanaf de kaart te vinden zijn. Het punt ligt op de Hoevensebaan, ruim 400 m van het dorpsplein - op de route die de stoet die dag aflegde. Precies op het middelpunt viel hij volledig weg onder de bol van 'Kapellen' zelf (336 foto's), op elk zoomniveau: twee punten van 5 m uit elkaar gaan nooit uit elkaar, hoe ver je ook inzoomt, en hij was daardoor wel getekend maar niet aan te klikken.",
+			"correctable": true,
+			"priority": 62,
 			"kind": "persoon",
 			"outsideKapellen": false,
-			"lat": 51.30791,
-			"lng": 4.42484
+			"lat": 51.31299,
+			"lng": 4.42429,
+			"doubt": "Dit punt is een afspraak, geen vindplaats. De foto's zijn over de hele optochtroute genomen - van de Akkerstraat over de Hoevensebaan tot het centrum. De speld staat op die route, niet op een plek waar een foto genomen is.",
+			"research": "Wie de route van 9 juli 1976 kent, kan er een lijn van maken in plaats van een punt; dat zou kloppen met wat de foto's tonen."
 		},
 		"sint-jozefkerk": {
 			"id": "sint-jozefkerk",
@@ -896,7 +898,7 @@
 			"display": "punt_met_twijfel",
 			"note": "De schoolkolonie Kindervreugd, aan de overkant van de Kalmthoutsesteenweg tegenover nr. 33. Inmiddels afgebroken. gzvka.be waarschuwt uitdrukkelijk het niet te verwarren met het Dennenhuis / Home Flor Mielants ertegenover.",
 			"correctable": true,
-			"priority": 8,
+			"priority": 9,
 			"kind": "plaats",
 			"outsideKapellen": false,
 			"lat": 51.3305,

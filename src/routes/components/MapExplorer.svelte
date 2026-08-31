@@ -26,6 +26,7 @@
 	} from '$lib/coordinates';
 	import type { Approximation, Candidate } from '$lib/approximations';
 	import { circleCollection, isDrawable, loadApproximations } from '$lib/approximations';
+	import { belongsOnMap, researchFor as research } from '$lib/map-places';
 	import type { CorrectionKind } from '../../../sharedModels/correction';
 	import PlaceUncertainty from './PlaceUncertainty.svelte';
 
@@ -106,39 +107,13 @@
 	 * A place counts as located when anyone knows where it is: a curator's pin, the official
 	 * street register, or the research. The research is the newest of the three and the only
 	 * one that can be wrong by hundreds of metres, so it is kept distinguishable rather than
-	 * merged in - `research` below is what decides how each marker is drawn.
+	 * merged in - `researchFor` is what decides how each marker is drawn.
 	 *
-	 * A curator's pin outranks the research, and when there is one the approximation is
-	 * dropped along with its circle and its warning. That is the point of a correction: it
-	 * replaces the guess rather than sitting beside it.
+	 * Both rules live in `$lib/map-places` because six maps now ask them - this one, and the
+	 * castles, streets, districts, stories and donor pages, each drawing a subset. A place that
+	 * one map shows and another silently drops, with nothing to explain the difference, is
+	 * exactly what a second copy of the rule would produce.
 	 */
-	function research(
-		layer: Record<string, Approximation>,
-		pins: Record<string, PlacedCoordinate>,
-		placeId: string
-	): Approximation | undefined {
-		if (pins[placeId]) return undefined;
-		return layer[placeId];
-	}
-
-	/**
-	 * Off the map on purpose: outside Kapellen, or never found.
-	 *
-	 * Like `research`, the two records are arguments rather than closure reads. A reactive
-	 * statement in Svelte 3 re-runs only when an identifier written *in the statement*
-	 * changes, so a helper that reaches for `placed` or `approximations` internally makes
-	 * the list that calls it freeze at whatever those held on the first render.
-	 */
-	function belongsOnMap(
-		layer: Record<string, Approximation>,
-		pins: Record<string, PlacedCoordinate>,
-		place: ArchivePlace
-	): boolean {
-		const found = layer[place.id];
-		if (!found || pins[place.id]) return true;
-		return isDrawable(found);
-	}
-
 	$: locatedPlaces = allPlaces.filter(
 		(place) =>
 			belongsOnMap(approximations, placed, place) &&

@@ -12,8 +12,8 @@
 		"totaal": 91,
 		"met_coordinaten": 89,
 		"te_corrigeren": 27,
-		"fotos_totaal": 3792,
-		"fotos_onzeker": 668,
+		"fotos_totaal": 3802,
+		"fotos_onzeker": 719,
 		"zekerheidsschaal": {
 			"A": "Exact: geokodeerd adres of OSM-object met dezelfde naam. Gebouwniveau.",
 			"B": "Straat of kruispunt vast uit een geschreven bron. Circa 50-150 m.",
@@ -70,7 +70,7 @@
 			"properties": {
 				"categorie": "Wijken en gehuchten",
 				"plaats": "Kapellen",
-				"fotos": 335,
+				"fotos": 336,
 				"zekerheid": "A",
 				"toelichting": "OSM place=town, het centrum.",
 				"onzeker": false,
@@ -1135,25 +1135,25 @@
 				"categorie": "Gebouwen, cafés, kerken en kapellen",
 				"plaats": "Tajje",
 				"fotos": 62,
-				"zekerheid": "A",
-				"toelichting": "Geen plaats maar een persoon. \"Tajje de Kotter\" was de bijnaam van Matheus Janssens; de foto's tonen de optocht door Kapellen voor zijn honderdste verjaardag op 9 juli 1976. Het punt is de Akkerstraat, waar hij werd opgehaald, maar de stoet liep verder over de Hoevensebaan naar het centrum - daarom staat hij niet op de kaart.",
+				"zekerheid": "B",
+				"toelichting": "Geen plaats maar een persoon: 'Tajje de Kotter' was de bijnaam van Matheus Janssens, en de foto's tonen de optocht door Kapellen voor zijn honderdste verjaardag op 9 juli 1976. De stoet haalde hem op in de Akkerstraat en liep via de Hoevensebaan naar het centrum, dus hij hoort bij de hele gemeente en niet bij een huisnummer. Op vraag van het archief staat hij in het centrum van Kapellen: niet omdat de foto's daar genomen zijn, maar zodat de 62 foto's van die dag vanaf de kaart te vinden zijn. Het punt ligt op de Hoevensebaan, ruim 400 m van het dorpsplein - op de route die de stoet die dag aflegde. Precies op het middelpunt viel hij volledig weg onder de bol van 'Kapellen' zelf (336 foto's), op elk zoomniveau: twee punten van 5 m uit elkaar gaan nooit uit elkaar, hoe ver je ook inzoomt, en hij was daardoor wel getekend maar niet aan te klikken.",
 				"onzeker": false,
-				"straal_m": 300,
-				"twijfel": "",
-				"onderzoek": "",
+				"straal_m": null,
+				"twijfel": "Dit punt is een afspraak, geen vindplaats. De foto's zijn over de hele optochtroute genomen - van de Akkerstraat over de Hoevensebaan tot het centrum. De speld staat op die route, niet op een plek waar een foto genomen is.",
+				"onderzoek": "Wie de route van 9 juli 1976 kent, kan er een lijn van maken in plaats van een punt; dat zou kloppen met wat de foto's tonen.",
 				"kandidaten": [],
 				"type": "persoon",
 				"alias_van": "",
 				"buiten_kapellen": false,
-				"weergave": "benadering",
-				"corrigeerbaar": false,
-				"prioriteit": 0
+				"weergave": "punt_met_twijfel",
+				"corrigeerbaar": true,
+				"prioriteit": 62
 			},
 			"geometry": {
 				"type": "Point",
 				"coordinates": [
-					4.424835,
-					51.307914
+					4.42429,
+					51.31299
 				]
 			}
 		},
@@ -1218,7 +1218,7 @@
 			"properties": {
 				"categorie": "Gebouwen, cafés, kerken en kapellen",
 				"plaats": "Louwke Poep",
-				"fotos": 40,
+				"fotos": 41,
 				"zekerheid": "A",
 				"toelichting": "OSM historic=memorial. Monument der gesneuvelden (1926, Theo Blickx), aan het begin van de Christiaan Pallemansstraat. Officieel \"Treurende moeder\".",
 				"onzeker": false,
@@ -1498,7 +1498,7 @@
 			"properties": {
 				"categorie": "Gebouwen, cafés, kerken en kapellen",
 				"plaats": "Home Flor Mielants",
-				"fotos": 16,
+				"fotos": 19,
 				"zekerheid": "A",
 				"toelichting": "Kalmthoutsesteenweg 33. Heette eerder \"Lindenhof\" en \"Villa Thekla\", nu \"Dennenhuis\"; in 1956 openluchtschool van de stad Antwerpen.",
 				"onzeker": false,
@@ -1694,7 +1694,7 @@
 			"properties": {
 				"categorie": "Gebouwen, cafés, kerken en kapellen",
 				"plaats": "Home Philippe Speth",
-				"fotos": 10,
+				"fotos": 12,
 				"zekerheid": "A",
 				"toelichting": "Kapelsestraat 246 — bevestigt het corpus. Zelfde domein als Middelbeek.",
 				"onzeker": false,
@@ -1722,7 +1722,7 @@
 			"properties": {
 				"categorie": "Gebouwen, cafés, kerken en kapellen",
 				"plaats": "Sint-Jozefkapel",
-				"fotos": 10,
+				"fotos": 12,
 				"zekerheid": "A",
 				"toelichting": "OSM amenity=place_of_worship.",
 				"onzeker": false,
@@ -1750,7 +1750,7 @@
 			"properties": {
 				"categorie": "Gebouwen, cafés, kerken en kapellen",
 				"plaats": "Home Kindervreugd",
-				"fotos": 8,
+				"fotos": 9,
 				"zekerheid": "B",
 				"toelichting": "De schoolkolonie Kindervreugd, aan de overkant van de Kalmthoutsesteenweg tegenover nr. 33. Inmiddels afgebroken. gzvka.be waarschuwt uitdrukkelijk het niet te verwarren met het Dennenhuis / Home Flor Mielants ertegenover.",
 				"onzeker": false,
@@ -1763,7 +1763,7 @@
 				"buiten_kapellen": false,
 				"weergave": "punt_met_twijfel",
 				"corrigeerbaar": true,
-				"prioriteit": 8
+				"prioriteit": 9
 			},
 			"geometry": {
 				"type": "Point",

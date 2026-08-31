@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PlaceList from '../components/PlaceList.svelte';
+	import PlaceMap from '../components/PlaceMap.svelte';
 	import Seo from '../components/Seo.svelte';
 
 	export let data: { places: { id: string; name: string; count: number }[] };
@@ -33,5 +34,24 @@
 		</p>
 	</header>
 
-	<PlaceList places={data.places} noun="kastelen" />
+	<!--
+		The map above the list, because on this page it answers the first question. Several of
+		these castles were demolished - Kasteel Oude Gracht, Kasteel Les Chataigniers - and a
+		reader who has heard the name wants to know where it stood before they want to know
+		how many photographs there are.
+	-->
+	<div class="mt-8">
+		<PlaceMap
+			places={data.places}
+			noun="kastelen"
+			title="Waar ze staan (of stonden)"
+			height="460px"
+			zoom={12.2}
+		/>
+	</div>
+
+	<div class="mt-10 border-t border-gray-200 pt-8 dark:border-gray-700">
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Alle kastelen op een rij</h2>
+		<PlaceList places={data.places} noun="kastelen" />
+	</div>
 </div>

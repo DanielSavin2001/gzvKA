@@ -4,9 +4,17 @@
 	"corrections": {
 		"station-en-omgeving-station-eerste-stoomtrein-kapellen-1854-hoghescote-z-d": {
 			"year": "1905",
-			"note": "Not a photograph of 1854: the 'locomotive' is a parade float drawn by horses, past a beenhouwer's shopfront - the Onafhankelijkheidsfeesten float of 1905 depicting the first train of 1854. Same event as '75 jaar Belgie - Onafhankelijkheidsfeesten - eerste trein Kapellen 1854'. The 1854 in the name is what the float depicts, not when the camera stood there.",
+			"title": "Praalwagen 'de eerste stoomtrein van 1854' - Onafhankelijkheidsfeesten",
+			"note": "Not a photograph of 1854: the 'locomotive' is a parade float drawn by horses, past a beenhouwer's shopfront - the Onafhankelijkheidsfeesten float of 1905 depicting the first train of 1854. Same event as '75 jaar Belgie - Onafhankelijkheidsfeesten - eerste trein Kapellen 1854'. The title is rewritten as well as the year: a card reading \"eerste stoomtrein Kapellen 1854\" above the year 1905 reads as a mistake, and this photograph has now been reported as misdated twice by people who were reading exactly that.",
 			"by": "Daniel Savin",
-			"on": "2026-08-30"
+			"on": "2026-08-31"
+		},
+		"feesten-in-kapellen-75-jaar-belgie-onafhankelijkheidsfeesten-eerste-trein-kapell": {
+			"year": "1905",
+			"title": "75 jaar Belgie - Onafhankelijkheidsfeesten - praalwagen 'de eerste trein van 1854'",
+			"note": "The same float as 'Station - eerste stoomtrein Kapellen 1854', and the same 1905 celebration of 75 years of Belgian independence. Retitled for the same reason: the 1854 in the name is what the float depicts, not when the photograph was taken.",
+			"by": "Daniel Savin",
+			"on": "2026-08-31"
 		},
 		"gemeentepark-beaulieu-het-klein-bos-23-vicky-staal-zd": {
 			"places": ["klein-bos"],
