@@ -100,14 +100,24 @@ describe('isDrawable', () => {
 		expect(isDrawable(place({ display: 'punt', outsideKapellen: true }))).toBe(true);
 	});
 
-	it('never draws a person, however well located', () => {
+	it('draws a person when somebody deliberately placed him', () => {
 		// "Tajje de Kotter" was Matheus Janssens, and the 62 photographs are of the
-		// procession through Kapellen for his hundredth birthday. The record carries the
-		// Akkerstraat, where he was collected - but the parade ran from there down the
-		// Hoevensebaan to the centre, so a pin on one house number says something none of
-		// the photographs do.
-		expect(isDrawable(place({ display: 'punt', kind: 'persoon' }))).toBe(false);
-		expect(isDrawable(place({ display: 'benadering', kind: 'persoon', radius: 300 }))).toBe(false);
+		// procession through Kapellen for his hundredth birthday, which ran from the
+		// Akkerstraat down the Hoevensebaan to the centre. No house number is where they
+		// were taken - but leaving him off the map put those 62 photographs in a list headed
+		// "not on the map", which reads as a place nobody managed to find. The archive asked
+		// for him on the map, in the centre of Kapellen, and his panel says what the point
+		// means: an agreed spot for a whole parade, not a location.
+		expect(isDrawable(place({ display: 'punt', kind: 'persoon' }))).toBe(true);
+		expect(isDrawable(place({ display: 'punt_met_twijfel', kind: 'persoon' }))).toBe(true);
+	});
+
+	it('still refuses a person with no point at all', () => {
+		// The kind no longer decides, so the position has to.
+		expect(
+			isDrawable(place({ display: 'punt', kind: 'persoon', lat: undefined, lng: undefined }))
+		).toBe(false);
+		expect(isDrawable(place({ display: 'niet_geplaatst', kind: 'persoon' }))).toBe(false);
 	});
 
 	it('still needs a position, wherever the place is', () => {
@@ -227,9 +237,11 @@ describe('the generated file', () => {
 		expect(byDisplay('kandidaten')).toBe(1);
 		expect(byDisplay('niet_geplaatst')).toBe(0);
 
-		// 26: the second round's five correctable rows took it to 27, and Middelbeek came off
-		// the queue when its answer arrived.
-		expect(places.filter((entry) => entry.correctable)).toHaveLength(26);
+		// 27: the second round's five correctable rows took it to 27, Middelbeek came off the
+		// queue when its answer arrived, and Tajje joined it - his point is an agreed spot
+		// for a parade rather than a location, so it is exactly the kind of thing somebody
+		// who was there should be able to correct.
+		expect(places.filter((entry) => entry.correctable)).toHaveLength(27);
 	});
 
 	it('gives every correctable place something to read', () => {

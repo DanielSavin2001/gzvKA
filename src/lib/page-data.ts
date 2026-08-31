@@ -80,6 +80,39 @@ export async function placeFamily(
 	return placesInFamily(archive, family).map(({ id, name, count }) => ({ id, name, count }));
 }
 
+/** A place a page draws on its own map. */
+export interface MappablePlace {
+	id: string;
+	name: string;
+	count: number;
+	/** Decides the marker colour: blue for a street or square, green for everything else. */
+	isStreet: boolean;
+}
+
+/**
+ * The places the old site wrote about, for the map on `/verhalen`.
+ *
+ * The story index knows which place each story belongs to but not what that place is called
+ * or how many photographs it holds - it is keyed by gazetteer id, and a map of a hundred
+ * points labelled `kasteel-oude-gracht` is not a map. The names come from the archive here,
+ * at prerender time, so they are in the HTML rather than behind a 1.1 MB download.
+ *
+ * About 5 KB for the whole list, once. Cheaper than the alternative and considerably cheaper
+ * than the map having to wait for the index before it can draw anything.
+ */
+export async function storyPlaces(
+	fetcher: typeof fetch,
+	byPlace: Record<string, unknown[]>
+): Promise<MappablePlace[]> {
+	const archive = await loadArchive(fetcher);
+
+	return Object.keys(byPlace)
+		.map((id) => archive.placeById.get(id))
+		.filter((place): place is NonNullable<typeof place> => place !== undefined)
+		.map(({ id, name, count, isStreet }) => ({ id, name, count, isStreet }))
+		.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+}
+
 /** One decade of the archive, for the timeline. */
 export interface Decade {
 	/** Anchor and key, e.g. `1960` or `voor-1900`. */
@@ -364,8 +397,15 @@ export interface DonorSummary {
 	photos: PhotoLink[];
 	/** The first of them, as a link-preview card. */
 	card: string | null;
-	/** The places they photographed, biggest first - what this person's giving amounts to. */
-	places: { id: string; name: string; count: number }[];
+	/**
+	 * The places they photographed, biggest first - what this person's giving amounts to.
+	 *
+	 * All of them, not the dozen the chips under the heading show: the map below draws from
+	 * the same list, and a map that stops at twelve would leave a donor's quieter streets off
+	 * it with nothing to say they were missing. The count is this person's photographs of that
+	 * place, not the archive's.
+	 */
+	places: MappablePlace[];
 	/** The years their photographs span, when enough of them are dated to say. */
 	span: string | null;
 }
@@ -393,9 +433,13 @@ export async function donorSummary(
 		// Tajje is filed as a place so his photographs stay findable, but "photographed
 		// Tajje 4 times" is not a place somebody went.
 		.filter(({ place }) => place !== undefined && !isPerson(place))
-		.map(({ place, count }) => ({ id: place!.id, name: place!.name, count }))
-		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'nl'))
-		.slice(0, 12);
+		.map(({ place, count }) => ({
+			id: place!.id,
+			name: place!.name,
+			count,
+			isStreet: place!.isStreet
+		}))
+		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'nl'));
 
 	const years = donor.photos
 		.map((photo) => Number(photo.y))

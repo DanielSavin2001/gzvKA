@@ -72,11 +72,16 @@ export interface ApproximationFile {
  * it is a fact about the place, not a reason to hide it.
  */
 export function isDrawable(approximation: Approximation): boolean {
-	// A person is not a location. "Tajje de Kotter" carried a point in the Akkerstraat,
-	// where Matheus Janssens was collected on his hundredth birthday - but the photographs
-	// are of a procession that ran from there down the Hoevensebaan to the centre, and
-	// pinning it to one house number says something none of them do.
-	if (approximation.kind === 'persoon') return false;
+	// A person used to be excluded outright, and the reasoning still holds: "Tajje de Kotter"
+	// is Matheus Janssens, and the photographs are of a procession that ran from the
+	// Akkerstraat down the Hoevensebaan to the centre, so no house number is where they were
+	// taken. But leaving him off the map left 62 photographs reachable only through a list
+	// headed "not on the map", which reads as a failure to find him rather than as what it
+	// is. The archive asked for him on the map, in the centre of Kapellen.
+	//
+	// So the record decides rather than the kind: a person is drawn when somebody has
+	// deliberately given him a point, and his panel says in full what that point means -
+	// an agreed spot for the whole parade, not the place a photograph was taken.
 	if (approximation.display === 'niet_geplaatst') return false;
 	if (approximation.display === 'kandidaten') return (approximation.candidates ?? []).length > 0;
 	return approximation.lat != null && approximation.lng != null;

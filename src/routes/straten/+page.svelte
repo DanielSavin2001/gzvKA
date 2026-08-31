@@ -1,10 +1,14 @@
 <script lang="ts">
 	import PlaceList from '../components/PlaceList.svelte';
+	import PlaceMap from '../components/PlaceMap.svelte';
 	import Seo from '../components/Seo.svelte';
 
 	export let data: { places: { id: string; name: string; count: number }[] };
 
 	$: photographs = data.places.reduce((sum, place) => sum + place.count, 0);
+
+	/** Streets are drawn blue; everything else on the site's maps is green. */
+	$: streets = data.places.map((place) => ({ ...place, isStreet: true }));
 </script>
 
 <Seo
@@ -33,5 +37,18 @@
 		</p>
 	</header>
 
-	<PlaceList places={data.places} noun="straten" />
+	<div class="mt-8">
+		<PlaceMap
+			places={streets}
+			noun="straten"
+			title="Op de kaart"
+			height="460px"
+			zoom={12.4}
+		/>
+	</div>
+
+	<div class="mt-10 border-t border-gray-200 pt-8 dark:border-gray-700">
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Alle straten op een rij</h2>
+		<PlaceList places={data.places} noun="straten" />
+	</div>
 </div>

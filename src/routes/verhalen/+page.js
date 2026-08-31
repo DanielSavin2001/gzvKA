@@ -1,3 +1,4 @@
+import { storyPlaces } from '$lib/page-data';
 import { loadStoryIndex } from '$lib/stories';
 
 /**
@@ -14,5 +15,10 @@ import { loadStoryIndex } from '$lib/stories';
 export const prerender = true;
 
 export async function load({ fetch }) {
-	return { index: await loadStoryIndex(fetch) };
+	const index = await loadStoryIndex(fetch);
+
+	// The names of the places written about, so the map can be drawn from the prerendered
+	// HTML. The story index is keyed by gazetteer id and knows no names; a map of a hundred
+	// points labelled `kasteel-oude-gracht` is not a map.
+	return { index, places: await storyPlaces(fetch, index.byPlace) };
 }

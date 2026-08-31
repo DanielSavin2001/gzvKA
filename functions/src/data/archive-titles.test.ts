@@ -23,7 +23,13 @@ const index = JSON.parse(
 		path.join(__dirname, '..', '..', '..', 'static', 'data', 'archive-index.json'),
 		'utf8'
 	)
-) as { photos: { id: string; p: string; t: string; s: string; st: string[]; d?: string; k?: string }[] };
+) as {
+	photos: { id: string; p: string; t: string; s: string; st: string[]; d?: string; k?: string }[];
+	places: { id: string; name: string }[];
+};
+
+/** Place names by id, so a test can build the haystack the site builds. */
+const placeNames = new Map(index.places.map((place) => [place.id, place.name]));
 
 describe('display titles', () => {
 	it('keeps a caption that only looks like a person', () => {
@@ -58,6 +64,12 @@ describe('display titles', () => {
 		// must not include it either - building the haystack from `p` and then asserting that
 		// every word of `p` is in it can never fail, and would leave the regression it exists
 		// to catch invisible. Measured: without `k`, 586 photographs would fail here.
+		//
+		// The place names have to be in it for the same reason the path must not: `k` is built
+		// by subtracting every field the site already searches, place names included, so a
+		// haystack missing them reports a word as lost that a visitor can type and find. It
+		// caught the retitled 1905 parade float - matched to the place "Kapellen", so dropping
+		// "Kapellen" from its title lost the word here and nowhere else.
 		// Extensions, the "no date" and "anonymous" markers, and the subject prefix codes
 		// whose meaning the archive never recorded (KNOWN_PREFIX_CODES in segment.ts). The
 		// last of those are set aside on purpose - nobody searches for "OWNP" - and a word
@@ -81,8 +93,9 @@ describe('display titles', () => {
 				.filter((word) => word.length > 2 && !/^\d+$/.test(word) && !ignorable.has(word));
 
 		const unreachable = index.photos.filter((photo) => {
+			const named = photo.st.map((id) => placeNames.get(id) ?? '').join(' ');
 			const haystack = new Set(
-				words([photo.t, photo.s, photo.d ?? '', photo.k ?? ''].join(' '))
+				words([photo.t, photo.s, named, photo.d ?? '', photo.k ?? ''].join(' '))
 			);
 			return words(photo.p).some((word) => !haystack.has(word));
 		});
