@@ -288,9 +288,21 @@ Bourlet-Luyckx*. 360 foto's werden getoond als een kale straatnaam, met het enig
 de foto over zichzelf zei. En omdat de zoekindex uit de titel werd gebouwd en niet uit de
 bestandsnaam, waren die woorden ook onvindbaar: **894 foto's droegen een woord dat nergens meer
 te zoeken was**. Wie de garage zocht waar zijn vader werkte, kreeg te horen dat het archief zo'n
-foto niet had, terwijl het er een had. De trimmer knipt nu alleen nog een naam weg die het corpus
-zelf als schenker kent, en de zoekfunctie leest ook het pad. Nul foto's dragen nog een
-onbereikbaar woord, en een test houdt dat zo.
+foto niet had, terwijl het er een had.
+
+De trimmer knipt nu alleen nog een naam weg die het corpus zelf als schenker kent — een naam
+waaronder niemand ooit een foto schonk is een bijschrift. Daaronder zat nog een oudere fout:
+als een bestandsnaam *z.n.* zegt (schenker onbekend) nam de parser het segment ervóór alsnog
+als schenker en gooide het daarna weg, omdat diezelfde functie al had vastgesteld dat de
+schenker onbekend is — zo verloor *Nieuwe Wijk - St. Jozefkapel - zn - zd* de kapel uit zijn
+titel én uit alles wat daaruit volgt.
+
+Voor wat de trimmer terecht weglaat draagt elke foto nu een veld `k`: de woorden uit het pad
+die geen enkel ander veld draagt, mét de datum van schenking, de bestandsextensie en alle
+kale getallen eruit. Dat laatste is niet vrijblijvend — de eerste versie indexeerde gewoon
+het hele pad, en toen antwoordde *"2015"* met de 602 foto's die dát jaar geschonken waren in
+plaats van de 36 die erin genomen zijn. Nul foto's dragen nog een onbereikbaar woord, en twee
+tests houden allebei de helften vast.
 
 **Een goedgekeurde foto bereikte de website nooit.** `publishedPhotos` was geschreven, uitgerold
 en gedocumenteerd als *"what the website merges into the archive"* — en niets in `src/` riep het
