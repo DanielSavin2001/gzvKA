@@ -18,25 +18,35 @@ const TIMEOUT_MS = 3_000;
 
 let cache: Record<string, PlacePin> | null = null;
 
+/**
+ * The pins, or null when they could not be fetched - callers that only draw treat null as
+ * "none" (`?? {}`), while a caller that caches must not freeze a failure as an answer.
+ *
+ * `fresh: true` bypasses the endpoint's 60-second HTTP cache as well as this module's,
+ * which is what a curator needs right after saving or removing a pin: the browser would
+ * otherwise happily serve the pre-change response for up to a minute.
+ */
 export async function loadPlacePins(
-	fetcher: typeof fetch = fetch
-): Promise<Record<string, PlacePin>> {
-	if (cache) return cache;
+	fetcher: typeof fetch = fetch,
+	options: { fresh?: boolean } = {}
+): Promise<Record<string, PlacePin> | null> {
+	if (cache && !options.fresh) return cache;
 
 	// No backend configured: the normal state for a fresh clone; the map works without it.
 	if (!FUNCTIONS_BASE) return {};
 
 	try {
 		const response = await fetcher(`${FUNCTIONS_BASE}placePins`, {
-			signal: AbortSignal.timeout(TIMEOUT_MS)
+			signal: AbortSignal.timeout(TIMEOUT_MS),
+			...(options.fresh ? { cache: 'reload' as RequestCache } : {})
 		});
-		if (!response.ok) return {};
+		if (!response.ok) return null;
 
 		const parsed = (await response.json()) as Partial<PlacePinFile>;
 		cache = parsed.pins ?? {};
 		return cache;
 	} catch {
-		return {};
+		return null;
 	}
 }
 

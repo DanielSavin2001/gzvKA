@@ -34,6 +34,15 @@
 
 	let picked: { lat: number; lng: number } | null = start ? { ...start } : null;
 
+	/**
+	 * Where the map opens - captured once, not derived from `picked`. The MapLibre
+	 * component eases to its center/zoom props whenever they change, so props that follow
+	 * the pick would recenter and re-zoom the map on every click, fighting the curator's
+	 * own panning exactly when they are fine-tuning.
+	 */
+	const initialCentre: [number, number] = start ? [start.lng, start.lat] : KAPELLEN_CENTRE;
+	const initialZoom = start ? 15 : 13;
+
 	$: outside = picked !== null && !isWithinKapellen(picked.lat, picked.lng);
 	$: moved = picked !== null && (start === null || picked.lat !== start.lat || picked.lng !== start.lng);
 
@@ -72,8 +81,8 @@
 
 		<div class="mt-3 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
 			<MapLibre
-				center={picked ? [picked.lng, picked.lat] : KAPELLEN_CENTRE}
-				zoom={picked ? 15 : 13}
+				center={initialCentre}
+				zoom={initialZoom}
 				class="h-[24rem] w-full"
 				style={{ version: 8, sources: {}, layers: [] }}
 			>
@@ -89,10 +98,10 @@
 				</RasterTileSource>
 
 				{#if picked}
+					<!-- Centred on the coordinate, like the dots on the public map: an offset
+					     here would make a carefully tuned pin save a spot it does not show. -->
 					<Marker lngLat={[picked.lng, picked.lat]}>
-						<div
-							class="h-5 w-5 -translate-y-1/2 rounded-full border-2 border-white bg-blue-700 shadow-md"
-						/>
+						<div class="h-5 w-5 rounded-full border-2 border-white bg-blue-700 shadow-md" />
 					</Marker>
 				{/if}
 			</MapLibre>

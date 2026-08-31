@@ -126,7 +126,10 @@ export function readCuratorFields(input: Record<string, unknown>): CuratorFields
 	if (typeof input.donor === 'string' && input.donor.trim()) {
 		fields.donor = input.donor.trim().slice(0, 200);
 	}
-	if (typeof input.description === 'string' && input.description.trim()) {
+	// An empty string is kept, deliberately: the beheer form prefills the description from
+	// the contributor's unreviewed suggestion, so "cleared the field" must actually clear it.
+	// Dropping empties here would let review()'s merge resurrect text a curator deleted.
+	if (typeof input.description === 'string') {
 		fields.description = input.description.trim().slice(0, 4000);
 	}
 	if (typeof input.lat === 'number' && typeof input.lng === 'number') {

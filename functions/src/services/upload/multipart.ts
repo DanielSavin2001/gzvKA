@@ -131,14 +131,3 @@ export function collectUpload(
 		busboy.end(body);
 	});
 }
-
-/**
- * The files alone. Kept for the callers and tests written before fields existed;
- * new code wants {@link collectUpload}.
- */
-export async function collectFiles(
-	headers: IncomingHttpHeaders,
-	body: Buffer | string
-): Promise<FileData[]> {
-	return (await collectUpload(headers, body)).files;
-}

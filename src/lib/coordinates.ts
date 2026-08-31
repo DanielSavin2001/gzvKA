@@ -65,31 +65,43 @@ let cached: PlaceCoordinates | null = null;
 let geometryCache: Record<string, StreetGeometry> | null = null;
 
 /**
+ * The committed half of the answer, or null when the fetch failed - so a transient error is
+ * distinguishable from a genuinely empty file and never cached as "none placed".
+ */
+export async function loadCommittedPlaces(
+	fetcher: typeof fetch = fetch
+): Promise<Record<string, PlacedCoordinate> | null> {
+	try {
+		const response = await fetcher('/data/place-coordinates.json');
+		if (!response.ok) return null;
+
+		const parsed = (await response.json()) as Partial<PlaceCoordinates>;
+		return parsed.places ?? {};
+	} catch {
+		return null;
+	}
+}
+
+/**
  * Loads the placed coordinates. Missing or unreadable means "none placed yet", not an error.
  *
  * Two layers merged into one answer: the committed file, and the live pins a curator placed
  * on /beheer since the last deploy. A pin wins over the file - it is the newer judgement of
- * the same kind of person. Both halves fail soft, so the map draws whatever is reachable.
+ * the same kind of person. Both halves fail soft, so the map draws whatever is reachable -
+ * but a failed half is never cached, so the next call retries instead of freezing an empty
+ * answer for the whole session.
  */
 export async function loadCoordinates(fetcher: typeof fetch = fetch): Promise<PlaceCoordinates> {
 	if (cached) return cached;
 
-	const committed = await (async (): Promise<Record<string, PlacedCoordinate>> => {
-		try {
-			const response = await fetcher('/data/place-coordinates.json');
-			if (!response.ok) return {};
+	const [committed, pins] = await Promise.all([
+		loadCommittedPlaces(fetcher),
+		loadPlacePins(fetcher)
+	]);
 
-			const parsed = (await response.json()) as Partial<PlaceCoordinates>;
-			return parsed.places ?? {};
-		} catch {
-			return {};
-		}
-	})();
-
-	const pins = await loadPlacePins(fetcher);
-
-	cached = { places: { ...committed, ...pins } };
-	return cached;
+	const merged = { places: { ...(committed ?? {}), ...(pins ?? {}) } };
+	if (committed !== null && pins !== null) cached = merged;
+	return merged;
 }
 
 /** Forgets what was fetched, so a curator sees their own pin without a reload. */

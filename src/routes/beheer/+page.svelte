@@ -24,7 +24,13 @@
 	import type { PhotoEdit } from '$lib/photo-edits';
 	import { forgetPhotoEdits, loadPhotoEdits } from '$lib/photo-edits';
 	import type { CoordinateSource, PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
-	import { forgetCoordinates, loadCoordinates, loadStreetGeometry, locate } from '$lib/coordinates';
+	import {
+		forgetCoordinates,
+		loadCommittedPlaces,
+		loadStreetGeometry,
+		locate
+	} from '$lib/coordinates';
+	import { isPersonKind } from '../../../sharedModels/place-family';
 	import type { Approximation } from '$lib/approximations';
 	import { loadApproximations } from '$lib/approximations';
 	import type { PlacePin } from '$lib/place-pins';
@@ -81,19 +87,20 @@
 	let pinBusy = false;
 
 	async function loadPlacesData(): Promise<void> {
-		// Fresh rather than from the site's cache, so a curator sees their own last pin.
+		// Fresh rather than from any cache - the module's or the browser's - so a curator
+		// sees their own last pin rather than the answer of up to a minute ago.
 		forgetPlacePins();
 		forgetCoordinates();
-		const [coordinates, geometry, research, livePins] = await Promise.all([
-			loadCoordinates(),
+		const [committed, geometry, research, livePins] = await Promise.all([
+			loadCommittedPlaces(),
 			loadStreetGeometry(),
 			loadApproximations(),
-			loadPlacePins()
+			loadPlacePins(fetch, { fresh: true })
 		]);
-		allCoordinates = coordinates.places;
+		pins = livePins ?? {};
+		allCoordinates = { ...(committed ?? {}), ...pins };
 		streetGeometry = geometry;
 		approximations = research;
-		pins = livePins;
 		placesReady = true;
 	}
 
@@ -110,7 +117,7 @@
 		const query = normalizeText(placeQuery);
 
 		return archive.places
-			.filter((place) => place.kind !== 'person')
+			.filter((place) => !isPersonKind(place))
 			.filter((place) => query === '' || normalizeText(place.name).includes(query))
 			.map((place) => ({
 				place,
@@ -172,13 +179,17 @@
 	/**
 	 * One click for the common case: the visitor pointed at the right spot, so accepting
 	 * the report and placing the pin are the same decision.
+	 *
+	 * The pin goes first. If accepting then failed, a retry simply re-saves the same pin
+	 * and accepts; the other way round, a failed pin save would leave the report accepted,
+	 * every retry refused as "al accepted", and the visitor's coordinate silently dropped.
 	 */
 	async function acceptWithPin(report: PlaceCorrection): Promise<void> {
 		if (report.lat == null || report.lng == null) return;
 		reportBusy = report.id;
 		try {
-			await judgeCorrection({ id: report.id, status: 'accepted' });
 			const saved = await savePlacePin(report.placeId, report.lat, report.lng);
+			await judgeCorrection({ id: report.id, status: 'accepted' });
 			pins = { ...pins, [report.placeId]: saved.pin };
 			allCoordinates = { ...allCoordinates, [report.placeId]: saved.pin };
 			forgetPlacePins();
@@ -212,8 +223,13 @@
 		const anchor = document.createElement('a');
 		anchor.href = url;
 		anchor.download = 'place-coordinates.json';
+		// In the document, and the URL revoked only after the click has been handled: some
+		// browsers resolve a blob URL asynchronously, and a synchronous revoke on a detached
+		// anchor can silently abort the download.
+		document.body.appendChild(anchor);
 		anchor.click();
-		URL.revokeObjectURL(url);
+		anchor.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 10_000);
 	}
 
 	/** Finding a photograph among 4,504 of them. */
@@ -710,10 +726,10 @@
 										disabled={reportBusy === report.id}
 										on:click={() => judge(report, 'accepted')}
 									>
-										{report.kind === 'coordinate' && report.lat != null
-											? 'Klopt, zonder pin'
-											: reportBusy === report.id
+										{reportBusy === report.id
 											? 'Bezig ...'
+											: report.kind === 'coordinate' && report.lat != null
+											? 'Klopt, zonder pin'
 											: 'Klopt'}
 									</button>
 								{/if}

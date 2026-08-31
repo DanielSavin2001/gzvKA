@@ -33,6 +33,18 @@ describe('readPlacePin', () => {
 		);
 		expect(() => readPlacePin({ placeId: 'klein-bos' })).toThrow(PlacePinError);
 	});
+
+	it('refuses the values Number() would quietly turn into the equator', () => {
+		// Number(null), Number('') and Number([]) are all 0 - finite, in range, and wrong.
+		expect(() => readPlacePin({ placeId: 'klein-bos', lat: null, lng: 4.4 })).toThrow(
+			PlacePinError
+		);
+		expect(() => readPlacePin({ placeId: 'klein-bos', lat: 51.3, lng: '' })).toThrow(PlacePinError);
+		expect(() => readPlacePin({ placeId: 'klein-bos', lat: [], lng: 4.4 })).toThrow(PlacePinError);
+		expect(() => readPlacePin({ placeId: 'klein-bos', lat: '51.3', lng: 4.4 })).toThrow(
+			PlacePinError
+		);
+	});
 });
 
 describe('readPlacePinRemoval', () => {

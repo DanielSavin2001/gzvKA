@@ -53,8 +53,10 @@ export function readPlacePin(input: Record<string, unknown>): PlacePinRequest {
 		throw new PlacePinError('Geen plaats opgegeven.');
 	}
 
-	const lat = Number(input.lat);
-	const lng = Number(input.lng);
+	// Real numbers only: `Number(null)` and `Number('')` are 0, which is a finite, in-range
+	// coordinate on the equator - exactly the silent mis-pin this reader exists to refuse.
+	const lat = typeof input.lat === 'number' ? input.lat : NaN;
+	const lng = typeof input.lng === 'number' ? input.lng : NaN;
 	if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
 		throw new PlacePinError('De coördinaat is onleesbaar.');
 	}

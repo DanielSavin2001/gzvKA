@@ -2466,12 +2466,12 @@
 				"categorie": "Kastelen en domeinen",
 				"plaats": "Kasteel Pannenhuys",
 				"fotos": 35,
-				"zekerheid": "C",
-				"straal_m": 700,
+				"zekerheid": "B",
+				"straal_m": 400,
 				"weergave": "benadering",
-				"toelichting": "Sierlijk kasteeltje in rode baksteen aan de Heidestraat-Noord (Kapellenbos, richting Kalmthout), gebouwd 1908, park van tuinarchitect Petry. Na WO I ook 'Ladyloan' genoemd - extra alias voor het archief. Eigenaars Van de Put - Paternostre de Domon.",
-				"twijfel": "Geen huisnummer bekend; de Heidestraat-Noord is lang. Het punt is het midden van de straat.",
-				"onderzoek": "gzvka.be gebruikt de tegenwoordige tijd ('ligt'), dus het staat er vermoedelijk nog: een luchtfoto langs de Heidestraat-Noord vindt een rood bakstenen kasteeltje in een park.",
+				"toelichting": "Sierlijk kasteeltje in rode baksteen aan de Heidestraat-Noord 209 (Kapellenbos), gebouwd 1907-1908, park van tuinarchitect Petry. Na WO I ook 'Ladyloan' genoemd. Eigenaars Van de Put - Paternostre de Domon. Het staat er nog: een verkoopadvertentie (Immoscoop) beschrijft 'een karaktervol kasteel uit 1907... in het hart van Kapellenbos op een domein van ca. 2,5 ha met parkzicht en vijver', en een evenementenpagina (2022) noemt het adres voluit 'Kasteel Pannenhuys, Heidestraat-Noord 209'. Onderzoek 2026-08-31: klasse C naar B - het huisnummer is nu uit twee onafhankelijke geschreven bronnen bekend; het punt is een interpolatie van nr. 209 langs de registerpolylijn, tussen de Larikslaan en de Duinendreef.",
+				"twijfel": "Het huisnummer 209 is zeker, maar het punt is geinterpoleerd langs de 2,9 km lange straat, niet geokodeerd - de echte oprit kan enkele honderden meters verderop liggen. Verwar het niet met Heidestraat-ZUID 209, een gewone villa.",
+				"onderzoek": "Een pin op het gebouw zelf (Geopunt/GRB of ter plaatse) maakt er klasse A van: zoek het rode bakstenen kasteeltje met vijver tussen de kruispunten Larikslaan en Duinendreef, Heidestraat-Noord 209.",
 				"kandidaten": [],
 				"onzeker": true,
 				"type": "plaats",
@@ -2483,8 +2483,8 @@
 			"geometry": {
 				"type": "Point",
 				"coordinates": [
-					4.453565,
-					51.339893
+					4.4567,
+					51.3498
 				]
 			}
 		},

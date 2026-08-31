@@ -40,10 +40,13 @@ export const placePins: HttpsFunction = https.onRequest(
 		if (response.headersSent) return response;
 
 		try {
+			const all = await pins.all();
+
 			// Short, like publishedPhotos: a pin placed a minute ago should show without the
-			// curator wondering whether it worked.
+			// curator wondering whether it worked. Set only after the read succeeded - an
+			// explicit freshness lifetime on a 500 would let caches keep serving the failure.
 			response.set('Cache-Control', 'public, max-age=60');
-			return response.status(200).json({ version: 1, pins: await pins.all() });
+			return response.status(200).json({ version: 1, pins: all });
 		} catch (error) {
 			return fail(response, error);
 		}

@@ -157,6 +157,14 @@ describe('readCuratorFields', () => {
 		expect(readCuratorFields({ description: 'x'.repeat(5000) }).description?.length).toBe(4000);
 	});
 
+	it('lets a curator clear a description', () => {
+		// The form prefills the description from the contributor's unreviewed suggestion, so
+		// emptying the field must actually erase it; a dropped empty string would let the
+		// review merge resurrect text the curator deleted.
+		expect(readCuratorFields({ description: '   ' })).toEqual({ description: '' });
+		expect(readCuratorFields({})).toEqual({});
+	});
+
 	it('refuses a year that is not one', () => {
 		expect(readCuratorFields({ year: 'ergens in de jaren 30' })).toEqual({});
 		expect(readCuratorFields({ year: '1935-1936' })).toEqual({ year: '1935-1936' });
