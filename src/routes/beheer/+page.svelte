@@ -39,6 +39,7 @@
 	import { normalizeText } from '../../../sharedModels/text';
 	import DonorPicker from '../components/DonorPicker.svelte';
 	import DonorDesk from '../components/DonorDesk.svelte';
+	import PlaceChooser from '../components/PlaceChooser.svelte';
 	import PhotoEditor from '../components/PhotoEditor.svelte';
 	import DatingDesk from '../components/DatingDesk.svelte';
 	import PinPicker from '../components/PinPicker.svelte';
@@ -458,20 +459,6 @@
 		} finally {
 			busy = null;
 		}
-	}
-
-	/** Places a curator can file a photograph under, busiest first so the common ones lead. */
-	$: places = archive
-		? [...archive.places].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-		: [];
-
-	function togglePlace(item: QueuedSubmission, placeId: string): void {
-		const current = editsFor(item);
-		const chosen = current.places ?? [];
-		current.places = chosen.includes(placeId)
-			? chosen.filter((id) => id !== placeId)
-			: [...chosen, placeId];
-		edits = edits;
 	}
 
 	function readableSize(bytes: number): string {
@@ -1010,43 +997,12 @@
 							</div>
 
 							<div class="mt-3">
-								<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-									Plaats
-									{#if ready.places && ready.places.length > 0}
-										<span class="font-normal text-gray-500 dark:text-gray-400"
-											>({ready.places.length} gekozen)</span
-										>
-									{/if}
-								</p>
-
-								{#if ready.places && ready.places.length > 0}
-									<ul class="mt-1 flex flex-wrap gap-1">
-										{#each ready.places as placeId (placeId)}
-											<li>
-												<button
-													type="button"
-													class="rounded-full bg-blue-800 px-3 py-1 text-sm text-white"
-													on:click={() => togglePlace(item, placeId)}
-												>
-													{archive?.placeById.get(placeId)?.name ?? placeId} &times;
-												</button>
-											</li>
-										{/each}
-									</ul>
-								{/if}
-
-								<select
-									class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-									on:change={(event) => {
-										if (event.currentTarget.value) togglePlace(item, event.currentTarget.value);
-										event.currentTarget.value = '';
-									}}
-								>
-									<option value="">Straat of plaats toevoegen ...</option>
-									{#each places as place (place.id)}
-										<option value={place.id}>{place.name} ({place.count})</option>
-									{/each}
-								</select>
+								<PlaceChooser
+									chosen={ready.places ?? []}
+									{archive}
+									on:change={(event) => (edits[item.id].places = event.detail)}
+									on:created={reloadArchive}
+								/>
 							</div>
 
 							<div class="mt-5 flex flex-wrap gap-2">

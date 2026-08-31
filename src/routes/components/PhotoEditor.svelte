@@ -3,6 +3,7 @@
 	import { thumbUrl } from '$lib/archive';
 	import type { PhotoEdit, PhotoFields } from '$lib/photo-edits';
 	import DonorPicker from './DonorPicker.svelte';
+	import PlaceChooser from './PlaceChooser.svelte';
 	import { revertPhotoEdit, savePhotoEdit } from '$lib/admin';
 
 	/**
@@ -33,17 +34,6 @@
 	let year = photo.y ?? '';
 	let donor = photo.d ?? '';
 	let description = (photo as ArchivePhoto & { desc?: string }).desc ?? '';
-
-	/** Places a curator can file under, busiest first so the common ones lead. */
-	$: options = [...archive.places].sort(
-		(a, b) => b.count - a.count || a.name.localeCompare(b.name)
-	);
-
-	function toggle(placeId: string): void {
-		places = places.includes(placeId)
-			? places.filter((id) => id !== placeId)
-			: [...places, placeId];
-	}
 
 	/**
 	 * What actually changed.
@@ -194,34 +184,7 @@
 				{/if}
 			</p>
 
-			{#if places.length > 0}
-				<ul class="mt-1 flex flex-wrap gap-1">
-					{#each places as placeId (placeId)}
-						<li>
-							<button
-								type="button"
-								class="rounded-full bg-blue-800 px-3 py-1 text-sm text-white"
-								on:click={() => toggle(placeId)}
-							>
-								{archive.placeById.get(placeId)?.name ?? placeId} &times;
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-
-			<select
-				class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-				on:change={(event) => {
-					if (event.currentTarget.value) toggle(event.currentTarget.value);
-					event.currentTarget.value = '';
-				}}
-			>
-				<option value="">Straat of plaats toevoegen ...</option>
-				{#each options as place (place.id)}
-					<option value={place.id}>{place.name} ({place.count})</option>
-				{/each}
-			</select>
+			<PlaceChooser bind:chosen={places} {archive} label="" on:created />
 		</div>
 
 		{#if error}

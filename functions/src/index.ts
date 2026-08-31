@@ -54,6 +54,15 @@ export const placePins = controllers.placePinController.placePins;
 export const savePlacePin = controllers.placePinController.savePlacePin;
 
 /**
+ * @function placeRecords      public - the places a curator made or corrected
+ * @function savePlaceRecord   curators - create a place, or correct one
+ * @function deletePlaceRecord curators - drop the overlay for one place
+ */
+export const placeRecords = controllers.placeRecordController.placeRecords;
+export const savePlaceRecord = controllers.placeRecordController.savePlaceRecord;
+export const deletePlaceRecord = controllers.placeRecordController.deletePlaceRecord;
+
+/**
  * Functions behind "I know when this photograph was taken".
  *
  * 3,896 of the 4,504 photographs have no year, and no work inside this repository can

@@ -14,6 +14,7 @@
 import type { PlaceCorrection } from '../../sharedModels/correction';
 import type { PhotoFact } from '../../sharedModels/photo-fact';
 import type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
+import type { PlaceRecord } from '../../sharedModels/place-record';
 import type { Submission } from '../../sharedModels/submission';
 
 /**
@@ -217,6 +218,37 @@ export function savePhotoEdit(photoId: string, fields: PhotoFields): Promise<Pho
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ photoId, ...fields })
+	});
+}
+
+/**
+ * Creates a place, or corrects what the gazetteer says about one.
+ *
+ * The site merges these over the generated index, so the place is real everywhere the moment
+ * this returns - the maps, the browse lists, search, the photo pages. What it does not have
+ * until the next build is prerendered HTML of its own, which costs a crawler and not a
+ * visitor: the static build falls back to the app shell and the page renders client-side.
+ */
+export function savePlaceRecord(fields: {
+	id?: string;
+	name: string;
+	kind: string;
+	parentId?: string;
+	district?: string;
+}): Promise<PlaceRecord> {
+	return call<PlaceRecord>('savePlaceRecord', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(fields)
+	});
+}
+
+/** Drops the overlay, so the place reverts to the gazetteer or stops existing. */
+export function revertPlaceRecord(placeId: string): Promise<{ id: string }> {
+	return call<{ id: string }>('deletePlaceRecord', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ placeId })
 	});
 }
 

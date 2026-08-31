@@ -20,6 +20,11 @@ import { familyOfPlace, isPersonKind } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
 import { loadPublished } from './published';
+import type { PlaceRecord } from './place-records';
+import { loadPlaceRecords } from './place-records';
+import { withPlaceRecords } from '../../sharedModels/place-record';
+
+export { withPlaceRecords };
 
 /** One photograph. The keys are short because the file holds 2948 of them. */
 export interface ArchivePhoto {
@@ -71,6 +76,12 @@ export interface ArchivePlace {
 	district: string;
 	isStreet: boolean;
 	count: number;
+	/**
+	 * The place this one sits under, when a curator has said so - "Station Kapellen" under
+	 * "Stations". Absent for all 131 generated places, and a place without one behaves
+	 * exactly as every place did before curator-made places existed.
+	 */
+	parentId?: string;
 }
 
 export interface ArchiveSubject {
@@ -130,12 +141,26 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 		// The approved uploads are concatenated rather than overlaid: they are photographs
 		// the generated index has never heard of, and appending them here is what puts them
 		// in the search, on their street's page, on the map and on the donor's page at once.
-		const [edits, published] = await Promise.all([loadPhotoEdits(fetcher), loadPublished(fetcher)]);
+		//
+		// The curator-made places are merged the same way and for the same reason: a place
+		// that only exists in the overlay has to be a place everywhere at once, or a
+		// photograph filed under it belongs nowhere - which is what happened before, because
+		// nothing validated the id a curator typed.
+		const [edits, published, records] = await Promise.all([
+			loadPhotoEdits(fetcher),
+			loadPublished(fetcher),
+			loadPlaceRecords(fetcher)
+		]);
 		const photos = [...index.photos, ...published].map((photo) =>
 			applyPhotoEdit(photo, edits[photo.id])
 		);
 
-		cached = buildArchive({ ...index, imageCount: photos.length, photos });
+		cached = buildArchive({
+			...index,
+			imageCount: photos.length,
+			photos,
+			places: withPlaceRecords(index.places, records ?? {})
+		});
 		return cached;
 	})();
 
@@ -194,9 +219,15 @@ function buildArchive(index: ArchiveIndex): Archive {
 	const haystacks = index.photos.map((photo) => {
 		const placeNames = photo.st.map((id) => placeById.get(id)?.name ?? '').join(' ');
 		return normalizeText(
-			[photo.t, photo.s, placeNames, photo.d ?? '', photo.y ?? '', photo.hn ?? '', photo.k ?? ''].join(
-				' '
-			)
+			[
+				photo.t,
+				photo.s,
+				placeNames,
+				photo.d ?? '',
+				photo.y ?? '',
+				photo.hn ?? '',
+				photo.k ?? ''
+			].join(' ')
 		);
 	});
 
