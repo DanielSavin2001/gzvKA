@@ -16,8 +16,15 @@ import type { PhotoFact } from '../../sharedModels/photo-fact';
 import type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
 import type { Submission } from '../../sharedModels/submission';
 
-/** A submission with a link a curator can actually open while it is still private. */
-export type QueuedSubmission = Submission & { previewUrl: string };
+/**
+ * A submission with a link a curator can actually open while it is still private.
+ *
+ * `previewUrl` is nullable because signing that link is the one part of the queue that can
+ * fail on its own - it needs a permission the runtime service account may not have - and a
+ * row without its picture is still a row a curator can read and approve. It used to be
+ * typed as always present, which is how a single unsignable file took the whole queue down.
+ */
+export type QueuedSubmission = Submission & { previewUrl: string | null };
 
 export interface Curator {
 	uid: string;

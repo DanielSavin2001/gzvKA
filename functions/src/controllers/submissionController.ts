@@ -18,7 +18,21 @@ import { isMissingIndex, missingIndexMessage } from '../utils/firestore-errors';
  * public, and there is no third case.
  */
 
-function fail(response: Response, error: unknown): Response {
+/**
+ * Turns a thrown error into a response.
+ *
+ * `forCurator` is set only once `requireAdmin` has actually returned - not merely because
+ * the handler is an admin-only one. requireAdmin can throw something other than
+ * NotAuthorised (a token that will not decode, Firebase unreachable), and at that moment
+ * the caller has proved nothing, so they get the same line a visitor would.
+ * A visitor gets the same unrevealing line as before - what broke inside the archive is
+ * none of their business and might say more than it should - but a curator staring at
+ * "Er ging iets mis" on their own queue has nothing to act on and no way to read the
+ * function's logs. That is exactly the position the archive was left in when the signed
+ * preview links started failing: a 500, a generic sentence, and three photographs that had
+ * arrived safely but could not be seen.
+ */
+function fail(response: Response, error: unknown, forCurator = false): Response {
 	if (error instanceof NotAuthorised) {
 		logger.warn('Refused: ', error.message);
 		return response.status(error.status).send(error.message);
@@ -35,6 +49,12 @@ function fail(response: Response, error: unknown): Response {
 	}
 
 	logger.error('Submission endpoint failed: ', error);
+
+	if (forCurator) {
+		const reason = error instanceof Error ? error.message : String(error);
+		return response.status(500).send(`Er ging iets mis: ${reason.slice(0, 500)}`);
+	}
+
 	return response.status(500).send('Er ging iets mis. Probeer het later opnieuw.');
 }
 
@@ -125,8 +145,15 @@ export const listSubmissions: HttpsFunction = https.onRequest(
 		response = validateCors(request, response);
 		if (response.headersSent) return response;
 
+		// Only true once requireAdmin has actually returned. `fail` leans on it to decide
+		// whether the caller has earned a real error message, and requireAdmin can itself
+		// throw something other than NotAuthorised - a token that will not decode, Firebase
+		// unreachable - at a moment when nobody has proved anything yet.
+		let asCurator = false;
+
 		try {
 			await requireAdmin(request.headers.authorization);
+			asCurator = true;
 
 			const status = String(request.query.status ?? 'pending');
 			const allowed = ['pending', 'approved', 'rejected', 'all'];
@@ -136,16 +163,31 @@ export const listSubmissions: HttpsFunction = https.onRequest(
 
 			// Signed links, so a curator can see a photograph that is not public yet without
 			// the bucket being readable by anyone who guesses a path.
+			//
+			// One link at a time, and a failure costs that link rather than the queue. Signing
+			// is the one step here that depends on something outside this code - the runtime
+			// service account needs iam.serviceAccounts.signBlob, and without it every call
+			// throws. Inside a bare Promise.all that took the whole response down with it: a
+			// curator with three photographs waiting saw a 500 and an empty queue, with no way
+			// to approve the photographs the archive already had. A row without its thumbnail
+			// can still be read, judged and approved; a row that does not exist cannot.
 			const withPreviews = await Promise.all(
-				found.map(async (submission) => ({
-					...submission,
-					previewUrl: await submissions.previewUrl(submission.storagePath)
-				}))
+				found.map(async (submission) => {
+					try {
+						return {
+							...submission,
+							previewUrl: await submissions.previewUrl(submission.storagePath)
+						};
+					} catch (error) {
+						logger.error('Preview link failed for ', submission.storagePath, error);
+						return { ...submission, previewUrl: null };
+					}
+				})
 			);
 
 			return response.status(200).json({ submissions: withPreviews });
 		} catch (error) {
-			return fail(response, error);
+			return fail(response, error, asCurator);
 		}
 	}
 );
@@ -156,8 +198,11 @@ export const reviewSubmission: HttpsFunction = https.onRequest(
 		response = validateCors(request, response);
 		if (response.headersSent) return response;
 
+		let asCurator = false;
+
 		try {
 			const curator = await requireAdmin(request.headers.authorization);
+			asCurator = true;
 
 			if (request.method !== 'POST') return response.status(405).send('Method Not Allowed');
 
@@ -184,7 +229,7 @@ export const reviewSubmission: HttpsFunction = https.onRequest(
 
 			return response.status(200).json(updated);
 		} catch (error) {
-			return fail(response, error);
+			return fail(response, error, asCurator);
 		}
 	}
 );
@@ -195,11 +240,14 @@ export const whoAmI: HttpsFunction = https.onRequest(
 		response = validateCors(request, response);
 		if (response.headersSent) return response;
 
+		let asCurator = false;
+
 		try {
 			const curator = await requireAdmin(request.headers.authorization);
+			asCurator = true;
 			return response.status(200).json(curator);
 		} catch (error) {
-			return fail(response, error);
+			return fail(response, error, asCurator);
 		}
 	}
 );
