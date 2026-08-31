@@ -2,6 +2,7 @@
 	import type { Archive, ArchivePhoto } from '$lib/archive';
 	import { thumbUrl } from '$lib/archive';
 	import type { PhotoEdit, PhotoFields } from '$lib/photo-edits';
+	import DonorPicker from './DonorPicker.svelte';
 	import { revertPhotoEdit, savePhotoEdit } from '$lib/admin';
 
 	/**
@@ -180,13 +181,7 @@
 					class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
 				/>
 			</label>
-			<label class="block">
-				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Ingezonden door</span>
-				<input
-					bind:value={donor}
-					class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-				/>
-			</label>
+			<DonorPicker bind:value={donor} {archive} />
 		</div>
 
 		<div class="mt-3">

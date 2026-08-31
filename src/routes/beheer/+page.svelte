@@ -37,6 +37,8 @@
 	import type { PlacePin } from '$lib/place-pins';
 	import { forgetPlacePins, loadPlacePins } from '$lib/place-pins';
 	import { normalizeText } from '../../../sharedModels/text';
+	import DonorPicker from '../components/DonorPicker.svelte';
+	import DonorDesk from '../components/DonorDesk.svelte';
 	import PhotoEditor from '../components/PhotoEditor.svelte';
 	import DatingDesk from '../components/DatingDesk.svelte';
 	import PinPicker from '../components/PinPicker.svelte';
@@ -68,7 +70,7 @@
 	 * *in*, and the 4,504 already here - every field of them read out of a filename - had no
 	 * way to be corrected at all.
 	 */
-	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' = 'fotos';
+	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' | 'schenkers' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
 
@@ -255,6 +257,32 @@
 		desk = 'jaartallen';
 		error = null;
 		await refreshEdits();
+	}
+
+	/**
+	 * The donor desk reads the archive - donors are derived from it, not stored anywhere - and
+	 * the edit overlay, because a rename writes edits and the list has to show the result.
+	 */
+	async function openDonorDesk(): Promise<void> {
+		desk = 'schenkers';
+		openPhoto = null;
+		error = null;
+		await refreshEdits();
+	}
+
+	/**
+	 * After a rename, the archive in memory still carries the old names: `donors()` reads
+	 * `photo.d`, and the overlay that has just changed is applied when the archive is built.
+	 * So it is thrown away and rebuilt rather than patched.
+	 */
+	async function reloadArchive(): Promise<void> {
+		forgetPhotoEdits();
+		forgetArchive();
+		try {
+			archive = await loadArchive();
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		}
 	}
 
 	async function refreshEdits(): Promise<void> {
@@ -501,7 +529,7 @@
 		</div>
 	{:else}
 		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart']] as [value, label] (value)}
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
@@ -516,6 +544,10 @@
 							openDatingDesk();
 							return;
 						}
+						if (value === 'schenkers') {
+							openDonorDesk();
+							return;
+						}
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
 						refresh();
@@ -527,7 +559,10 @@
 			{/each}
 		</nav>
 
-		<nav class="mt-6 flex gap-2" class:hidden={desk === 'archief' || desk === 'jaartallen'}>
+		<nav
+			class="mt-6 flex gap-2"
+			class:hidden={desk === 'archief' || desk === 'jaartallen' || desk === 'schenkers'}
+		>
 			{#each tabs as [value, label] (value)}
 				<button
 					type="button"
@@ -644,6 +679,10 @@
 					<option value={subject.name} />
 				{/each}
 			</datalist>
+		{:else if desk === 'schenkers'}
+			<div class="mt-6">
+				<DonorDesk {archive} on:changed={reloadArchive} />
+			</div>
 		{:else if desk === 'correcties'}
 			<h2 class="mt-6 text-xl font-bold text-gray-900 dark:text-gray-100">
 				Meldingen van bezoekers
@@ -967,15 +1006,7 @@
 										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
-								<label class="block">
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-										>Ingezonden door</span
-									>
-									<input
-										bind:value={edits[item.id].donor}
-										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-									/>
-								</label>
+								<DonorPicker bind:value={edits[item.id].donor} {archive} />
 							</div>
 
 							<div class="mt-3">

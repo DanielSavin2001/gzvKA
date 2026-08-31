@@ -220,6 +220,22 @@ export function savePhotoEdit(photoId: string, fields: PhotoFields): Promise<Pho
 	});
 }
 
+/**
+ * Writes one donor's name onto many photographs at once - a rename, or a merge of two
+ * spellings of one person.
+ *
+ * The ids are worked out here rather than on the server, because a donor is not a record
+ * anywhere: it is the string on each photograph, and only the archive index knows which
+ * photographs carry it. The page is already holding that index; the functions never load it.
+ */
+export function renameDonor(photoIds: string[], donor: string): Promise<{ changed: number }> {
+	return call<{ changed: number }>('renameDonor', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ photoIds, donor })
+	});
+}
+
 /** Drops the correction, so the photograph goes back to what the index says. */
 export function revertPhotoEdit(photoId: string): Promise<{ id: string }> {
 	return call<{ id: string }>('deletePhotoEdit', {

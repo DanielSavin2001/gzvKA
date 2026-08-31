@@ -39,6 +39,7 @@ export const reviewCorrection = controllers.correctionController.reviewCorrectio
 export const photoEdits = controllers.photoEditController.photoEdits;
 export const savePhotoEdit = controllers.photoEditController.savePhotoEdit;
 export const deletePhotoEdit = controllers.photoEditController.deletePhotoEdit;
+export const renameDonor = controllers.photoEditController.renameDonor;
 
 /**
  * Functions behind placing whole places on the map from /beheer.
