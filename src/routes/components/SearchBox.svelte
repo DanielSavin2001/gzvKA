@@ -75,7 +75,7 @@
 				{placeholder}
 				autocomplete="off"
 				{autofocus}
-				class="w-full border-0 px-4 py-3 text-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-0"
+				class="w-full border-0 bg-white px-4 py-3 text-lg text-gray-900 placeholder-gray-500 focus:ring-0 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-400"
 			/>
 			<button
 				type="submit"

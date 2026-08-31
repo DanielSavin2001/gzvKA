@@ -41,6 +41,18 @@ export const savePhotoEdit = controllers.photoEditController.savePhotoEdit;
 export const deletePhotoEdit = controllers.photoEditController.deletePhotoEdit;
 
 /**
+ * Functions behind placing whole places on the map from /beheer.
+ *
+ * The committed `place-coordinates.json` is the durable record; these pins are the live
+ * layer over it, so a curator's click moves the map now rather than after a deploy.
+ *
+ * @function placePins    public - every curator-placed pin
+ * @function savePlacePin curators - place or remove one pin
+ */
+export const placePins = controllers.placePinController.placePins;
+export const savePlacePin = controllers.placePinController.savePlacePin;
+
+/**
  * Functions behind "I know when this photograph was taken".
  *
  * 3,896 of the 4,504 photographs have no year, and no work inside this repository can

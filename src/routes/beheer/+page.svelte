@@ -3,26 +3,43 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
-	import { loadArchive } from '$lib/archive';
+	import { forgetArchive, loadArchive } from '$lib/archive';
 	import type { Curator, Decision, QueuedSubmission } from '$lib/admin';
 	import {
 		corrections,
 		isConfigured,
 		judgeCorrection,
 		queue,
+		removePlacePin,
 		review,
+		savePlacePin,
 		signIn,
 		signOut,
 		watchSignIn,
 		whoAmI
 	} from '$lib/admin';
 	import type { PlaceCorrection } from '../../../sharedModels/correction';
-	import type { ArchivePhoto } from '$lib/archive';
+	import type { ArchivePhoto, ArchivePlace } from '$lib/archive';
 	import { searchPhotos, thumbUrl } from '$lib/archive';
 	import type { PhotoEdit } from '$lib/photo-edits';
 	import { forgetPhotoEdits, loadPhotoEdits } from '$lib/photo-edits';
+	import { forgetPublished } from '$lib/published';
+	import type { CoordinateSource, PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
+	import {
+		forgetCoordinates,
+		loadCommittedPlaces,
+		loadStreetGeometry,
+		locate
+	} from '$lib/coordinates';
+	import { isPersonKind } from '../../../sharedModels/place-family';
+	import type { Approximation } from '$lib/approximations';
+	import { loadApproximations } from '$lib/approximations';
+	import type { PlacePin } from '$lib/place-pins';
+	import { forgetPlacePins, loadPlacePins } from '$lib/place-pins';
+	import { normalizeText } from '../../../sharedModels/text';
 	import PhotoEditor from '../components/PhotoEditor.svelte';
 	import DatingDesk from '../components/DatingDesk.svelte';
+	import PinPicker from '../components/PinPicker.svelte';
 
 	/**
 	 * The curator's desk.
@@ -54,6 +71,167 @@
 	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
+
+	/**
+	 * The positioning workbench: every place the archive knows, its current position and
+	 * where that position came from, and a picker to set a better one. This is what makes
+	 * "24 places wait for somebody who knows better" an afternoon instead of a year: a pin
+	 * saved here is live for the next visitor, no file download, no commit, no deploy.
+	 */
+	let placeQuery = '';
+	let placesReady = false;
+	let pins: Record<string, PlacePin> = {};
+	let allCoordinates: Record<string, PlacedCoordinate> = {};
+	let streetGeometry: Record<string, StreetGeometry> = {};
+	let approximations: Record<string, Approximation> = {};
+	let picking: ArchivePlace | null = null;
+	let pinBusy = false;
+
+	async function loadPlacesData(): Promise<void> {
+		// Fresh rather than from any cache - the module's or the browser's - so a curator
+		// sees their own last pin rather than the answer of up to a minute ago.
+		forgetPlacePins();
+		forgetCoordinates();
+		const [committed, geometry, research, livePins] = await Promise.all([
+			loadCommittedPlaces(),
+			loadStreetGeometry(),
+			loadApproximations(),
+			loadPlacePins(fetch, { fresh: true })
+		]);
+		pins = livePins ?? {};
+		allCoordinates = { ...(committed ?? {}), ...pins };
+		streetGeometry = geometry;
+		approximations = research;
+		placesReady = true;
+	}
+
+	interface PlaceRow {
+		place: ArchivePlace;
+		located: { lat: number; lng: number; source: CoordinateSource } | null;
+		hasPin: boolean;
+		radius?: number;
+	}
+
+	/** Unlocated first, then the busiest: the same order the old placing queue used. */
+	$: placeRows = ((): PlaceRow[] => {
+		if (!archive || !placesReady) return [];
+		const query = normalizeText(placeQuery);
+
+		return archive.places
+			.filter((place) => !isPersonKind(place))
+			.filter((place) => query === '' || normalizeText(place.name).includes(query))
+			.map((place) => ({
+				place,
+				located: locate(place.id, allCoordinates, streetGeometry, approximations),
+				hasPin: place.id in pins,
+				radius: approximations[place.id]?.radius
+			}))
+			.sort(
+				(a, b) =>
+					Number(a.located !== null) - Number(b.located !== null) ||
+					b.place.count - a.place.count
+			);
+	})();
+
+	$: correctableCount = Object.values(approximations).filter((entry) => entry.correctable).length;
+
+	function sourceLabel(row: PlaceRow): string {
+		if (row.located === null) return 'Niet geplaatst';
+		if (row.hasPin) return 'Vastgelegd via beheer';
+		if (row.located.source === 'placed') return 'Vastgelegd';
+		if (row.located.source === 'register') return 'Stratenregister';
+		return row.radius ? `Onderzoek, ± ${row.radius} m` : 'Onderzoek';
+	}
+
+	async function savePin(place: ArchivePlace, spot: { lat: number; lng: number }): Promise<void> {
+		pinBusy = true;
+		try {
+			const saved = await savePlacePin(place.id, spot.lat, spot.lng);
+			pins = { ...pins, [place.id]: saved.pin };
+			allCoordinates = { ...allCoordinates, [place.id]: saved.pin };
+			// The public map caches; forget so a curator checking their work sees the pin.
+			forgetPlacePins();
+			forgetCoordinates();
+			picking = null;
+			error = null;
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		} finally {
+			pinBusy = false;
+		}
+	}
+
+	async function dropPin(place: ArchivePlace): Promise<void> {
+		pinBusy = true;
+		try {
+			await removePlacePin(place.id);
+			picking = null;
+			error = null;
+			// The committed file may still hold an older coordinate; rebuild from scratch
+			// rather than guessing what the place falls back to.
+			await loadPlacesData();
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		} finally {
+			pinBusy = false;
+		}
+	}
+
+	/**
+	 * One click for the common case: the visitor pointed at the right spot, so accepting
+	 * the report and placing the pin are the same decision.
+	 *
+	 * The pin goes first. If accepting then failed, a retry simply re-saves the same pin
+	 * and accepts; the other way round, a failed pin save would leave the report accepted,
+	 * every retry refused as "al accepted", and the visitor's coordinate silently dropped.
+	 */
+	async function acceptWithPin(report: PlaceCorrection): Promise<void> {
+		if (report.lat == null || report.lng == null) return;
+		reportBusy = report.id;
+		try {
+			const saved = await savePlacePin(report.placeId, report.lat, report.lng);
+			await judgeCorrection({ id: report.id, status: 'accepted' });
+			pins = { ...pins, [report.placeId]: saved.pin };
+			allCoordinates = { ...allCoordinates, [report.placeId]: saved.pin };
+			forgetPlacePins();
+			forgetCoordinates();
+			reports = reports.filter((other) => other.id !== report.id);
+			error = null;
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		} finally {
+			reportBusy = null;
+		}
+	}
+
+	/**
+	 * The merged coordinates as a committable file, so the repository stays the durable
+	 * record: pins live in Firestore, and this is the way they come home.
+	 */
+	function exportCoordinates(): void {
+		const payload = {
+			_comment:
+				'Hand-placed coordinates for places the street register cannot know. Exported from ' +
+				'/beheer, where the live pins are placed; committing this file makes them durable.',
+			_format: '{ "<gazetteer-id>": { "lat": 51.3, "lng": 4.4, "by": "who", "on": "YYYY-MM-DD" } }',
+			places: allCoordinates
+		};
+
+		const blob = new Blob([JSON.stringify(payload, null, '\t') + '\n'], {
+			type: 'application/json'
+		});
+		const url = URL.createObjectURL(blob);
+		const anchor = document.createElement('a');
+		anchor.href = url;
+		anchor.download = 'place-coordinates.json';
+		// In the document, and the URL revoked only after the click has been handled: some
+		// browsers resolve a blob URL asynchronously, and a synchronous revoke on a detached
+		// anchor can silently abort the download.
+		document.body.appendChild(anchor);
+		anchor.click();
+		anchor.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 10_000);
+	}
 
 	/** Finding a photograph among 4,504 of them. */
 	let photoQuery = '';
@@ -201,14 +379,23 @@
 
 	function editsFor(item: QueuedSubmission): Decision {
 		if (!edits[item.id]) {
+			// The contributor's suggestion prefills the form, so publishing it is one look and
+			// one click rather than retyping - but it only reaches the site through these
+			// fields, after a curator has seen it. A suggested year prefills only when it is
+			// already a real year ("1957" or "1957-1958"): the server refuses anything else,
+			// and silently losing "rond 1950" on approve is worse than showing it as a quote.
+			const suggestedYear = /^\d{4}(-\d{4})?$/.test(item.suggestion?.year ?? '')
+				? item.suggestion?.year
+				: undefined;
 			edits[item.id] = {
 				id: item.id,
 				status: 'approved',
-				title: item.title ?? item.originalName.replace(/\.[^.]+$/, ''),
+				title: item.title ?? item.suggestion?.title ?? item.originalName.replace(/\.[^.]+$/, ''),
 				places: item.places ?? [],
 				...(item.houseNumber != null ? { houseNumber: item.houseNumber } : {}),
-				...(item.year ? { year: item.year } : {}),
-				donor: item.donor ?? item.contributor.name ?? ''
+				...(item.year ? { year: item.year } : suggestedYear ? { year: suggestedYear } : {}),
+				donor: item.donor ?? item.contributor.name ?? '',
+				description: item.description ?? item.suggestion?.description ?? ''
 			};
 		}
 		return edits[item.id];
@@ -229,6 +416,12 @@
 			}
 
 			await review(decision);
+			// The site merges the approved photographs into the archive, and the archive is
+			// built once and kept. Both caches have to go, or a curator who walks from here to
+			// the street page in the same tab sees it without the photograph they just
+			// approved.
+			forgetPublished();
+			forgetArchive();
 			delete edits[item.id];
 			edits = edits;
 			items = items.filter((other) => other.id !== item.id);
@@ -309,7 +502,7 @@
 		</div>
 	{:else}
 		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Correcties op de kaart']] as [value, label] (value)}
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
@@ -327,6 +520,7 @@
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
 						refresh();
+						if (desk === 'correcties' && !placesReady) loadPlacesData();
 					}}
 				>
 					{label}
@@ -452,15 +646,21 @@
 				{/each}
 			</datalist>
 		{:else if desk === 'correcties'}
+			<h2 class="mt-6 text-xl font-bold text-gray-900 dark:text-gray-100">
+				Meldingen van bezoekers
+			</h2>
 			{#if loading}
-				<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+				<p class="py-8 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
 			{:else if reports.length === 0}
-				<p class="py-16 text-center text-gray-600 dark:text-gray-400">
-					Geen meldingen. 24 plaatsen staan bij benadering op de kaart en wachten op iemand die het
-					beter weet.
+				<p class="py-8 text-center text-gray-600 dark:text-gray-400">
+					Geen meldingen.
+					{#if correctableCount > 0}
+						{correctableCount} plaatsen staan bij benadering op de kaart en wachten op iemand die
+						het beter weet &mdash; die kunt u hieronder zelf zetten.
+					{/if}
 				</p>
 			{:else}
-				<ul class="mt-6 space-y-4">
+				<ul class="mt-4 space-y-4">
 					{#each reports as report (report.id)}
 						<li
 							class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
@@ -500,20 +700,44 @@
 							</div>
 
 							<p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
-								Goedkeuren noteert dat de melding klopt. De kaart verandert pas als
-								<code class="rounded bg-gray-100 dark:bg-gray-800 px-1">plaatsen.geojson</code> wordt
-								aangepast, zodat de klasse en de twijfeltekst mee veranderen met het punt.
+								{#if report.kind === 'coordinate' && report.lat != null}
+									&ldquo;Klopt, zet de pin&rdquo; keurt goed en verplaatst meteen het punt op de
+									kaart. De onderzoeksklasse en twijfeltekst in
+									<code class="rounded bg-gray-100 dark:bg-gray-800 px-1">plaatsen.geojson</code>
+									volgen bij de volgende commit.
+								{:else}
+									Goedkeuren noteert dat de melding klopt. De kaart verandert pas als
+									<code class="rounded bg-gray-100 dark:bg-gray-800 px-1">plaatsen.geojson</code> wordt
+									aangepast, zodat de klasse en de twijfeltekst mee veranderen met het punt.
+								{/if}
 							</p>
 
 							<div class="mt-3 flex flex-wrap gap-2">
-								{#if report.status !== 'accepted'}
+								{#if report.status !== 'accepted' && report.kind === 'coordinate' && report.lat != null}
 									<button
 										type="button"
 										class="rounded-lg bg-green-700 px-5 py-2.5 font-semibold text-white hover:bg-green-800 disabled:bg-gray-400"
 										disabled={reportBusy === report.id}
+										on:click={() => acceptWithPin(report)}
+									>
+										{reportBusy === report.id ? 'Bezig ...' : 'Klopt, zet de pin'}
+									</button>
+								{/if}
+								{#if report.status !== 'accepted'}
+									<button
+										type="button"
+										class="rounded-lg px-5 py-2.5 font-semibold {report.kind === 'coordinate' &&
+										report.lat != null
+											? 'border-2 border-green-700 text-green-800 hover:bg-green-50 dark:text-green-300 dark:hover:bg-green-950'
+											: 'bg-green-700 text-white hover:bg-green-800'} disabled:opacity-50"
+										disabled={reportBusy === report.id}
 										on:click={() => judge(report, 'accepted')}
 									>
-										{reportBusy === report.id ? 'Bezig ...' : 'Klopt'}
+										{reportBusy === report.id
+											? 'Bezig ...'
+											: report.kind === 'coordinate' && report.lat != null
+											? 'Klopt, zonder pin'
+											: 'Klopt'}
 									</button>
 								{/if}
 								{#if report.status !== 'rejected'}
@@ -530,6 +754,84 @@
 						</li>
 					{/each}
 				</ul>
+			{/if}
+
+			<div class="mt-10 flex flex-wrap items-end justify-between gap-3">
+				<div>
+					<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Alle plaatsen</h2>
+					<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+						Elke plaats, met waar ze nu staat en waar dat vandaan komt. Klik en zet de pin
+						&mdash; die staat er meteen, voor iedereen.
+					</p>
+				</div>
+				<button
+					type="button"
+					class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+					on:click={exportCoordinates}
+					title="De pins leven in de databank; dit bestand maakt ze blijvend in de repository."
+				>
+					Bewaar als place-coordinates.json
+				</button>
+			</div>
+
+			<input
+				bind:value={placeQuery}
+				type="search"
+				placeholder="Zoek een plaats ..."
+				class="mt-3 w-full max-w-md rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+			/>
+
+			{#if !placesReady}
+				<p class="py-8 text-center text-gray-500 dark:text-gray-400">
+					Bezig met het laden van de plaatsen ...
+				</p>
+			{:else if placeRows.length === 0}
+				<p class="py-8 text-center text-gray-600 dark:text-gray-400">Geen plaats gevonden.</p>
+			{:else}
+				<ul class="mt-4 divide-y divide-gray-200 rounded-xl border border-gray-300 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900">
+					{#each placeRows as row (row.place.id)}
+						<li class="flex flex-wrap items-center gap-3 px-4 py-2.5">
+							<div class="min-w-0 flex-1">
+								<span class="font-medium text-gray-900 dark:text-gray-100">{row.place.name}</span>
+								<span class="ml-2 text-sm text-gray-500 dark:text-gray-400">
+									{row.place.count}
+									{row.place.count === 1 ? 'foto' : "foto's"}
+								</span>
+							</div>
+							<span
+								class="rounded-full px-3 py-0.5 text-xs font-medium {row.located === null
+									? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+									: row.hasPin || row.located.source === 'placed'
+									? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
+									: row.located.source === 'register'
+									? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+									: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'}"
+							>
+								{sourceLabel(row)}
+							</span>
+							<button
+								type="button"
+								class="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+								on:click={() => (picking = row.place)}
+							>
+								{row.located === null ? 'Plaats' : 'Verplaats'}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+
+			{#if picking}
+				{@const current = locate(picking.id, allCoordinates, streetGeometry, approximations)}
+				<PinPicker
+					placeName={picking.name}
+					start={current ? { lat: current.lat, lng: current.lng } : null}
+					hasPin={picking.id in pins}
+					busy={pinBusy}
+					on:save={(event) => picking && savePin(picking, event.detail)}
+					on:remove={() => picking && dropPin(picking)}
+					on:close={() => (picking = null)}
+				/>
 			{/if}
 		{:else if loading}
 			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
@@ -567,8 +869,28 @@
 								<p
 									class="mt-2 rounded bg-amber-50 dark:bg-amber-950 p-2 text-sm text-gray-800 dark:text-gray-200"
 								>
-									&ldquo;{item.contributor.note}&rdquo;
+									Over de inzending: &ldquo;{item.contributor.note}&rdquo;
 								</p>
+							{/if}
+							{#if item.suggestion}
+								<!--
+									What they said about this photograph in particular. Shown verbatim
+									beside the form it prefilled, so a curator can see what was suggested
+									even after editing the fields.
+								-->
+								<div
+									class="mt-2 space-y-1 rounded bg-amber-50 dark:bg-amber-950 p-2 text-sm text-gray-800 dark:text-gray-200"
+								>
+									{#if item.suggestion.title}
+										<p>Titel: &ldquo;{item.suggestion.title}&rdquo;</p>
+									{/if}
+									{#if item.suggestion.year}
+										<p>Jaartal: &ldquo;{item.suggestion.year}&rdquo;</p>
+									{/if}
+									{#if item.suggestion.description}
+										<p>&ldquo;{item.suggestion.description}&rdquo;</p>
+									{/if}
+								</div>
 							{/if}
 							{#if item.rejectionReason}
 								<p
@@ -584,7 +906,18 @@
 								<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Titel</span>
 								<input
 									bind:value={edits[item.id].title}
-									class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+									class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+								/>
+							</label>
+
+							<label class="mt-3 block">
+								<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+									>Beschrijving</span
+								>
+								<textarea
+									bind:value={edits[item.id].description}
+									rows="2"
+									class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 								/>
 							</label>
 
@@ -596,7 +929,7 @@
 									<input
 										type="number"
 										bind:value={edits[item.id].houseNumber}
-										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
 								<label class="block">
@@ -604,7 +937,7 @@
 									<input
 										bind:value={edits[item.id].year}
 										placeholder="1935"
-										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
 								<label class="block">
@@ -613,7 +946,7 @@
 									>
 									<input
 										bind:value={edits[item.id].donor}
-										class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
 							</div>
@@ -645,7 +978,7 @@
 								{/if}
 
 								<select
-									class="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+									class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									on:change={(event) => {
 										if (event.currentTarget.value) togglePlace(item, event.currentTarget.value);
 										event.currentTarget.value = '';

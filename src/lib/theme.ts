@@ -6,8 +6,8 @@
  * asking again by starting light is ignoring them. A visitor who picks light or dark here
  * has overruled that, and the override is what gets stored.
  *
- * The value lives under `color-theme`, which is the key flowbite-svelte's own toggle uses,
- * so the two cannot disagree if that component is ever brought in.
+ * The value lives under `color-theme`, the key flowbite-svelte's toggle used back when
+ * that library was in the project. Kept so nobody's stored preference is forgotten.
  *
  * The class is put on `<html>` by a blocking script in `app.html` before anything paints.
  * Doing it here instead would mean every page renders light for a frame and then flips,

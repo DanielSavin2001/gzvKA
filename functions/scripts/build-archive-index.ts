@@ -24,6 +24,7 @@ import { familyOfPlace } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { buildIndex, matchImagePath } from '../src/gazetteer/match';
 import { yearFromFilename } from '../src/utils/photo-year';
+import type { FilenameParts } from '../src/gazetteer/segment';
 import { looksLikePersonName, splitFilename, splitPathContext } from '../src/gazetteer/segment';
 
 function findRepoRoot(startDirectory: string): string {
@@ -84,6 +85,18 @@ interface IndexedPhoto {
 	a?: string;
 	/** True for the prize-draw subtree, which is browsed by event rather than by place. */
 	ev?: boolean;
+	/**
+	 * Words a volunteer typed into the path that no other field carries: a sub-folder, a
+	 * caption the title trimmer dropped, a donor the broken date convention never separated
+	 * out. Searched, never shown.
+	 *
+	 * Only the residue is stored, and the acquisition date and the file extension are left
+	 * out on purpose. Indexing the whole path instead looks tempting and is wrong: nearly
+	 * every filename ends in the date the archive received the photograph, so searching
+	 * "2015" would answer with the 602 photographs donated that year rather than the 36
+	 * taken in it, and "jpg" would match every photograph in the archive.
+	 */
+	k?: string;
 }
 
 /** A place, with how many photographs reference it. */
@@ -145,8 +158,15 @@ function listCorpusFiles(directory: string): string[] {
 /**
  * The part of a filename worth showing to a visitor: the descriptive segments, with the
  * donor and the date removed. "Dorpsstraat 15 - Swatti Alix - zd" reads as "Dorpsstraat 15".
+ *
+ * `donors` is every name the corpus itself identifies as a contributor, normalized. It is
+ * what stops the trimmer eating captions: "Garage Meyvis", "Hotel-Cafe De Zwaan" and
+ * "Familie Bourlet-Luyckx" are all two capitalised words, which is also what a person's
+ * name looks like - but only one of those is somebody who donated a photograph. A trailing
+ * name nobody in this archive ever donated under is a caption, and the caption is often the
+ * only thing the photograph says about itself.
  */
-function displayTitle(fileName: string, folderName: string): string {
+function displayTitle(fileName: string, folderName: string, donors: Set<string>): string {
 	const parts = splitFilename(fileName);
 	const segments = parts.placeSegments.map((segment) => segment.text.trim()).filter(Boolean);
 
@@ -159,8 +179,13 @@ function displayTitle(fileName: string, folderName: string): string {
 		const last = segments[segments.length - 1].replace(/(?:_\d{1,3}|\s*\(\d{1,3}\))$/, '').trim();
 		const isPartialDate = /^\d{1,2}[.\-/]\d{1,2}$/.test(last);
 		const isBareIndex = /^\d{1,3}$/.test(last) && segments.length > 2;
+		// The bare trailing index goes before the lookup, because `splitFilename` records a
+		// donor without it: "Dirk Pelgrims 2" is stored as "Dirk Pelgrims", and without this
+		// the donor's name would survive into the title as though it were a caption.
+		const withoutIndex = last.replace(/\s+\d{1,2}$/, '');
+		const isDonor = looksLikePersonName(last) && donors.has(normalizeText(withoutIndex));
 
-		if (isPartialDate || isBareIndex || looksLikePersonName(last)) segments.pop();
+		if (isPartialDate || isBareIndex || isDonor) segments.pop();
 		else break;
 	}
 
@@ -169,6 +194,50 @@ function displayTitle(fileName: string, folderName: string): string {
 
 	// Some filenames are nothing but a donor and a date; fall back to the subject.
 	return folderName;
+}
+
+/**
+ * The words of a path that the photograph's own fields do not already carry.
+ *
+ * The site searches title, subject, place names, donor, year and house number. Everything
+ * else a volunteer typed - a sub-folder like "Fietszoektocht 2014", a caption the trimmer
+ * dropped, a donor whose filename broke the date convention - is only in the path, and
+ * without this nobody can find it by typing it back. Measured on this corpus: 586
+ * photographs hold at least one such word.
+ */
+function extraKeywords(
+	relativePath: string,
+	parts: FilenameParts,
+	photo: IndexedPhoto,
+	gazetteer: Gazetteer,
+	placeIds: string[]
+): string {
+	// The place segments are the filename minus the donor and the date, which is exactly
+	// what should be searchable; the folder chain adds the sub-folders `s` does not carry.
+	const source = [
+		...relativePath.split('/').slice(0, -1),
+		...parts.placeSegments.map((segment) => segment.text)
+	].join(' ');
+
+	const placeNames = placeIds
+		.map((id) => gazetteer.entries.find((entry) => entry.id === id)?.name ?? '')
+		.join(' ');
+
+	const known = new Set(
+		normalizeText(
+			[photo.t, photo.s, placeNames, photo.d ?? '', photo.y ?? '', photo.hn ?? ''].join(' ')
+		).split(' ')
+	);
+
+	// Numbers are dropped whole. A year worth searching is already in `y` and a house number
+	// in `hn`; what is left in a path is the wreckage of the date convention - "16 04" from
+	// "16.04", a bare duplicate index - and indexing it answers "2014" with the photographs
+	// donated that year.
+	const extra = normalizeText(source)
+		.split(' ')
+		.filter((word) => word.length > 1 && !/^\d+$/.test(word) && !known.has(word));
+
+	return [...new Set(extra)].join(' ');
 }
 
 /** A short, stable id for a photograph, unique within the corpus. */
@@ -205,6 +274,16 @@ function main(): void {
 		}
 	}
 
+	// Everybody the corpus identifies as a donor, gathered before any title is built: the
+	// title trimmer needs to know whether a trailing name is a person who gave photographs
+	// to this archive or the name of a shop on a street corner, and it can only know that
+	// by looking at the whole corpus first.
+	const donors = new Set<string>();
+	for (const relativePath of files) {
+		const contributor = splitFilename(relativePath.split('/').pop() ?? '').contributor;
+		if (contributor) donors.add(normalizeText(contributor));
+	}
+
 	const applied = new Set<string>();
 	const takenIds = new Set<string>();
 	const photos: IndexedPhoto[] = [];
@@ -235,7 +314,7 @@ function main(): void {
 		const photo: IndexedPhoto = {
 			id,
 			p: relativePath,
-			t: correction?.title ?? displayTitle(fileName, folderName),
+			t: correction?.title ?? displayTitle(fileName, folderName, donors),
 			s: folderName,
 			st: placeIds
 		};
@@ -251,6 +330,10 @@ function main(): void {
 		else if (named && !parts.dateOfAcquisition?.includes(named)) {
 			photo.y = named;
 		}
+
+		// Last, because it subtracts everything the other fields already carry.
+		const keywords = extraKeywords(relativePath, parts, photo, gazetteer, placeIds);
+		if (keywords) photo.k = keywords;
 
 		photos.push(photo);
 	}

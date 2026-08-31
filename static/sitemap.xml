@@ -361,6 +361,11 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
+		<loc>https://gzvka.com/straat/home-flor-mielants</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	<url>
 		<loc>https://gzvka.com/straat/guyotlei</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
@@ -382,11 +387,6 @@
 	</url>
 	<url>
 		<loc>https://gzvka.com/straat/kasteel-san-salvador</loc>
-		<changefreq>monthly</changefreq>
-		<priority>0.8</priority>
-	</url>
-	<url>
-		<loc>https://gzvka.com/straat/home-flor-mielants</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
@@ -441,12 +441,22 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
+		<loc>https://gzvka.com/straat/home-philippe-speth</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	<url>
 		<loc>https://gzvka.com/straat/kasteel-mastenhof</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
 	<url>
 		<loc>https://gzvka.com/straat/kerk-olv-van-vrede</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://gzvka.com/straat/sint-jozefkapel</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
@@ -471,17 +481,12 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/straat/home-philippe-speth</loc>
-		<changefreq>monthly</changefreq>
-		<priority>0.8</priority>
-	</url>
-	<url>
-		<loc>https://gzvka.com/straat/sint-jozefkapel</loc>
-		<changefreq>monthly</changefreq>
-		<priority>0.8</priority>
-	</url>
-	<url>
 		<loc>https://gzvka.com/straat/cafe-de-vrede</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://gzvka.com/straat/home-kindervreugd</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
@@ -491,7 +496,7 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/straat/home-kindervreugd</loc>
+		<loc>https://gzvka.com/straat/villa-heirust</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
@@ -671,11 +676,6 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/straat/villa-heirust</loc>
-		<changefreq>monthly</changefreq>
-		<priority>0.8</priority>
-	</url>
-	<url>
 		<loc>https://gzvka.com/straat/blokjesweg</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
@@ -836,12 +836,12 @@
 		<priority>0.7</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/verhaal/oud-gemeentehuis</loc>
+		<loc>https://gzvka.com/verhaal/guyotlei-ketelaars</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/verhaal/guyotlei-ketelaars</loc>
+		<loc>https://gzvka.com/verhaal/oud-gemeentehuis</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
@@ -946,17 +946,17 @@
 		<priority>0.7</priority>
 	</url>
 	<url>
+		<loc>https://gzvka.com/verhaal/kasteel-san-salvador</loc>
+		<changefreq>yearly</changefreq>
+		<priority>0.7</priority>
+	</url>
+	<url>
 		<loc>https://gzvka.com/verhaal/fotowedstrijd</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
 	<url>
 		<loc>https://gzvka.com/verhaal/kasteel-blauwhof</loc>
-		<changefreq>yearly</changefreq>
-		<priority>0.7</priority>
-	</url>
-	<url>
-		<loc>https://gzvka.com/verhaal/kasteel-san-salvador</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
@@ -1006,6 +1006,11 @@
 		<priority>0.7</priority>
 	</url>
 	<url>
+		<loc>https://gzvka.com/verhaal/school-en-klasfoto</loc>
+		<changefreq>yearly</changefreq>
+		<priority>0.7</priority>
+	</url>
+	<url>
 		<loc>https://gzvka.com/verhaal/kasteel-op-den-wal</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
@@ -1026,12 +1031,12 @@
 		<priority>0.7</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/verhaal/klein-bos</loc>
+		<loc>https://gzvka.com/verhaal/hoogboom-hoogboomsteenweg</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/verhaal/hoogboom-hoogboomsteenweg</loc>
+		<loc>https://gzvka.com/verhaal/klein-bos</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
@@ -1057,11 +1062,6 @@
 	</url>
 	<url>
 		<loc>https://gzvka.com/verhaal/fort-van-ertbrand</loc>
-		<changefreq>yearly</changefreq>
-		<priority>0.7</priority>
-	</url>
-	<url>
-		<loc>https://gzvka.com/verhaal/school-en-klasfoto</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
@@ -1161,12 +1161,12 @@
 		<priority>0.7</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/verhaal/rubensheide</loc>
+		<loc>https://gzvka.com/verhaal/villa-sans-soucis-hoogboom</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/verhaal/villa-sans-soucis-hoogboom</loc>
+		<loc>https://gzvka.com/verhaal/rubensheide</loc>
 		<changefreq>yearly</changefreq>
 		<priority>0.7</priority>
 	</url>

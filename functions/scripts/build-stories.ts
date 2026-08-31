@@ -29,6 +29,8 @@ import * as path from 'path';
 import type { Gazetteer, PlaceMatch } from '../../sharedModels/gazetteer';
 import { normalizeText } from '../../sharedModels/text';
 import { buildIndex, matchPlacesInText } from '../src/gazetteer/match';
+import { looksLikePersonName } from '../src/gazetteer/segment';
+import type { StoryPart } from '../src/legacy/parse';
 import { parseLegacyHtml } from '../src/legacy/parse';
 import { buildPhotoLookup, resolvePhoto, unambiguousFolders } from '../src/legacy/link';
 
@@ -211,6 +213,62 @@ function placesIn(text: string, index: ReturnType<typeof buildIndex>): string[] 
 	return [...new Set(matches.map((match) => match.entryId))];
 }
 
+/**
+ * A person's name as the standings write it: surname first, then one or two given names,
+ * optionally with a Dutch particle - "Achternaam Voornaam", "Van Achternaam Voornaam".
+ *
+ * Written as a shape rather than with examples on purpose: the examples to hand would be
+ * two of the private individuals this very function exists to keep off the site.
+ */
+/**
+ * A ranked roll of names, stripped out of a section that also contains writing.
+ *
+ * The fietszoektocht standings arrive as alternating rank, name and score paragraphs, with
+ * a few real paragraphs about the event mixed in. This project already wrote the rule for
+ * that data: "The .xlsx standings files are lists of 146-154 named private individuals. Do
+ * not import them" (docs/PLAN.md). The same list came in through the saved web page
+ * instead, and was being published - 140 names with their scores, in the sitemap, findable
+ * by anybody's own name.
+ *
+ * So the roll goes and the writing stays. The test for "this section is a results table"
+ * is deliberately narrow - twenty or more paragraphs, more than a third of them bare
+ * numbers - because a page of prose about the village must never match it; and within such
+ * a section only the short, bare number-or-name paragraphs are dropped, so a sentence
+ * standing between two rows survives.
+ *
+ * Returns the parts to keep, and how many were withheld.
+ */
+function withoutRollOfNames(parts: StoryPart[]): {
+	parts: StoryPart[];
+	withheld: number;
+	characters: number;
+} {
+	const texts = parts.map((part) => (part.kind === 'paragraph' ? part.text.trim() : null));
+	const isNumber = (text: string): boolean => /^\d{1,5}(?:[.,]\d+)?$/.test(text);
+
+	const numbers = texts.filter((text) => text !== null && isNumber(text)).length;
+	if (parts.length < 20 || numbers <= parts.length / 3) {
+		return { parts, withheld: 0, characters: 0 };
+	}
+
+	const kept = parts.filter((part, i) => {
+		const text = texts[i];
+		if (text === null || text.length > 60) return true;
+		return !isNumber(text) && !looksLikePersonName(text);
+	});
+
+	// The characters go back to the caller too: `prose` drives the reading time, the
+	// site-wide total and the "longest pieces first" ordering, and counting text the reader
+	// will never see makes all three wrong.
+	const dropped = parts.filter((part) => !kept.includes(part));
+	const characters = dropped.reduce(
+		(sum, part) => sum + (part.kind === 'paragraph' ? part.text.length : 0),
+		0
+	);
+
+	return { parts: kept, withheld: parts.length - kept.length, characters };
+}
+
 /** The first sentence or so of a section, used wherever a story is listed rather than read. */
 function excerptOf(parts: StoredPart[], limit = 220): string {
 	const text = parts
@@ -252,6 +310,7 @@ function main(): void {
 	const summaries: StorySummary[] = [];
 	const byPlace = new Map<string, PlaceStoryRef[]>();
 	const byPhoto: Record<string, { slug: string; section: number; part: number }> = {};
+	let namesWithheld = 0;
 
 	let referenced = 0;
 	let resolved = 0;
@@ -277,7 +336,10 @@ function main(): void {
 			const parts: StoredPart[] = [];
 			const photoPlaceCounts = new Map<string, number>();
 
-			for (const part of section.parts) {
+			const readable = withoutRollOfNames(section.parts);
+			namesWithheld += readable.withheld;
+
+			for (const part of readable.parts) {
 				if (part.kind === 'paragraph') {
 					parts.push(
 						part.credit ? { k: 'p', t: part.text, credit: true } : { k: 'p', t: part.text }
@@ -338,7 +400,15 @@ function main(): void {
 			});
 		}
 
-		if (sections.every((section) => section.parts.length === 0)) continue;
+		if (sections.every((section) => section.parts.length === 0)) {
+			// The photographs of a skipped story already registered a pointer at it. Left
+			// behind, they send a photo page to /verhaal/<slug>, which was never written -
+			// the story that holds them exists nowhere but in that broken link.
+			for (const [photoId, ref] of Object.entries(byPhoto)) {
+				if (ref.slug === slug) delete byPhoto[photoId];
+			}
+			continue;
+		}
 
 		const storyPlaces = [...new Set([...titlePlaces, ...sections.flatMap((s) => s.places)])];
 
@@ -375,7 +445,15 @@ function main(): void {
 			slug,
 			title: page.title,
 			excerpt: excerptOf(sections.flatMap((section) => section.parts)),
-			prose: page.proseLength,
+			// Counted from the sections as stored, not from what the parser read: a story
+			// whose roll of names was withheld must not be advertised, ranked or given a
+			// reading time by a length the reader will never see.
+			prose: sections.reduce(
+				(sum, section) =>
+					sum +
+					section.parts.reduce((n, part) => n + (part.k === 'p' ? part.t.length : 0), 0),
+				0
+			),
 			photos: photosResolved,
 			kind,
 			places: storyPlaces
@@ -443,7 +521,7 @@ function main(): void {
 	fs.writeFileSync(path.join(DATA_DIR, 'stories.json'), JSON.stringify(stories_json), 'utf8');
 	fs.writeFileSync(path.join(DATA_DIR, 'story-photos.json'), JSON.stringify(byPhoto), 'utf8');
 
-	report(stories, summaries, byPlace, byPhoto, referenced, resolved, missing);
+	report(stories, summaries, byPlace, byPhoto, referenced, resolved, missing, namesWithheld);
 
 	if (missingDocuments.length > 0) {
 		// A document the old site linked and this repository does not have. Worth naming: it
@@ -488,7 +566,8 @@ function report(
 	byPhoto: Record<string, unknown>,
 	referenced: number,
 	resolved: number,
-	missing: string[]
+	missing: string[],
+	namesWithheld: number
 ): void {
 	const prose = summaries.reduce((sum, story) => sum + story.prose, 0);
 	const sections = stories.reduce((sum, story) => sum + story.sections.length, 0);
@@ -501,6 +580,11 @@ function report(
 			`${Object.keys(byPhoto).length} distinct`
 	);
 	console.log(`Places         ${byPlace.size} with something written about them`);
+	if (namesWithheld > 0) {
+		console.log(
+			`Withheld       ${namesWithheld} lines of a ranked roll of named private individuals, per docs/PLAN.md`
+		);
+	}
 	console.log(
 		`Documents      ${stories.reduce(
 			(sum, story) => sum + (story.documents?.length ?? 0),

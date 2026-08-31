@@ -246,10 +246,39 @@ itself. Asking a seventy-year-old to register before they can contribute a photo
 their own street is how an archive stays empty. Nothing appears on the site until a curator
 has looked at it, which is the other half of the same decision.
 
-Curators work at `/beheer`: sign in with Google, then approve, reject, retitle, place on a
-street, set a house number, a year and a donor. Approving publishes immediately — the photo
-is served from Cloud Storage and merged into the archive in the browser, so there is no
-rebuild to wait for.
+A contributor is asked for a title, a year and a description **per photograph**, and for a
+name, an email and a general remark once for the batch. What they suggest is never published
+as it stands: it prefills the curator's form and is shown verbatim beside it, and only what
+the curator saves reaches the site.
+
+Curators work at `/beheer`: sign in with Google, then approve, reject, retitle, describe,
+place on a street, set a house number, a year and a donor. Approving publishes immediately —
+the photo is served from Cloud Storage and `src/lib/published.ts` merges it into the archive
+in the browser, so it is in the search, on its street's page, on the map and on its donor's
+page without a rebuild.
+
+The archive it merges into is still the committed index, so the photograph joins the site
+before it joins the repository. Fold it in properly by adding the file to
+`src/lib/images/history-images/` and re-running `npm run archive:index`; until somebody does,
+it lives only in Cloud Storage and Firestore.
+
+**When you fold one in, send its submission back to the queue** — the "Terug naar de
+wachtrij" button on `/beheer`. `publishedPhotos` returns every approved submission for as
+long as it is approved, so a photograph that is now in the index as well would otherwise
+appear twice: two cards on its street's page, two search hits, and a place count one too
+high.
+
+Two things an uploaded photograph does not get, and both are worth knowing before a wide
+appeal for photographs: **no thumbnail is generated for it**, so the grid serves the
+original — a 20 MB scan stays 20 MB — and its link-preview card is that same original rather
+than the 1200x630 the sharing sites want. The fix is a resize on approval (the Firebase
+Resize Images extension writes the three suffixes beside the original); until then, a handful
+of uploads is fine and a hundred is not.
+
+`/beheer` also holds the map desk: every place the archive knows, with where it sits and
+where that position came from, and a click to pin it. A pin is stored in Firestore and wins
+over `static/data/place-coordinates.json`, so it moves the map at once; the desk's export
+button writes the merged set back out as that file, which is how a pin becomes durable.
 
 ### What has to be set up once
 

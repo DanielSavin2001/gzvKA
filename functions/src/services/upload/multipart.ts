@@ -22,6 +22,20 @@ import { FileData, FileDataFields } from '../../../../sharedModels/interfaces';
 /** How large a single upload may be before it is rejected, in bytes. */
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
+/**
+ * How large one non-file field may be. The only field the upload page sends is `meta`,
+ * a JSON array with a title, year and description per photograph - capped at 4000
+ * characters each, so even a large batch fits comfortably under a megabyte.
+ */
+export const MAX_FIELD_BYTES = 1024 * 1024;
+
+/** Everything one multipart request carried: the files, and any plain fields beside them. */
+export interface UploadParts {
+	files: FileData[];
+	/** Non-file fields by name. A repeated name keeps the last value. */
+	fields: Record<string, string>;
+}
+
 /** Raised when the client sent something we will not store. */
 export class UploadValidationError extends Error {
 	constructor(message: string) {
@@ -31,24 +45,27 @@ export class UploadValidationError extends Error {
 }
 
 /**
- * Parses a multipart request body and resolves once every file has been read in full.
+ * Parses a multipart request body and resolves once every part has been read in full.
  *
  * @param headers The request headers, which carry the multipart boundary.
  * @param body The raw request body.
- * @returns Every file in the request, in the order they appeared.
+ * @returns Every file in the request, in the order they appeared, and the plain fields.
  *
  * @throws {UploadValidationError} if the request contains no files, or a file exceeds
  * {@link MAX_FILE_BYTES}.
  */
-export function collectFiles(
+export function collectUpload(
 	headers: IncomingHttpHeaders,
 	body: Buffer | string
-): Promise<FileData[]> {
-	return new Promise<FileData[]>((resolve, reject) => {
+): Promise<UploadParts> {
+	return new Promise<UploadParts>((resolve, reject) => {
 		let busboy: Busboy.Busboy;
 
 		try {
-			busboy = Busboy({ headers, limits: { fileSize: MAX_FILE_BYTES } });
+			busboy = Busboy({
+				headers,
+				limits: { fileSize: MAX_FILE_BYTES, fieldSize: MAX_FIELD_BYTES }
+			});
 		} catch (error) {
 			// A missing or malformed content-type throws synchronously.
 			reject(new UploadValidationError(`Could not read the upload: ${error}`));
@@ -56,6 +73,7 @@ export function collectFiles(
 		}
 
 		const files: FileData[] = [];
+		const fields: Record<string, string> = {};
 		let settled = false;
 
 		const fail = (error: Error): void => {
@@ -88,6 +106,12 @@ export function collectFiles(
 			});
 		});
 
+		// Without this handler busboy still consumes the field parts - it just tells nobody,
+		// which is how per-photo metadata silently vanished in the first version of this flow.
+		busboy.on('field', (name: string, value: string) => {
+			fields[name] = value;
+		});
+
 		busboy.on('error', (error: unknown) =>
 			fail(error instanceof Error ? error : new Error(String(error)))
 		);
@@ -101,7 +125,7 @@ export function collectFiles(
 			}
 
 			settled = true;
-			resolve(files);
+			resolve({ files, fields });
 		});
 
 		busboy.end(body);

@@ -437,7 +437,7 @@
 			"name": "Essenhoutstraat",
 			"aliases": [],
 			"kind": "street",
-			"district": "unknown",
+			"district": "kapellen",
 			"inMunicipality": true,
 			"isStreet": true,
 			"allowHouseNumber": true,
@@ -445,7 +445,7 @@
 			"relatedIds": [
 				"essenhout"
 			],
-			"note": "Not in the imported street register, so its geometry has to come from a map click. The photographs are of the Erfgoedcentrum in Hoeve Van Paesschen and of the Smoldersklok.",
+			"note": "In the official street register after all (street_id 5382, 1128.5 m in 11023_Kapellen_streets.geojson); an earlier note claimed otherwise because the street-geometry build had not been rerun since this entry was added. The photographs are of the Erfgoedcentrum in Hoeve Van Paesschen (Essenhoutstraat 59) and of the Smoldersklok.",
 			"manualGeometry": null,
 			"evidence": {
 				"corpusHits": 14,
@@ -1456,7 +1456,7 @@
 			"isStreet": false,
 			"allowHouseNumber": false,
 			"fuzzy": true,
-			"note": "One photograph is filed under Gemeentepark Beaulieu, so the two may adjoin. Worth confirming before placing.",
+			"note": "Lies between Wilgenstraat, Knotwilgstraat and Akkerstraat; does NOT adjoin the Gemeentepark Beaulieu (900 m apart). The one photograph that was filed under the park ('Het Klein Bos 23') is corrected in photo-corrections.json.",
 			"manualGeometry": null,
 			"evidence": {
 				"corpusHits": 37,

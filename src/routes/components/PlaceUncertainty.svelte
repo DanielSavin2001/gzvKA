@@ -255,7 +255,7 @@
 						bind:value={message}
 						rows="3"
 						placeholder="Bijvoorbeeld: het clubhuis van de korfbalclub staat op die plek."
-						class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm"
+						class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
 					/>
 				</label>
 
@@ -265,7 +265,7 @@
 						<input
 							bind:value={name}
 							placeholder="Mag leeg blijven"
-							class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm"
+							class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
 						/>
 					</label>
 					<label class="block">
@@ -274,7 +274,7 @@
 							bind:value={email}
 							type="email"
 							placeholder="Alleen om iets te vragen"
-							class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm"
+							class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
 						/>
 						<span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400"
 							>Komt niet op de website.</span

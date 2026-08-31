@@ -202,27 +202,34 @@ describe('the generated file', () => {
 		};
 		const places = Object.values(file.places);
 
-		expect(places).toHaveLength(82);
+		// 91 = the 82 of the first research round plus the second round's 9: the ten places
+		// that were still unplaced, minus the Essenhoutstraat, which turned out to be in the
+		// official street register all along and gets its geometry from `npm run streets`.
+		expect(places).toHaveLength(91);
 
 		const byDisplay = (display: string) =>
 			places.filter((entry) => entry.display === display).length;
 
-		// 59 rather than the research's 58: Blokjesweg was the one place nobody could find,
-		// and Daniel identified it as the local name for the Kalmthoutsesteenweg and gave
-		// the spot. Nothing in the archive is unplaced any more, which is what the zero
-		// below records.
-		expect(byDisplay('punt')).toBe(59);
-		// The research counted 7 doubted points and 11 approximations. The build moves Tajje
-		// out of `benadering`, because a circle around a person claims something the same
-		// record's doubt text denies - so 8 and 10 here.
-		expect(byDisplay('punt_met_twijfel')).toBe(8);
-		expect(byDisplay('benadering')).toBe(10);
-		expect(byDisplay('kandidaten')).toBe(5);
+		// 64 = the first round's 59, the second round's four A-grades (Het Klein Bos,
+		// Ertbrandbos, Villa Eikenhoeve, Villa Palmaro), and Domein Middelbeek, which the
+		// third round settled at Kapelsestraat 246 - the same building as the Home Philippe
+		// Speth, so its second candidate 2.3 km away was never a place at all.
+		expect(byDisplay('punt')).toBe(64);
+		// The first round built 8 doubted points and 10 approximations (Tajje moved out of
+		// `benadering`, because a circle around a person claims something the same record's
+		// doubt text denies). Later rounds added the doubted Larikshof, Ekenhof and Café De
+		// Vrede, and moved five more places onto a researched circle.
+		expect(byDisplay('punt_met_twijfel')).toBe(11);
+		expect(byDisplay('benadering')).toBe(15);
+		// One left of the five: De Grens is the border crossing at Putte, Les Chataigniers
+		// stands beside the Irishof on the 1892 map, Villa des Hirondelles is on the
+		// Hoogboomsteenweg, and Middelbeek is settled. Only Poloplein still offers a choice.
+		expect(byDisplay('kandidaten')).toBe(1);
 		expect(byDisplay('niet_geplaatst')).toBe(0);
 
-		// 22 rather than 23: Tajje's open question was "where is this place?", and the answer
-		// is that it is not one. Nothing left for anybody to correct.
-		expect(places.filter((entry) => entry.correctable)).toHaveLength(22);
+		// 26: the second round's five correctable rows took it to 27, and Middelbeek came off
+		// the queue when its answer arrived.
+		expect(places.filter((entry) => entry.correctable)).toHaveLength(26);
 	});
 
 	it('gives every correctable place something to read', () => {

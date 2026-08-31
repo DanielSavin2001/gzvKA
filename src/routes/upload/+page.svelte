@@ -9,13 +9,24 @@
 	 * optional, because the photographs worth having most often come from people who will
 	 * not fill in a form - and a name, a year or a street is a bonus, not a toll.
 	 *
+	 * What a contributor knows is almost always about one photograph, not the batch: THIS
+	 * one is the bakery, THAT one is from around 1950. So the title, year and description
+	 * ask beside each picture, and only the name, email and a general remark are asked once.
+	 *
 	 * Nothing appears on the site until someone has looked at it, and the page says so
 	 * plainly rather than implying the photograph is live.
 	 */
 
 	const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
 
-	let files: File[] = [];
+	interface Entry {
+		file: File;
+		title: string;
+		year: string;
+		description: string;
+	}
+
+	let entries: Entry[] = [];
 	let name = '';
 	let email = '';
 	let note = '';
@@ -25,19 +36,27 @@
 	let sent = 0;
 	let error: string | null = null;
 
-	$: tooBig = files.filter((file) => file.size > MAX_SUBMISSION_BYTES);
-	$: wrongType = files.filter((file) => !ALLOWED_CONTENT_TYPES.includes(file.type));
-	$: sendable = files.length > 0 && tooBig.length === 0 && wrongType.length === 0;
+	$: tooBig = entries.filter((entry) => entry.file.size > MAX_SUBMISSION_BYTES);
+	$: wrongType = entries.filter((entry) => !ALLOWED_CONTENT_TYPES.includes(entry.file.type));
+	$: sendable = entries.length > 0 && tooBig.length === 0 && wrongType.length === 0;
+
+	const FIELD_CLASSES =
+		'mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 ' +
+		'placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 ' +
+		'dark:placeholder-gray-500';
 
 	function add(incoming: FileList | null): void {
 		if (!incoming) return;
 		error = null;
 		sent = 0;
-		files = [...files, ...Array.from(incoming)];
+		entries = [
+			...entries,
+			...Array.from(incoming).map((file) => ({ file, title: '', year: '', description: '' }))
+		];
 	}
 
 	function remove(index: number): void {
-		files = files.filter((_, i) => i !== index);
+		entries = entries.filter((_, i) => i !== index);
 	}
 
 	function onDrop(event: DragEvent): void {
@@ -69,7 +88,21 @@
 
 		try {
 			const body = new FormData();
-			for (const file of files) body.append('foto', file, file.name);
+
+			// One suggestion per photograph, in the same order the files are appended: the
+			// server pairs meta[i] with the i-th file. The field goes first so it is parsed
+			// before the last file finishes.
+			body.append(
+				'meta',
+				JSON.stringify(
+					entries.map((entry) => ({
+						title: entry.title,
+						year: entry.year,
+						description: entry.description
+					}))
+				)
+			);
+			for (const entry of entries) body.append('foto', entry.file, entry.file.name);
 
 			const query = new URLSearchParams();
 			if (name.trim()) query.set('name', name.trim());
@@ -85,7 +118,7 @@
 
 			const result = (await response.json()) as { accepted: number };
 			sent = result.accepted;
-			files = [];
+			entries = [];
 			note = '';
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
@@ -172,55 +205,97 @@
 		</p>
 	</div>
 
-	{#if files.length > 0}
-		<ul class="mt-6 space-y-3">
-			{#each files as file, index (file.name + index)}
+	{#if entries.length > 0}
+		<div class="mt-8">
+			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+				Wat weet u over {entries.length === 1 ? 'deze foto' : "deze foto's"}?
+			</h2>
+			<p class="mt-1 text-gray-600 dark:text-gray-400">
+				Alles mag u leeg laten &mdash; maar elke straat, elk jaartal en elke naam helpt het
+				archief.
+			</p>
+		</div>
+
+		<ul class="mt-4 space-y-4">
+			{#each entries as entry, index (entry.file.name + index)}
 				<li
-					class="flex items-center gap-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3"
+					class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
 				>
-					<img
-						src={preview(file)}
-						alt=""
-						class="h-16 w-16 shrink-0 rounded object-cover"
-						on:load={releasePreview}
-					/>
-					<div class="min-w-0 flex-1">
-						<p class="truncate font-medium text-gray-900 dark:text-gray-100">{file.name}</p>
-						<p class="text-sm text-gray-500 dark:text-gray-400">{readableSize(file.size)}</p>
-						{#if file.size > MAX_SUBMISSION_BYTES}
-							<p class="text-sm font-medium text-red-700 dark:text-red-300">
-								Te groot om in te sturen.
+					<div class="flex items-start gap-4">
+						<img
+							src={preview(entry.file)}
+							alt=""
+							class="h-20 w-20 shrink-0 rounded object-cover"
+							on:load={releasePreview}
+						/>
+						<div class="min-w-0 flex-1">
+							<p class="truncate font-medium text-gray-900 dark:text-gray-100">
+								{entry.file.name}
 							</p>
-						{:else if !ALLOWED_CONTENT_TYPES.includes(file.type)}
-							<p class="text-sm font-medium text-red-700 dark:text-red-300">Dit is geen foto.</p>
-						{/if}
+							<p class="text-sm text-gray-500 dark:text-gray-400">
+								{readableSize(entry.file.size)}
+							</p>
+							{#if entry.file.size > MAX_SUBMISSION_BYTES}
+								<p class="text-sm font-medium text-red-700 dark:text-red-300">
+									Te groot om in te sturen.
+								</p>
+							{:else if !ALLOWED_CONTENT_TYPES.includes(entry.file.type)}
+								<p class="text-sm font-medium text-red-700 dark:text-red-300">
+									Dit is geen foto.
+								</p>
+							{/if}
+						</div>
+						<button
+							type="button"
+							class="shrink-0 rounded px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+							on:click={() => remove(index)}
+						>
+							Verwijderen
+						</button>
 					</div>
-					<button
-						type="button"
-						class="shrink-0 rounded px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-						on:click={() => remove(index)}
-					>
-						Verwijderen
-					</button>
+
+					<div class="mt-3 grid gap-3 sm:grid-cols-3">
+						<label class="block sm:col-span-2">
+							<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Titel</span>
+							<input
+								bind:value={entry.title}
+								placeholder="bv. Dorpsstraat, bakkerij Peeters"
+								class={FIELD_CLASSES}
+							/>
+						</label>
+						<label class="block">
+							<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Jaartal</span>
+							<input
+								bind:value={entry.year}
+								placeholder="bv. 1957, of 'rond 1950'"
+								class={FIELD_CLASSES}
+							/>
+						</label>
+					</div>
+					<label class="mt-3 block">
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+							Wat staat erop?
+						</span>
+						<textarea
+							bind:value={entry.description}
+							rows="2"
+							placeholder="Welke straat, wie staat erop, wat gebeurt er ... alles helpt."
+							class={FIELD_CLASSES}
+						/>
+					</label>
 				</li>
 			{/each}
 		</ul>
 	{/if}
 
 	<div class="mt-8 space-y-4">
-		<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
-			Wilt u er iets bij vertellen?
-		</h2>
-		<p class="-mt-2 text-gray-600 dark:text-gray-400">Alles hieronder mag u leeg laten.</p>
+		<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Over u</h2>
+		<p class="-mt-2 text-gray-600 dark:text-gray-400">Ook dit mag u leeg laten.</p>
 
 		<div class="grid gap-4 sm:grid-cols-2">
 			<label class="block">
 				<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Uw naam</span>
-				<input
-					bind:value={name}
-					placeholder="Zo vermelden we u bij de foto"
-					class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
-				/>
+				<input bind:value={name} placeholder="Zo vermelden we u bij de foto" class={FIELD_CLASSES} />
 			</label>
 
 			<label class="block">
@@ -229,7 +304,7 @@
 					bind:value={email}
 					type="email"
 					placeholder="Alleen om iets te kunnen vragen"
-					class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+					class={FIELD_CLASSES}
 				/>
 				<span class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
 					>Komt niet op de website.</span
@@ -238,12 +313,14 @@
 		</div>
 
 		<label class="block">
-			<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Wat staat erop?</span>
+			<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+				Wilt u nog iets kwijt over deze inzending als geheel?
+			</span>
 			<textarea
 				bind:value={note}
-				rows="4"
-				placeholder="Welke straat, welk jaar, wie staat erop ... alles helpt."
-				class="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2"
+				rows="3"
+				placeholder="bv. Alle foto's komen uit het album van mijn grootmoeder."
+				class={FIELD_CLASSES}
 			/>
 		</label>
 	</div>
@@ -256,11 +333,11 @@
 	>
 		{#if sending}
 			Bezig met versturen ...
-		{:else if files.length === 0}
+		{:else if entries.length === 0}
 			Kies eerst een foto
 		{:else}
-			Stuur {files.length}
-			{files.length === 1 ? 'foto' : "foto's"} in
+			Stuur {entries.length}
+			{entries.length === 1 ? 'foto' : "foto's"} in
 		{/if}
 	</button>
 

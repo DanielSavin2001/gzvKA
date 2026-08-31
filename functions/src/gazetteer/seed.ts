@@ -111,7 +111,15 @@ const STREETS: SeedEntry[] = [
 	{ id: 'denneburgdreef', name: 'Denneburgdreef', kind: 'street', relatedIds: ['kasteel-dennenburg'], note: 'single corpus occurrence; confirm against OSM' },
 	{ id: 'koerspleindreef', name: 'Koerspleindreef', kind: 'street', note: 'single corpus occurrence; confirm against OSM' },
 	{ id: 'blokjesweg', name: 'Blokjesweg', kind: 'street', note: 'single corpus occurrence; confirm against OSM' },
-	{ id: 'oude-baan', name: 'Oude Baan', kind: 'street', relatedIds: ['rubensheide'], note: 'from "Rubensheide (Oude Baan)"; confirm against OSM' }
+	{ id: 'oude-baan', name: 'Oude Baan', kind: 'street', relatedIds: ['rubensheide'], note: 'from "Rubensheide (Oude Baan)"; confirm against OSM' },
+	{
+		id: 'essenhoutstraat',
+		name: 'Essenhoutstraat',
+		kind: 'street',
+		district: 'kapellen',
+		relatedIds: ['essenhout'],
+		note: 'In the official street register after all (street_id 5382, 1128.5 m in 11023_Kapellen_streets.geojson); an earlier note claimed otherwise because the street-geometry build had not been rerun since this entry was added. The photographs are of the Erfgoedcentrum in Hoeve Van Paesschen (Essenhoutstraat 59) and of the Smoldersklok.'
+	}
 ];
 
 /** Squares, which take house numbers like streets do. */
@@ -157,6 +165,15 @@ const AREAS: SeedEntry[] = [
 	{ id: 'nieuwe-wijk', name: 'Nieuwe Wijk', kind: 'area', district: 'kapellen' },
 	{ id: 'kapellenbos', name: 'Kapellenbos', kind: 'area', district: 'kapellen' },
 	{ id: 'essenhout', name: 'Essenhout', kind: 'area' },
+	{
+		id: 'klein-bos',
+		name: 'Het Klein Bos',
+		aliases: ['Klein Bos'],
+		kind: 'area',
+		district: 'kapellen',
+		note: "Lies between Wilgenstraat, Knotwilgstraat and Akkerstraat; does NOT adjoin the Gemeentepark Beaulieu (900 m apart). The one photograph that was filed under the park ('Het Klein Bos 23') is corrected in photo-corrections.json."
+	},
+	{ id: 'ertbrandbos', name: 'Ertbrandbos', kind: 'area', district: 'ertbrand', relatedIds: ['ertbrand', 'fort-van-ertbrand'] },
 	{ id: 'zilverenhoek', name: 'Zilverenhoek', kind: 'area' },
 	{ id: 'de-grens', name: 'De Grens', aliases: ['Grens'], kind: 'area', district: 'putte-kapellen', fuzzy: false },
 	{ id: 'galgeveld', name: 'Galgeveld', kind: 'area', district: 'putte-kapellen' },
@@ -207,7 +224,18 @@ const ESTATES: SeedEntry[] = [
 	{ id: 'rozenhof', name: 'Villa Rozenhof', aliases: ['Rozenhof', 'Parein-Rozenhof'], kind: 'castle-estate' },
 	{ id: 'kasteel-ravenhof', name: 'Kasteel Ravenhof', aliases: ['Ravenhof'], kind: 'castle-estate', inMunicipality: false, note: 'Ravenhof lies in Stabroek, not Kapellen. Searchable, but excluded from the map of Kapellen.' },
 	{ id: 'mastbeekhof', name: 'Mastbeekhof', kind: 'castle-estate' },
-	{ id: 'kattekensberg', name: 'Kattekensberg', kind: 'castle-estate' }
+	{ id: 'kattekensberg', name: 'Kattekensberg', kind: 'castle-estate' },
+	{ id: 'kasteel-oude-gracht', name: 'Kasteel Oude Gracht', aliases: ['Oude Gracht'], kind: 'castle-estate', district: 'hoogboom', note: 'Filenames place it in Hoogboom ("Hoogboom - Kasteel Oude Gracht"). The corpus also photographs its boothuis, brug and vijver separately.' },
+	{ id: 'kasteel-pannenhuys', name: 'Kasteel Pannenhuys', aliases: ['Pannenhuis'], kind: 'castle-estate', note: 'District not established by any filename. The alias "Pannenhuis" is the other spelling seen in the corpus. Known after WWI as "Ladyloan", a name the corpus never uses.' },
+	{ id: 'kasteel-larikshof', name: 'Kasteel Larikshof', aliases: ['Villa Larikshof', 'Larikshof'], kind: 'castle-estate', note: 'The folder calls it a kasteel, every filename inside calls it a villa.' },
+	{
+		id: 'kasteel-ekenhof',
+		name: 'Kasteel Ekenhof',
+		aliases: ['Ekenhof'],
+		kind: 'castle-estate',
+		fuzzy: false,
+		note: 'Fuzzy matching is off: "Ekenhof" is within edit distance of the existing Kasteel Beukenhof, so a fuzzy hit could file a photograph of one under the other. All three filenames spell it exactly, so exact matching loses nothing.'
+	}
 ];
 
 /** Forts. */
@@ -240,14 +268,32 @@ const BUILDINGS: SeedEntry[] = [
 	{ id: 'de-barreel', name: 'Café De Barreel', aliases: ['Barreel'], kind: 'building', relatedIds: ['koning-albertlei'] },
 	{ id: 'villa-des-hirondelles', name: 'Villa Des Hirondelles', kind: 'building', district: 'hoogboom' },
 	{ id: 'kapel-de-heuvels', name: 'Kapel De Heuvels', kind: 'building' },
-	{ id: 'tajje', name: 'Tajje', kind: 'building', fuzzy: false, note: 'A landmark; exact identity still to be confirmed.' },
+	{
+		id: 'tajje',
+		name: 'Tajje',
+		aliases: ['Tajje de Kotter', 'Matheus Janssens'],
+		kind: 'person',
+		fuzzy: false,
+		note: 'Not a place. "Tajje de Kotter" was the nickname of Matheus Janssens; the 58 photographs are of the procession through Kapellen for his hundredth birthday on 9 July 1976. Kept as an entry so the photographs stay findable under the name everybody knew him by, but it is a person and is not put on the map.'
+	},
 	{ id: 'villa-heirust', name: 'Villa Heirust', aliases: ['Heirust'], kind: 'building', district: 'putte-kapellen' },
 	{ id: 'domein-middelbeek', name: 'Domein Middelbeek', aliases: ['Middelbeek'], kind: 'building', district: 'putte-kapellen' },
 	{ id: 'home-kindervreugd', name: 'Home Kindervreugd', kind: 'building' },
 	{ id: 'home-philippe-speth', name: 'Home Philippe Speth', kind: 'building', relatedIds: ['kapelsestraat'], note: 'The corpus gives Kapelsestraat 246.' },
 	{ id: 'home-flor-mielants', name: 'Home Flor Mielants', kind: 'building' },
 	{ id: 'maison-la-chaine', name: 'Maison La Chaine', kind: 'building', relatedIds: ['stationsstraat'] },
-	{ id: 'casteleinhoeve', name: 'Casteleinhoeve', kind: 'building', relatedIds: ['kalmthoutsesteenweg'] }
+	{ id: 'casteleinhoeve', name: 'Casteleinhoeve', kind: 'building', relatedIds: ['kalmthoutsesteenweg'] },
+	{ id: 'villa-eikenhoeve', name: 'Villa Eikenhoeve', aliases: ['Eikenhoeve'], kind: 'building', district: 'hoogboom', relatedIds: ['jagersdreef'], note: 'Filenames give the address: Hoogboomsteenweg 77 (one says 79), Hoogboom, with an entrance on Jagersdreef. Onroerend Erfgoed fiche 13337 settles the 77/79 doubt: it is 79.' },
+	{
+		id: 'cafe-de-vrede',
+		name: 'Café De Vrede',
+		aliases: ['De Vrede'],
+		kind: 'building',
+		fuzzy: false,
+		negativeContext: ['vredestraat', 'van vrede', 'o\\.?l\\.?v', 'onze[- ]lieve[- ]vrouw'],
+		note: 'Appears across four different folders, which is what marks it as a real establishment rather than a folder name. Photographed for the Tajje procession of 1976.'
+	},
+	{ id: 'villa-palmaro', name: 'Villa Palmaro', aliases: ['Palmaro'], kind: 'building', note: 'One of the six is a voorontwerp - a design drawing - so the villa may never have been built as drawn. Stood at Lindenstraat 112, today Philippe Spethstraat 112 - the Lindenstraat is the old name of the Philippe Spethstraat.' }
 ];
 
 /**

@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { https, HttpsFunction } from 'firebase-functions';
 import * as logger from 'firebase-functions/logger';
 
-import { SubmissionError, readContributor } from '../../../sharedModels/submission';
+import { SubmissionError, readContributor, readSuggestion } from '../../../sharedModels/submission';
 import { NotAuthorised, requireAdmin } from '../services/admin-auth';
 import * as submissions from '../services/submissionService';
-import { collectFiles, UploadValidationError } from '../services/upload/multipart';
+import { collectUpload, UploadValidationError } from '../services/upload/multipart';
 import { validateCors } from '../utils/cors-helper';
 import { isMissingIndex, missingIndexMessage } from '../utils/firestore-errors';
 
@@ -53,17 +53,31 @@ export const submitPhoto: HttpsFunction = https.onRequest(
 		try {
 			if (request.method !== 'POST') return response.status(405).send('Method Not Allowed');
 
-			const files = await collectFiles(request.headers, request.body);
+			const { files, fields } = await collectUpload(request.headers, request.body);
 			if (files.length === 0) return response.status(400).send('Geen foto ontvangen.');
 
+			// Name, email and the note about the batch still ride the query string, so a page
+			// opened before this deploy keeps working; the multipart `meta` field carries what
+			// the query string cannot: one suggestion per photograph, in file order.
 			const contributor = readContributor({
 				name: request.query.name,
 				email: request.query.email,
 				note: request.query.note
 			});
 
+			let meta: unknown[] = [];
+			if (typeof fields.meta === 'string' && fields.meta !== '') {
+				try {
+					const parsed: unknown = JSON.parse(fields.meta);
+					if (Array.isArray(parsed)) meta = parsed;
+				} catch {
+					// A malformed meta field loses the suggestions, not the photographs.
+					logger.warn('Could not parse the meta field of an upload; storing files without it.');
+				}
+			}
+
 			const stored = [];
-			for (const file of files) {
+			for (const [index, file] of files.entries()) {
 				stored.push(
 					await submissions.submit(
 						{
@@ -71,7 +85,8 @@ export const submitPhoto: HttpsFunction = https.onRequest(
 							originalName: file.fields.filename,
 							contentType: file.fields.mimeType
 						},
-						contributor
+						contributor,
+						readSuggestion(meta[index])
 					)
 				);
 			}

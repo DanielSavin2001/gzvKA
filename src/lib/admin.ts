@@ -129,6 +129,7 @@ export interface Decision {
 	houseNumber?: number;
 	year?: string;
 	donor?: string;
+	description?: string;
 	lat?: number;
 	lng?: number;
 	rejectionReason?: string;
@@ -166,6 +167,34 @@ export function judgeCorrection(decision: {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(decision)
+	});
+}
+
+/**
+ * Placing a whole place on the map.
+ *
+ * Takes effect at once: the site merges these pins over the committed
+ * `place-coordinates.json`, and a pin wins. The beheer page can export the merged set for
+ * a commit, so the repository stays the durable record.
+ */
+export function savePlacePin(
+	placeId: string,
+	lat: number,
+	lng: number
+): Promise<{ id: string; pin: { lat: number; lng: number; by: string; on: string } }> {
+	return call('savePlacePin', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ placeId, lat, lng })
+	});
+}
+
+/** Drops the pin, so the place falls back to the register or the research. */
+export function removePlacePin(placeId: string): Promise<{ id: string; removed: boolean }> {
+	return call('savePlacePin', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ placeId, remove: true })
 	});
 }
 
