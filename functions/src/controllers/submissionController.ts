@@ -21,7 +21,10 @@ import { isMissingIndex, missingIndexMessage } from '../utils/firestore-errors';
 /**
  * Turns a thrown error into a response.
  *
- * `forCurator` may only be passed by a handler that has already got past `requireAdmin`.
+ * `forCurator` is set only once `requireAdmin` has actually returned - not merely because
+ * the handler is an admin-only one. requireAdmin can throw something other than
+ * NotAuthorised (a token that will not decode, Firebase unreachable), and at that moment
+ * the caller has proved nothing, so they get the same line a visitor would.
  * A visitor gets the same unrevealing line as before - what broke inside the archive is
  * none of their business and might say more than it should - but a curator staring at
  * "Er ging iets mis" on their own queue has nothing to act on and no way to read the
@@ -142,8 +145,15 @@ export const listSubmissions: HttpsFunction = https.onRequest(
 		response = validateCors(request, response);
 		if (response.headersSent) return response;
 
+		// Only true once requireAdmin has actually returned. `fail` leans on it to decide
+		// whether the caller has earned a real error message, and requireAdmin can itself
+		// throw something other than NotAuthorised - a token that will not decode, Firebase
+		// unreachable - at a moment when nobody has proved anything yet.
+		let asCurator = false;
+
 		try {
 			await requireAdmin(request.headers.authorization);
+			asCurator = true;
 
 			const status = String(request.query.status ?? 'pending');
 			const allowed = ['pending', 'approved', 'rejected', 'all'];
@@ -177,7 +187,7 @@ export const listSubmissions: HttpsFunction = https.onRequest(
 
 			return response.status(200).json({ submissions: withPreviews });
 		} catch (error) {
-			return fail(response, error, true);
+			return fail(response, error, asCurator);
 		}
 	}
 );
@@ -188,8 +198,11 @@ export const reviewSubmission: HttpsFunction = https.onRequest(
 		response = validateCors(request, response);
 		if (response.headersSent) return response;
 
+		let asCurator = false;
+
 		try {
 			const curator = await requireAdmin(request.headers.authorization);
+			asCurator = true;
 
 			if (request.method !== 'POST') return response.status(405).send('Method Not Allowed');
 
@@ -216,7 +229,7 @@ export const reviewSubmission: HttpsFunction = https.onRequest(
 
 			return response.status(200).json(updated);
 		} catch (error) {
-			return fail(response, error, true);
+			return fail(response, error, asCurator);
 		}
 	}
 );
@@ -227,11 +240,14 @@ export const whoAmI: HttpsFunction = https.onRequest(
 		response = validateCors(request, response);
 		if (response.headersSent) return response;
 
+		let asCurator = false;
+
 		try {
 			const curator = await requireAdmin(request.headers.authorization);
+			asCurator = true;
 			return response.status(200).json(curator);
 		} catch (error) {
-			return fail(response, error, true);
+			return fail(response, error, asCurator);
 		}
 	}
 );
