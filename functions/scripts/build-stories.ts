@@ -29,6 +29,7 @@ import * as path from 'path';
 import type { Gazetteer, PlaceMatch } from '../../sharedModels/gazetteer';
 import { normalizeText } from '../../sharedModels/text';
 import { buildIndex, matchPlacesInText } from '../src/gazetteer/match';
+import type { StoryPart } from '../src/legacy/parse';
 import { parseLegacyHtml } from '../src/legacy/parse';
 import { buildPhotoLookup, resolvePhoto, unambiguousFolders } from '../src/legacy/link';
 
@@ -211,6 +212,47 @@ function placesIn(text: string, index: ReturnType<typeof buildIndex>): string[] 
 	return [...new Set(matches.map((match) => match.entryId))];
 }
 
+/**
+ * A person's name as the standings write it: "Van Gerwen Annick", "Poedts Marceline".
+ * Surname first, one or two given names, optionally with a Dutch particle.
+ */
+const NAME_SHAPED =
+	/^(?:van|de|den|der|ten|ter|vande|vanden|op|'t)?\s*[A-ZÀ-Þ][\p{L}'-]+(?:\s+(?:van|de|den|der|ten|ter|den)\b)?(?:\s+[A-ZÀ-Þ][\p{L}'-]+){1,2}$/u;
+
+/**
+ * A ranked roll of names, stripped out of a section that also contains writing.
+ *
+ * The fietszoektocht standings arrive as alternating rank, name and score paragraphs, with
+ * a few real paragraphs about the event mixed in. This project already wrote the rule for
+ * that data: "The .xlsx standings files are lists of 146-154 named private individuals. Do
+ * not import them" (docs/PLAN.md). The same list came in through the saved web page
+ * instead, and was being published - 140 names with their scores, in the sitemap, findable
+ * by anybody's own name.
+ *
+ * So the roll goes and the writing stays. The test for "this section is a results table"
+ * is deliberately narrow - twenty or more paragraphs, more than a third of them bare
+ * numbers - because a page of prose about the village must never match it; and within such
+ * a section only the short, bare number-or-name paragraphs are dropped, so a sentence
+ * standing between two rows survives.
+ *
+ * Returns the parts to keep, and how many were withheld.
+ */
+function withoutRollOfNames(parts: StoryPart[]): { parts: StoryPart[]; withheld: number } {
+	const texts = parts.map((part) => (part.kind === 'paragraph' ? part.text.trim() : null));
+	const isNumber = (text: string): boolean => /^\d{1,5}(?:[.,]\d+)?$/.test(text);
+
+	const numbers = texts.filter((text) => text !== null && isNumber(text)).length;
+	if (parts.length < 20 || numbers <= parts.length / 3) return { parts, withheld: 0 };
+
+	const kept = parts.filter((part, i) => {
+		const text = texts[i];
+		if (text === null || text.length > 60) return true;
+		return !isNumber(text) && !NAME_SHAPED.test(text);
+	});
+
+	return { parts: kept, withheld: parts.length - kept.length };
+}
+
 /** The first sentence or so of a section, used wherever a story is listed rather than read. */
 function excerptOf(parts: StoredPart[], limit = 220): string {
 	const text = parts
@@ -252,6 +294,7 @@ function main(): void {
 	const summaries: StorySummary[] = [];
 	const byPlace = new Map<string, PlaceStoryRef[]>();
 	const byPhoto: Record<string, { slug: string; section: number; part: number }> = {};
+	let namesWithheld = 0;
 
 	let referenced = 0;
 	let resolved = 0;
@@ -277,7 +320,10 @@ function main(): void {
 			const parts: StoredPart[] = [];
 			const photoPlaceCounts = new Map<string, number>();
 
-			for (const part of section.parts) {
+			const readable = withoutRollOfNames(section.parts);
+			namesWithheld += readable.withheld;
+
+			for (const part of readable.parts) {
 				if (part.kind === 'paragraph') {
 					parts.push(
 						part.credit ? { k: 'p', t: part.text, credit: true } : { k: 'p', t: part.text }
@@ -443,7 +489,7 @@ function main(): void {
 	fs.writeFileSync(path.join(DATA_DIR, 'stories.json'), JSON.stringify(stories_json), 'utf8');
 	fs.writeFileSync(path.join(DATA_DIR, 'story-photos.json'), JSON.stringify(byPhoto), 'utf8');
 
-	report(stories, summaries, byPlace, byPhoto, referenced, resolved, missing);
+	report(stories, summaries, byPlace, byPhoto, referenced, resolved, missing, namesWithheld);
 
 	if (missingDocuments.length > 0) {
 		// A document the old site linked and this repository does not have. Worth naming: it
@@ -488,7 +534,8 @@ function report(
 	byPhoto: Record<string, unknown>,
 	referenced: number,
 	resolved: number,
-	missing: string[]
+	missing: string[],
+	namesWithheld: number
 ): void {
 	const prose = summaries.reduce((sum, story) => sum + story.prose, 0);
 	const sections = stories.reduce((sum, story) => sum + story.sections.length, 0);
@@ -501,6 +548,11 @@ function report(
 			`${Object.keys(byPhoto).length} distinct`
 	);
 	console.log(`Places         ${byPlace.size} with something written about them`);
+	if (namesWithheld > 0) {
+		console.log(
+			`Withheld       ${namesWithheld} lines of a ranked roll of named private individuals, per docs/PLAN.md`
+		);
+	}
 	console.log(
 		`Documents      ${stories.reduce(
 			(sum, story) => sum + (story.documents?.length ?? 0),

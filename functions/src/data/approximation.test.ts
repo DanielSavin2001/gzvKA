@@ -210,22 +210,26 @@ describe('the generated file', () => {
 		const byDisplay = (display: string) =>
 			places.filter((entry) => entry.display === display).length;
 
-		// 63 = the first round's 59 plus the second round's four A-grades (Het Klein Bos,
-		// Ertbrandbos, Villa Eikenhoeve, Villa Palmaro). Blokjesweg's story is in the git
-		// history: it was the one place nobody could find until Daniel identified it.
-		expect(byDisplay('punt')).toBe(63);
-		// The first round built 8 and 10 (Tajje moved out of `benadering`, because a circle
-		// around a person claims something the same record's doubt text denies). The second
-		// round adds 3 doubted points (Larikshof, Ekenhof, Café De Vrede) and 2 approximations
-		// (Kasteel Oude Gracht, Kasteel Pannenhuys - street certain, spot not).
+		// 64 = the first round's 59, the second round's four A-grades (Het Klein Bos,
+		// Ertbrandbos, Villa Eikenhoeve, Villa Palmaro), and Domein Middelbeek, which the
+		// third round settled at Kapelsestraat 246 - the same building as the Home Philippe
+		// Speth, so its second candidate 2.3 km away was never a place at all.
+		expect(byDisplay('punt')).toBe(64);
+		// The first round built 8 doubted points and 10 approximations (Tajje moved out of
+		// `benadering`, because a circle around a person claims something the same record's
+		// doubt text denies). Later rounds added the doubted Larikshof, Ekenhof and Café De
+		// Vrede, and moved five more places onto a researched circle.
 		expect(byDisplay('punt_met_twijfel')).toBe(11);
-		expect(byDisplay('benadering')).toBe(12);
-		expect(byDisplay('kandidaten')).toBe(5);
+		expect(byDisplay('benadering')).toBe(15);
+		// One left of the five: De Grens is the border crossing at Putte, Les Chataigniers
+		// stands beside the Irishof on the 1892 map, Villa des Hirondelles is on the
+		// Hoogboomsteenweg, and Middelbeek is settled. Only Poloplein still offers a choice.
+		expect(byDisplay('kandidaten')).toBe(1);
 		expect(byDisplay('niet_geplaatst')).toBe(0);
 
-		// The first round left 22 (Tajje's open question was "where is this place?", and the
-		// answer is that it is not one); the second round's 5 correctable rows make 27.
-		expect(places.filter((entry) => entry.correctable)).toHaveLength(27);
+		// 26: the second round's five correctable rows took it to 27, and Middelbeek came off
+		// the queue when its answer arrived.
+		expect(places.filter((entry) => entry.correctable)).toHaveLength(26);
 	});
 
 	it('gives every correctable place something to read', () => {

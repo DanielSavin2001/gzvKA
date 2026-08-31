@@ -156,29 +156,18 @@
 		"de-grens": {
 			"id": "de-grens",
 			"name": "De Grens",
-			"grade": "C",
-			"display": "kandidaten",
-			"note": "De Grensstraat op de Nederlandse grens bij Putte. Kan ook de grensovergang aan de Antwerpsesteenweg zijn — laat bevestigen.",
+			"grade": "B",
+			"display": "benadering",
+			"note": "De grensovergang bij Putte, niet de Grensstraat: de Hoelen-prentkaart in het archief zelf draagt het bijschrift 'PUTTE (N.B.) De Grens. La Frontiere'. Punt = het kruispunt Ertbrandstraat/Puttestraat x Grensstraat x Douaneplein x A.C. Swinnesstraat, met het douanekantoor, de slagboom, grenspaal 257 en de rij cafes. Onderzoek 2026-08-31: van twee kandidaten naar een punt; de kandidaat 'Grensstraat' lag 1,25 km ernaast.",
 			"correctable": true,
 			"priority": 28,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"lat": 51.35964,
-			"lng": 4.41157,
-			"doubt": "Twee heel verschillende mogelijkheden: de Grensstraat, of de grensovergang aan de Antwerpsesteenweg bij Putte. Met 28 foto's van vermoedelijk douanekantoren en slagbomen is dat laatste minstens zo waarschijnlijk — OSM kent daar een Douaneplein.",
-			"research": "Kijk of er op de foto's douanegebouwen, slagbomen of wachtende auto's staan. gzvka.be heeft pagina's 'Putte-Nederland' en 'Putte-Stabroek'.",
-			"candidates": [
-				{
-					"lat": 51.35964,
-					"lng": 4.41157,
-					"label": "Grensstraat"
-				},
-				{
-					"lat": 51.35564,
-					"lng": 4.39437,
-					"label": "Douaneplein / grensovergang"
-				}
-			]
+			"lat": 51.35585,
+			"lng": 4.39471,
+			"radius": 150,
+			"doubt": "De overgang zelf staat vast; welke van de 28 foto's strikt genomen op Kapels dan wel Stabroeks of Nederlands grondgebied genomen zijn, niet.",
+			"research": "Voor iemand uit Putte: waar stond de spitse grenspaal van de prentkaarten van 1901 - is dat de huidige grenspaal 257? En lagen de cafes van 'Cafes aan de Grens' aan de oost- of de westkant van de weg?"
 		},
 		"zilverenhoek": {
 			"id": "zilverenhoek",
@@ -369,32 +358,32 @@
 			"name": "Kasteel De Sterre",
 			"grade": "B",
 			"display": "punt_met_twijfel",
-			"note": "Schuttersdreef. OSM heeft ook een gehucht \"De Sterre\" op 51.302787, 4.451600.",
+			"note": "Landhuis van de familie Grisar, ca. 1900, architect Joseph Hertogs; in 1955 verbouwd tot de neuropsychiatrische kliniek Medister, sinds 1990 Nieuw Medister en sinds 2006 Elim, centrum voor psychotherapie, Jagersdreef 100. Onderzoek 2026-08-31: het zelfgekozen 'Schuttersdreef 1' vervalt (het lag bovendien aan de verkeerde kant van de dreef); het punt is nu het zwaartepunt van het enige onverkavelde blok dat zowel aan de Jagersdreef als aan de Schuttersdreef paalt. Onroerend Erfgoed (fiche 13350) noteert het adres als Schuttersdreef zonder huisnummer; gzvka.be en het huidige adres wijzen naar de Jagersdreef.",
 			"correctable": true,
 			"priority": 34,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"lat": 51.30189,
-			"lng": 4.45277,
+			"lat": 51.30288,
+			"lng": 4.45178,
 			"radius": 200,
-			"doubt": "Onroerend Erfgoed geeft alleen 'Schuttersdreef', zonder huisnummer. Ik heb nr. 1 gegeokodeerd omdat ik een punt nodig had — dat nummer is dus zelf gekozen. Het ziet eruit als een geokodeerd adres maar is een gok.",
-			"research": "Open fiche 13350 op inventaris.onroerenderfgoed.be; de detailpagina heeft vaak een kaartje. Of zoek op luchtfoto's waar aan de Schuttersdreef een groot gebouw met oprijlaan staat."
+			"doubt": "Het domein is vastgesteld, het gebouw binnen het domein niet.",
+			"research": "Een geokodering van 'Jagersdreef 100, 2950 Kapellen' of de zonepolygoon van fiche 13350 maakt hier meteen klasse A van. Vraag ter plaatse: staat het oorspronkelijke kasteelgebouw met de twee torentjes er nog, of is het gesloopt toen Nieuw Medister in 1990 werd gebouwd?"
 		},
 		"kasteel-bunderhof": {
 			"id": "kasteel-bunderhof",
 			"name": "Kasteel Bunderhof",
-			"grade": "C",
+			"grade": "B",
 			"display": "benadering",
-			"note": "Afgeleid van de Bunderbeeklaan. Gebouwd 1907 door Daniel-Jacques de Pret Roose de Calesberg, verviel na WO II. Zwakste van de kastelen — laat controleren.",
+			"note": "Kapellenbos, zeer waarschijnlijk aan De Pretlaan (genoemd naar de bouwersfamilie de Pret; twee bedrijvengidsen geven 'De Pretlaan 6'). Onderzoek 2026-08-31: de wijk staat vast uit de Hoelen-prentkaarten in het archief zelf (1909-1914), bijschriften 'Cappellen Bosch' en 'Cappellen-Heide' = Kapellenbos. Het oude punt kwam alleen doordat 'Bunder' in Bunderbeeklaan voorkwam - dat verband is weerlegd, niet alleen zwak.",
 			"correctable": true,
 			"priority": 32,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"lat": 51.30936,
-			"lng": 4.44086,
-			"radius": 600,
-			"doubt": "De bron beschrijft de familiegeschiedenis maar noemt geen enkele plaats. Het punt is puur afgeleid uit de straatnaam Bunderbeeklaan, omdat daar 'Bunder' in staat.",
-			"research": "Kapellen heeft ook een De Pretlaan (51.352813, 4.453873), genoemd naar de bouwersfamilie de Pret — een directere aanwijzing. Verder: Popp- en Vandermaelenkaart op geopunt.be; een kasteel uit 1907 staat op de topokaarten van voor WO II."
+			"lat": 51.3496,
+			"lng": 4.45213,
+			"radius": 550,
+			"doubt": "De laan is zeer waarschijnlijk, de plek erlangs niet: De Pretlaan is ruim een kilometer lang.",
+			"research": "Klopt het adres De Pretlaan 6, en waar ligt nummer 6: in het eerste stuk bij de Kalmthoutsesteenweg en de overweg, of aan de noordkant richting Douglaslaan/Bareellaan? Aan welke kant van de laan ligt de oprit?"
 		},
 		"kasteel-les-etangs": {
 			"id": "kasteel-les-etangs",
@@ -423,8 +412,8 @@
 			"lat": 51.31687,
 			"lng": 4.42319,
 			"radius": 250,
-			"doubt": "Het punt is het middelpunt van het Gemeentepark, niet de plek van het kasteel. Het park is bijna 15 ha groot.",
-			"research": "Makkelijkste correctie van de hele lijst: Korfbalclub Kapellen bouwde in 1980 een clubhuis op exact de plek van het kasteel, met restanten erin verwerkt. Zoek dat clubhuis in het Gemeentepark op een luchtfoto en lees de coördinaten af. Let op: 'Korfbal HKC' in OSM (51.313221, 4.403975) ligt 1,4 km westelijker en is vrijwel zeker een andere club."
+			"doubt": "Het punt is het middelpunt van het Gemeentepark (bijna 15 ha), niet de plek van het kasteel. Dat stond op de plek van het korfbalclubhuis, dat volgens de gemeente tussen de atletiekpiste (zuidkant, kleedkamers Bergstraat 80) en de tennisterreinen (noordoostkant, Dorpsstraat 65, bij brasserie De Chalet) ligt - dus in het oostelijke middendeel van het park, ruwweg 51.3164 / 4.4241.",
+			"research": "Onderzoek 2026-08-31: NIET meer proberen via de kaarten in het archief (het blad van 1892 is ~10,6 m/px met het woord 'Cappellen' dwars over het park; dat van 1841 is enkel het sectie-indexblad; de luchtfoto's zijn gemeentebrede schermafdrukken) en niet via Onroerend Erfgoed (fiches 77629/134123 zijn Beaulieu te Machelen). Wel kansrijk: 'Hobonia Groeiboek Kastelen - Beaulieu' van Heemkring Hoghescote op Issuu, de sportdienst (sport@kapellen.be) of Korfbalclub Kapellen zelf (Dorpsstraat 63). Vraag: staat het clubhuis uit 1980 aan de noordoostkant bij de tennisterreinen en De Chalet, of dichter bij de atletiekpiste aan de Bergstraat - en zijn de kasteelrestanten die erin verwerkt zitten nog aanwijsbaar?"
 		},
 		"kasteel-boterberg": {
 			"id": "kasteel-boterberg",
@@ -471,18 +460,18 @@
 		"kasteel-mastenhof": {
 			"id": "kasteel-mastenhof",
 			"name": "Kasteel Mastenhof",
-			"grade": "C",
+			"grade": "B",
 			"display": "benadering",
-			"note": "\"Aan de noordkant van de Kalmthoutsesteenweg\", eigendom van de families van Zuylen en later Kronacker. Afgebrand 1975. De gronden zijn nu het Mastenbos.",
+			"note": "Kalmthoutsesteenweg 53, noordkant: 'Het kasteel Mastenhof stond aan de noordkant van de Kalmthoutsesteenweg... afgebrand in 1975' (gzvka.be). Onderzoek 2026-08-31: het huisnummer komt uit een bestandsnaam in het archief zelf ('Kalmthoutsesteenweg 53 - Mastenhof - Heemkring Hoghescote'). Nr. 33 (het Dennenhuis) staat als klasse A 85 m ten noorden van de as van de steenweg, wat bevestigt dat de oneven nummers aan de noordkant liggen en ver van de weg af. De dreven van het oude landschapspark zijn nog zichtbaar in het Mastenbos.",
 			"correctable": true,
 			"priority": 12,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"lat": 51.338,
-			"lng": 4.432,
-			"radius": 850,
-			"doubt": "De bron zegt 'aan de noordkant van de Kalmthoutsesteenweg' — dat is een strook van 1,7 km. Het punt is met de hand in het midden gezet.",
-			"research": "Afgebrand in 1975, dus zichtbaar op orthofoto's van voor 1975 (geopunt.be heeft ze terug tot 1971). Zoek in het Mastenbos naar een verdwenen gebouw met oprijlaan. Agentschap Natuur en Bos beheert het gebied."
+			"lat": 51.3334,
+			"lng": 4.4295,
+			"radius": 450,
+			"doubt": "Het huisnummer is bekend, de plek erlangs geinterpoleerd: nr. 53 valt tussen nr. 33 en nr. 122 (Villa Les Boulets), en het eerste stuk is dicht genummerd, dus het punt kan enkele honderden meters opschuiven.",
+			"research": "Het Agentschap Natuur en Bos, dat het Mastenbos beheert en de dreven van het oude park kent, of een orthofoto van voor 1975 beslecht dit in een keer."
 		},
 		"kasteel-haezeldonck": {
 			"id": "kasteel-haezeldonck",
@@ -529,27 +518,18 @@
 		"kasteel-les-chataigniers": {
 			"id": "kasteel-les-chataigniers",
 			"name": "Kasteel Les Chataigniers",
-			"grade": "?",
-			"display": "kandidaten",
-			"note": "Heette oorspronkelijk \"Hof van Celst\"; via graaf Le Grelle naar de familie Speth; afgebroken en vervangen door een modern landhuis. Kapellen heeft een *Selstbaan* (51.357073, 4.419846), maar die ligt bij Putte terwijl de rest van het verhaal in het centrum speelt. Te tegenstrijdig om in te vullen.",
+			"grade": "C",
+			"display": "benadering",
+			"note": "Oorspronkelijk 'Hof van Celst', via graaf Emile Le Grelle naar de familie Speth, later afgebroken en vervangen door een modern landhuis. Onderzoek 2026-08-31: de tegenstrijdigheid is opgelost met de kaart van 1892 uit het archief zelf, die 'Hof van Celst' pal naast het 'Pharazynshof' zet - het latere Irishof, Kapelsestraat 37-41. Het hoort dus bij het centrum, aan de westkant van de Kapelsestraat; het spoor naar de Selstbaan bij Putte vervalt (daar was in 1892 nog kale heide, en die straat heet Selst-, niet Celst-).",
 			"correctable": true,
 			"priority": 7,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"doubt": "Twee aanwijzingen die niet samengaan. 'Hof van Celst' wijst naar de Selstbaan bij Putte; de rest van het verhaal (Le Grelle, Beaulieu, familie Speth) speelt in het centrum, waar de Speths het Irishof en Middelbeek hadden.",
-			"research": "Popp- en Vandermaelenkaart op geopunt.be — zoek 'Hof van Celst' of 'Chataigniers' langs zowel de Kapelsestraat als de Selstbaan. Kapellen heeft ook een Kastanjedreef (51.301770, 4.442395); chataigniers = kastanjes.",
-			"candidates": [
-				{
-					"lat": 51.35707,
-					"lng": 4.41985,
-					"label": "Selstbaan (naamspoor 'Hof van Celst')"
-				},
-				{
-					"lat": 51.32892,
-					"lng": 4.41535,
-					"label": "Kapelsestraat (spoor familie Speth / Le Grelle)"
-				}
-			]
+			"lat": 51.3225,
+			"lng": 4.4195,
+			"radius": 220,
+			"doubt": "Het punt komt van een georeferentie van de kaart van 1892 op twee kruispunten, geijkt op de labelplaatsing van het Pharazynshof; restfout 42-60 m. Het huisnummer aan de Kapelsestraat is niet bekend.",
+			"research": "De bewaarde rij daar is Irishof 37-41, Hof ter Vijvers 43, Heidehof 45-47, Starrenhof 61. Vraag aan de Heemkring: op welk perceel stond Les Chataigniers - tussen nr. 47 en nr. 61, of achter de rij? En welk modern landhuis staat er vandaag?"
 		},
 		"lusthof-hoenderhof": {
 			"id": "lusthof-hoenderhof",
@@ -698,18 +678,18 @@
 		"villa-zonnelicht": {
 			"id": "villa-zonnelicht",
 			"name": "Villa Zonnelicht",
-			"grade": "C",
+			"grade": "B",
 			"display": "benadering",
-			"note": "\"In de Koningin Astridlaan\", tehuis voor \"zwakke\" kinderen, ingehuldigd 24 juni 1933. Huisnummer onbekend — punt = midden van de laan.",
+			"note": "Koningin Astridlaan 41. Onderzoek 2026-08-31: het huisnummer staat op alle 21 bijschriften van de oude site, en het gebouw staat er nog - dezelfde bakstenen hekpijlers en hetzelfde houten hek als op de prentkaarten, opgenomen in de Inventaris Onroerend Erfgoed als villa van circa 1910-1920. In 1933 heette de laan nog IJzerenweglaan; dat is de term om op te zoeken in oude kranten.",
 			"correctable": true,
 			"priority": 23,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"lat": 51.31211,
-			"lng": 4.44107,
-			"radius": 550,
-			"doubt": "'In de Koningin Astridlaan', zonder huisnummer. Die laan is 1,1 km lang; het punt is het midden. Onroerend Erfgoed heeft dertien fiches in deze straat, geen enkele heet Zonnelicht.",
-			"research": "Ingehuldigd op 24 juni 1933 met de Antwerpse burgemeester Camille Huysmans erbij, dus vrijwel zeker krantendekking. Zoek 'Zonnelicht' + 'Kapellen' rond die datum op belgicapress.be."
+			"lat": 51.31313,
+			"lng": 4.44117,
+			"radius": 150,
+			"doubt": "Het huisnummer is zeker, de omzetting naar een exacte plek op de laan niet.",
+			"research": "Ligt nr. 41 aan de noordkant (oneven zijde) van de Koningin Astridlaan, bij de hoek met de Lobelialaan, tussen Villa Zonneschijn (39) en Villa Bloemenlust/Clara (43)? En hoorde de open heide met glazen ligzaal en ronde vijver achter de villa bij het domein Haezeldonck? Het archief heeft trouwens een moderne foto van hetzelfde pand onder 'Koninklijke Straten' (Kon. Astridlaan 41 - Villa) - die twee horen bij elkaar."
 		},
 		"lievenskapel": {
 			"id": "lievenskapel",
@@ -840,29 +820,16 @@
 		"domein-middelbeek": {
 			"id": "domein-middelbeek",
 			"name": "Domein Middelbeek",
-			"grade": "B",
-			"display": "kandidaten",
-			"note": "Eigendom van de familie Speth; het corpus geeft Kapelsestraat 246 (= Home Philippe Speth). Let op: er is óók een Middelbeeklaan bij Putte (51.355159, 4.414344) — twee kandidaten, laat kiezen.",
-			"correctable": true,
-			"priority": 12,
+			"grade": "A",
+			"display": "punt",
+			"note": "Kapelsestraat 246, hetzelfde gebouw als het Home Philippe Speth: 'In 1947 gaven de Heer en Mevrouw Charles Speth het volledig gerenoveerd kasteel Middelbeek in bruikleen aan Solidarite Liberale. Het kasteel had vanaf toen de naam Home Philippe Speth' (gzvka.be). Onderzoek 2026-08-31: van twee kandidaten 2,3 km uit elkaar naar een. Zes bestandsnamen dragen het adres, en de wandelpagina 'Op weg naar Putte' zet het domein in huisnummervolgorde precies waar nr. 246 hoort (tussen nr. 174/199 en de Lindenhoeve op 252-254). De Middelbeeklaan bij Putte heeft geen enkel verband met de familie Speth.",
+			"correctable": false,
+			"priority": 0,
 			"kind": "plaats",
 			"outsideKapellen": false,
 			"lat": 51.33473,
 			"lng": 4.41083,
-			"doubt": "Twee kandidaten, 2,3 km uit elkaar. Ik koos Kapelsestraat 246 omdat gzvka.be Middelbeek samen met Home Philippe Speth behandelt, maar dat kan ook zijn omdat het dezelfde familie Speth is.",
-			"research": "De Middelbeek is een beek. Kijk op de waterlopenkaart van geopunt.be waar die loopt. Loopt hij langs Kapelsestraat 246, dan klopt het punt; loopt hij alleen bij Putte, dan niet.",
-			"candidates": [
-				{
-					"lat": 51.33473,
-					"lng": 4.41083,
-					"label": "Kapelsestraat 246 (Home Philippe Speth)"
-				},
-				{
-					"lat": 51.35516,
-					"lng": 4.41434,
-					"label": "Middelbeeklaan, Putte"
-				}
-			]
+			"radius": 25
 		},
 		"kerk-olv-van-vrede": {
 			"id": "kerk-olv-van-vrede",
@@ -881,18 +848,18 @@
 		"villa-de-maretak": {
 			"id": "villa-de-maretak",
 			"name": "Villa De Maretak",
-			"grade": "C",
+			"grade": "B",
 			"display": "benadering",
-			"note": "In Kapellenbos, gebouwd 1911 door architect Florent Van Reeth voor de familie Muls. Punt = Jozef Mulslaan, genoemd naar letterkundige Jozef Muls die er woonde.",
+			"note": "Vijverslei, Kapellenbos, bij de Mulskapel: de Hoelen-prentkaart in het archief is gedrukt als '6508 Cappellenbosch (Heide). - De Marentak' en toont de villa over een grote vijver met een witte boogbrug; de Vijverslei heet op een andere Hoelen-kaart uit dezelfde reeks voluit 'Vijverslei. - Avenue des Etangs'. Bewoond door Jozef Muls, broer van de August Muls voor wie de Mulskapel in 1920 werd opgericht. Onderzoek 2026-08-31: de ABC-cover van 28 oktober 1945 in het archief noemt de kapel 'de kapel De Marentak te Kapellenbosch' en verbindt villa en kapel dus met een bron in plaats van met een naamsgelijkenis.",
 			"correctable": true,
 			"priority": 12,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"lat": 51.3307,
-			"lng": 4.43295,
-			"radius": 400,
-			"doubt": "Staat in Kapellenbos, gebouwd 1911 door architect Florent Van Reeth voor de familie Muls. Het punt is afgeleid van de Jozef Mulslaan — maar een straat die naar iemand genoemd is, ligt niet noodzakelijk waar zijn huis stond.",
-			"research": "Van Reeth was een bekend architect van de Pelgrimbeweging; zijn werk is goed gedocumenteerd. Zoek 'Van Reeth' + 'Muls' + 1911, of een Onroerend Erfgoed-fiche op naam van de architect."
+			"lat": 51.35046,
+			"lng": 4.47155,
+			"radius": 900,
+			"doubt": "De straat staat vast, de plek erlangs niet: de Vijverslei is 2 km lang. Het punt is het midden ervan.",
+			"research": "Zie Mulskapel: een huisnummer aan de Vijverslei beslecht beide in een keer."
 		},
 		"home-philippe-speth": {
 			"id": "home-philippe-speth",
@@ -941,18 +908,18 @@
 		"mulskapel": {
 			"id": "mulskapel",
 			"name": "Mulskapel",
-			"grade": "C",
+			"grade": "B",
 			"display": "benadering",
-			"note": "Vrijwel zeker verbonden met de familie Muls in Kapellenbos (zie Villa De Maretak en de Jozef Mulslaan). Zelfde ruwe punt.",
+			"note": "Vijverslei, Kapellenbos. gzvka.be kopt de sectie voluit 'MULSKAPEL - VIJVERSLEI - KAPELLENBOS': 'Nog op grondgebied Kapellen - in de Vijverslei in de wijk Kapellenbos - vinden we de Mulskapel. Deze werd in 1920 opgericht door de familie Muls, als dank voor de behouden terugkeer uit Rusland van hun zoon August.' August was de broer van Jozef Muls, bewoner van villa De Maretak. Onderzoek 2026-08-31: het oude punt kwam van de Jozef Mulslaan, 3,5 km hiervandaan - een naamsgelijkenis, geen bron. De tijdschriftcover uit 1945 in het archief zelf (ABC Weekblad, 28 oktober 1945) bewijst bovendien dat kapel en villa bij elkaar horen: 'Graven van Canadeesche Soldaten voor de kapel De Marentak te Kapellenbosch.'",
 			"correctable": true,
 			"priority": 7,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"lat": 51.3307,
-			"lng": 4.43295,
-			"radius": 500,
-			"doubt": "Gekoppeld aan de familie Muls op basis van niets anders dan de naam. Na Bunderhof de zwakste koppeling in dit bestand.",
-			"research": "Eerst uitzoeken of dit überhaupt dezelfde familie Muls is, of gewoon een kapel met een toevallig gelijkende naam."
+			"lat": 51.35046,
+			"lng": 4.47155,
+			"radius": 900,
+			"doubt": "De straat staat vast, de plek erlangs niet: de Vijverslei is 2 km lang. Het punt is het midden ervan.",
+			"research": "Welk huisnummer aan de Vijverslei hoort bij de kapel (1920) en bij de villa (1911, architect Florent Van Reeth) - staan ze op hetzelfde perceel, en aan welke kant liggen de vijvers waarop de villa uitkijkt?"
 		},
 		"kapel-de-heuvels": {
 			"id": "kapel-de-heuvels",
@@ -971,27 +938,18 @@
 		"villa-des-hirondelles": {
 			"id": "villa-des-hirondelles",
 			"name": "Villa Des Hirondelles",
-			"grade": "?",
-			"display": "kandidaten",
-			"note": "Twee kandidaten, allebei op gzvka.be. Op de Hoogboomsteenweg-pagina staat \"Hoogboom - Villa des Hirondelles\"; op de Eikendreef-pagina staat \"Eikendreef - Villa Les Hirondelles\" (naast een Villa Des Bouleaux). Twee verschillende villa's, of dezelfde onder twee straten — niet uit te maken. Hoogboomsteenweg ≈ 51.311078, 4.450815, Eikendreef ≈ 51.309688, 4.427955.",
+			"grade": "C",
+			"display": "benadering",
+			"note": "Hoogboom, aan het westelijke begin van de Hoogboomsteenweg bij het Hoogboomkruis. Onderzoek 2026-08-31: de Nels-kaart in het archief draagt de gedrukte titel 'Hoogboom-Cappellen. Villa des Hirondelles.', wat zowel de spelling ('des', niet 'les') als de straat beslecht; het spoor naar de Eikendreef vervalt. Op de gzvka-pagina staat ze tussen het poortgebouw Zilverhof (Hoogboomsteenweg 2) en Villa ter Beuken (nr. 7). Villa met toren, park en vijvers met rotspartij en knuppelbrug (Hoelen 1782 en 3783, en 212-213 met de roeiboot).",
 			"correctable": true,
 			"priority": 5,
 			"kind": "plaats",
 			"outsideKapellen": false,
-			"doubt": "gzvka.be heeft foto's onder twee verschillende straten: 'Hoogboom - Villa des Hirondelles' en 'Eikendreef - Villa Les Hirondelles'. Des versus les, en 2 km ertussen. Eén villa verkeerd ingedeeld, of twee villa's met bijna dezelfde naam.",
-			"research": "Leg de 5 archieffoto's naast de gzvka-foto's van beide pagina's. Als het één gebouw is, zie je dat meteen.",
-			"candidates": [
-				{
-					"lat": 51.31108,
-					"lng": 4.45082,
-					"label": "Hoogboomsteenweg"
-				},
-				{
-					"lat": 51.30969,
-					"lng": 4.42796,
-					"label": "Eikendreef"
-				}
-			]
+			"lat": 51.3039,
+			"lng": 4.4383,
+			"radius": 350,
+			"doubt": "Het perceel en het huisnummer binnen dat eerste stuk van de Hoogboomsteenweg zijn niet vastgesteld.",
+			"research": "Vraag aan een Hoogboomkenner: op welk perceel stond de villa met toren, welk huisnummer had ze, en wanneer is ze gesloopt? Hoort de tweede, torenloze villa met veranda aan de vijver op dezelfde Nels-kaart bij hetzelfde domein? Let ook op: het huisnummer 'Hoogboomsteenweg 2' in de bestandsnamen hoort bij het poortgebouw Zilverhof, niet bij deze villa."
 		},
 		"olv-onbevlekte-ontvangenis": {
 			"id": "olv-onbevlekte-ontvangenis",
