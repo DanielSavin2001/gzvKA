@@ -2438,12 +2438,12 @@
 				"categorie": "Kastelen en domeinen",
 				"plaats": "Kasteel Oude Gracht",
 				"fotos": 59,
-				"zekerheid": "C",
-				"straal_m": 700,
+				"zekerheid": "B",
+				"straal_m": 150,
 				"weergave": "benadering",
-				"toelichting": "Domein 'De Oude Gracht' op de grens Kapellen-Brasschaat, langs de gelijknamige weg in Hoogboom. Neorenaissancekasteel van baron Osy de Zegwaert (ca. 1880), na WO II afgebroken wegens oorlogsschade. Bebost domein met vijvers, dreven en weiland (Onroerend Erfgoed 101846/135370) - vandaar de aparte foto's van boothuis, brug en vijver. De Sint-Jozefkerk (1871) stond bij de westelijke toegang.",
-				"twijfel": "De straat en het domein zijn zeker, maar de exacte plek van het afgebroken kasteel binnen het beboste domein is niet vastgesteld. Het punt is het midden van de weg Oude Gracht aan Kapelse zijde; het domein loopt door tot in Brasschaat.",
-				"onderzoek": "Topografische kaarten van voor WO II tonen het kasteel nog: geopunt.be (Vandermaelen, Popp) en cartesius.be. Onroerend Erfgoed 101846 heeft de domeinbeschrijving.",
+				"toelichting": "Domein 'De Oude Gracht' in Hoogboom, op de grens met Brasschaat. Neorenaissancekasteel van baron Osy de Zegwaert (ca. 1880), afgebroken in 1952. Onderzoek 2026-08-31: klasse C naar B - het kasteel staat als gebouwsymbool 'Oudegracht Ch.' op de kaart van 1892 uit het archief zelf (Kaarten en Luchtfoto's, Jan Sliggers); gegeorefereerd op twee kruispunten valt dat symbool op 51.32129, 4.46651, aan de bocht van de weg Oude Gracht, ca. 720 m ten noordoosten van de Sint-Jozefkerk ('ingeplant aan de westelijke toegang van het domein', Landschapsatlas A10004). Het washuis bij het kasteel is Oude Gracht 9 (Onroerend Erfgoed 13393). Na de werken van Bunge (1921-22) stond het kasteel op een eiland van ca. 42 ha met acht bruggen; de vijverring daarvan omsluit dezelfde bocht.",
+				"twijfel": "Het punt komt van een gegeorefereerde kaart uit 1892 (schaalfout enkele tientallen meters) en is niet geokodeerd; binnen de bocht van de weg kan het gebouw enkele tientallen meters verschoven liggen.",
+				"onderzoek": "Ter plaatse of via Hobonia 1997 'De Geschiedenis van Hoogboom': zijn er tussen de weg en de langgerekte vijver nog funderingen, een terras of bruggenhoofden van het kasteeleiland te zien, ter hoogte van het washuis op nr. 9?",
 				"kandidaten": [],
 				"onzeker": true,
 				"type": "plaats",
@@ -2455,8 +2455,8 @@
 			"geometry": {
 				"type": "Point",
 				"coordinates": [
-					4.46962,
-					51.323239
+					4.46651,
+					51.32129
 				]
 			}
 		},
@@ -2467,10 +2467,10 @@
 				"plaats": "Kasteel Pannenhuys",
 				"fotos": 35,
 				"zekerheid": "B",
-				"straal_m": 400,
+				"straal_m": 300,
 				"weergave": "benadering",
 				"toelichting": "Sierlijk kasteeltje in rode baksteen aan de Heidestraat-Noord 209 (Kapellenbos), gebouwd 1907-1908, park van tuinarchitect Petry. Na WO I ook 'Ladyloan' genoemd. Eigenaars Van de Put - Paternostre de Domon. Het staat er nog: een verkoopadvertentie (Immoscoop) beschrijft 'een karaktervol kasteel uit 1907... in het hart van Kapellenbos op een domein van ca. 2,5 ha met parkzicht en vijver', en een evenementenpagina (2022) noemt het adres voluit 'Kasteel Pannenhuys, Heidestraat-Noord 209'. Onderzoek 2026-08-31: klasse C naar B - het huisnummer is nu uit twee onafhankelijke geschreven bronnen bekend; het punt is een interpolatie van nr. 209 langs de registerpolylijn, tussen de Larikslaan en de Duinendreef.",
-				"twijfel": "Het huisnummer 209 is zeker, maar het punt is geinterpoleerd langs de 2,9 km lange straat, niet geokodeerd - de echte oprit kan enkele honderden meters verderop liggen. Verwar het niet met Heidestraat-ZUID 209, een gewone villa.",
+				"twijfel": "Het huisnummer 209 is zeker (twee onafhankelijke bronnen; een tweede interpolatie langs de huisnummerreeks 3-237 komt op hetzelfde punt uit), maar het punt is geinterpoleerd langs de 2,9 km lange straat, niet geokodeerd. Verwar het niet met Heidestraat-ZUID 209, een gewone villa.",
 				"onderzoek": "Een pin op het gebouw zelf (Geopunt/GRB of ter plaatse) maakt er klasse A van: zoek het rode bakstenen kasteeltje met vijver tussen de kruispunten Larikslaan en Duinendreef, Heidestraat-Noord 209.",
 				"kandidaten": [],
 				"onzeker": true,
@@ -2484,7 +2484,7 @@
 				"type": "Point",
 				"coordinates": [
 					4.4567,
-					51.3498
+					51.3499
 				]
 			}
 		},
@@ -2495,11 +2495,11 @@
 				"plaats": "Kasteel Larikshof",
 				"fotos": 6,
 				"zekerheid": "B",
-				"straal_m": 80,
+				"straal_m": 65,
 				"weergave": "punt_met_twijfel",
-				"toelichting": "Kasteeltje in Engelse cottagestijl, 'op de hoek van de Heidestraat-Noord en de Larikslaan, nabij de grens met Kalmthout' (gzvka.be). Punt = berekend kruispunt. Afgebroken ('stond'). Map zegt kasteel, bestandsnamen zeggen villa; gzvka zegt kasteeltje.",
-				"twijfel": "De hoek is expliciet benoemd, maar welk kwadrant van het kruispunt is onbekend, en het gebouw is verdwenen.",
-				"onderzoek": "Luchtfoto's van voor de afbraak (geopunt.be orthofoto's, cartesius.be) tonen welk kwadrant.",
+				"toelichting": "Kasteeltje in Engelse cottagestijl, 'op de hoek van de Heidestraat-Noord en de Larikslaan, nabij de grens met Kalmthout' (gzvka.be). Onderzoek 2026-08-31: de Larikslaan bestaat alleen ten westen van de Heidestraat-Noord, dus de westkant is zeker; het punt ligt op de as van de Larikslaan bij het kruispunt. Let op: 'afgebroken' is mogelijk te sterk - het domein Larikslaan 1 heet vandaag nog 'Larikshof' en er staat een kasteelachtige kantoorvilla (o.a. De Kasteelpraktijk) die de gerestaureerde origineel kan zijn; twee foto's van Paul Arren tonen het gebouw vervallen, de andere gerestaureerd.",
+				"twijfel": "Noordwest- of zuidwesthoek van het kruispunt is niet vastgesteld, en of het huidige gebouw op Larikslaan 1 het gerestaureerde origineel is, evenmin.",
+				"onderzoek": "Eén blik op de orthofoto 1971 (geopunt.be), het GRB-perceel van Larikslaan 1, of Heemkring Hoghescote's 'Hobonia Groeiboek Kastelen - Larikshof' (Issuu) beslecht de hoek. 't Bruggeske 2010-2 (juni), p. 16 gaat over het afgebroken kantoorgebouw op het domein.",
 				"kandidaten": [],
 				"onzeker": false,
 				"type": "plaats",
@@ -2511,8 +2511,8 @@
 			"geometry": {
 				"type": "Point",
 				"coordinates": [
-					4.456649,
-					51.348246
+					4.45615,
+					51.34826
 				]
 			}
 		},
@@ -2525,9 +2525,9 @@
 				"zekerheid": "B",
 				"straal_m": 150,
 				"weergave": "punt_met_twijfel",
-				"toelichting": "Gebouwd 1908 door Gustave Martens; via Thornton (1928), Grisar-Good (1930), Van Damme (1946), Neuckens (1960) naar Pelckmans. Op het domein verrees het gebouw van De Nederlandsche Boekhandel / Pelckmans Uitgevers, nu CVO campus De Masten, Kapelsestraat 222A - dat adres is het punt. De archiefwaarschuwing klopt: Ekenhof en Beukenhof liggen 1,6 km uit elkaar; exact matchen.",
-				"twijfel": "Het opvolgergebouw (CVO De Masten) is exact gelokaliseerd, maar het kasteel zelf kan ernaast op het domein hebben gestaan.",
-				"onderzoek": "Kaart of luchtfoto van voor de bouw van het DNB-kantoor toont waar op het domein het kasteel stond.",
+				"toelichting": "Gebouwd 1908 door meststoffenhandelaar Gustave Martens; via Thornton (1928), Grisar-Good (1930), Van Damme (1946), Neuckens (1960) naar Pelckmans. Op het domein verrees ca. 1968 (verhuis van De Nederlandsche Boekhandel naar Kapellen) het kantoorgebouw van DNB / Pelckmans Uitgevers, nu CVO campus De Masten, Kapelsestraat 222A - dat adres is het punt. Het kasteel zelf bestaat vrijwel zeker niet meer: alleen Hoelen-postkaarten van voor WO I zijn bekend (nrs 4466, 4555, 6406), het staat niet in de erfgoedinventaris, en na de oorlog ontbreekt elk spoor. De archiefwaarschuwing blijft gelden: Ekenhof en Beukenhof liggen 1,6 km uit elkaar; exact matchen.",
+				"twijfel": "Postkaart Hoelen 6406 toont het kasteel diep in het park achter een grote vijver, dus vermoedelijk stond het niet vooraan aan de straat waar het adrespunt ligt, maar verder op het domein.",
+				"onderzoek": "Orthofoto 1971 (geopunt.be) of een NGI-topokaart 1930-1960 (cartesius.be): staat het Ekenhof daar nog naast (of in plaats van) het DNB-kantoor uit 1968, en bestaat de grote parkvijver van postkaart 6406 nog op de campus?",
 				"kandidaten": [],
 				"onzeker": false,
 				"type": "plaats",
@@ -2579,11 +2579,11 @@
 				"plaats": "Café De Vrede",
 				"fotos": 9,
 				"zekerheid": "B",
-				"straal_m": 150,
+				"straal_m": 25,
 				"weergave": "punt_met_twijfel",
-				"toelichting": "Aan de Stationsstraat: drie gzvka-foto's dragen het bijschrift 'Stationsstraat - Café De Vrede' (1960, 2015, 2023). Duikt ook op in de fotoreeks van de Tajje-optocht van 1976, precies zoals het archief zei.",
-				"twijfel": "Geen huisnummer; punt = midden van de Stationsstraat (260 m, dus kleine marge).",
-				"onderzoek": "De gzvka-foto's van 2015/2023 suggereren dat het pand er nog staat of stond - straatbeeld vergelijken volstaat.",
+				"toelichting": "Stond op de hoek van de Stationsstraat en de Vredestraat: op de foto van 17.03.2023 ('Café De Vrede 6') hangt het emaillen straatnaambordje 'Vredestraat' op de zijgevel van het hoekpand met de afgeschuinde hoekdeur. Drie gzvka-foto's dragen het bijschrift 'Stationsstraat - Café De Vrede' (1960, 2015, 2023) en het café duikt op in de Tajje-optocht van 1976. Onderzoek 2026-08-31: punt = het enige kruispunt Stationsstraat-Vredestraat. Let op: 'OWNP - Café De Vrede' in de reeks Op weg naar Putte toont een ANDER pand aan de Kapelsestraat - niet samenvoegen.",
+				"twijfel": "Welke van de twee hoeken (stationskant of dorpskant) en het huisnummer zijn nog niet vastgesteld; de straal van 25 m dekt beide hoeken.",
+				"onderzoek": "Ter plaatse of via street view: staat het hoekhuis met de geel-geblokte siertegels er nog, en is het vandaag bv. café De Veluwe (Stationsstraat 15)?",
 				"kandidaten": [],
 				"onzeker": false,
 				"type": "plaats",
@@ -2595,8 +2595,8 @@
 			"geometry": {
 				"type": "Point",
 				"coordinates": [
-					4.431551,
-					51.31418
+					4.430326,
+					51.314682
 				]
 			}
 		},
