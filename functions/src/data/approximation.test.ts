@@ -332,4 +332,5 @@ describe('the generated file', () => {
 			expect(entry.lng).toBeDefined();
 		}
 	});
+
 });
