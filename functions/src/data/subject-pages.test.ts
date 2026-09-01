@@ -38,7 +38,12 @@ describe('warrantsOwnPage', () => {
 		expect(warrantsOwnPage({ slug: 'leeg', name: 'Leeg', count: 0 }, place())).toBe(false);
 	});
 
-	it('withholds the folders held back on purpose', () => {
+	it('withholds any folder held back on purpose', () => {
+		// The list is empty today - `Wedstrijden GZVKA` was in it for a day and the archive
+		// decided to build it. The mechanism stays, because the next such folder deserves the
+		// same pause, and a mechanism nothing exercises is a mechanism that quietly rots.
+		expect(warrantsOwnPage({ slug: 'iets', name: 'Iets', count: 9 }, place())).toBe(true);
+
 		for (const slug of WITHHELD_SUBJECTS) {
 			expect(warrantsOwnPage({ slug, name: slug, count: 555 }, place())).toBe(false);
 		}

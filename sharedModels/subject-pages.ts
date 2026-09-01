@@ -30,19 +30,16 @@ export interface SubjectLike {
 /**
  * Folders that are deliberately not given a browsable index.
  *
- * `Wedstrijden GZVKA` is the association's own event photography from 2014-2021. Its titles
- * are the names of living private individuals at recent private events - "15000 leden -
- * Annelies Vandenbroek - foto overhandiging" - and `docs/fotos-zonder-plaats.md` classes 512
- * of its 555 as having probably no place at all.
+ * Empty, and that is a decision rather than an oversight. `Wedstrijden GZVKA` sat here for a
+ * day: 555 photographs of the association's own events from 2014-2021, titled with the names
+ * of living private individuals. A single browsable index of 555 named people is a different
+ * kind of exposure from 555 separate pages nobody has collected, so it was withheld and the
+ * question put to the archive. The archive said build it - they are its own events, its own
+ * members, and its own photographs to show.
  *
- * Those photographs are already published one by one. What a folder page would add is the
- * thing that does not exist yet: a single browsable index of 555 named people, which is a
- * different kind of exposure from 555 separate pages nobody has collected. Whether the
- * archive wants that is a decision for the heemkring - `docs/wat-nu.md` point 3 is about
- * exactly this material - so the conservative half is taken here and the decision is left
- * open. Removing the entry is one line if they say yes.
+ * The list stays because the next such folder deserves the same pause.
  */
-export const WITHHELD_SUBJECTS = ['wedstrijden-gzvka'];
+export const WITHHELD_SUBJECTS: string[] = [];
 
 /**
  * Whether this subject gets its own page.

@@ -17,11 +17,11 @@ These matter most: photographs are filed under a name today's Kapellen does not 
 
 | Street | Photographs | Kind |
 | --- | --- | --- |
-| Loopgravenpad | 173 | street |
 | Oude Baan | 7 | street |
 | Stationsplein | 7 | square |
 | IJzerenweglaan | 5 | street |
 | Blokjesweg | 1 | street |
 | Denneburgdreef | 1 | street |
 | Kazerneplein | 1 | square |
+| Loopgravenpad | 1 | street |
 | Putsesteenweg | 1 | street |

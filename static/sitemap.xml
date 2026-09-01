@@ -76,27 +76,12 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
-		<loc>https://gzvka.com/straat/dorpsstraat</loc>
-		<changefreq>monthly</changefreq>
-		<priority>0.8</priority>
-	</url>
-	<url>
-		<loc>https://gzvka.com/straat/geuzenhoek</loc>
-		<changefreq>monthly</changefreq>
-		<priority>0.8</priority>
-	</url>
-	<url>
 		<loc>https://gzvka.com/straat/putte-kapellen</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
 	<url>
 		<loc>https://gzvka.com/straat/de-uitlegger</loc>
-		<changefreq>monthly</changefreq>
-		<priority>0.8</priority>
-	</url>
-	<url>
-		<loc>https://gzvka.com/straat/loopgravenpad</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
@@ -112,6 +97,11 @@
 	</url>
 	<url>
 		<loc>https://gzvka.com/straat/kasteel-irishof</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://gzvka.com/straat/dorpsstraat</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
@@ -227,6 +217,11 @@
 	</url>
 	<url>
 		<loc>https://gzvka.com/straat/kasteel-hortensiahof</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://gzvka.com/straat/geuzenhoek</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
 	</url>
@@ -716,9 +711,19 @@
 		<priority>0.8</priority>
 	</url>
 	<url>
+		<loc>https://gzvka.com/straat/loopgravenpad</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.8</priority>
+	</url>
+	<url>
 		<loc>https://gzvka.com/straat/putsesteenweg</loc>
 		<changefreq>monthly</changefreq>
 		<priority>0.8</priority>
+	</url>
+	<url>
+		<loc>https://gzvka.com/onderwerp/wedstrijden-gzvka</loc>
+		<changefreq>monthly</changefreq>
+		<priority>0.7</priority>
 	</url>
 	<url>
 		<loc>https://gzvka.com/onderwerp/klasfotos</loc>

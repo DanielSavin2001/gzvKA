@@ -98,20 +98,20 @@
 			"properties": {
 				"categorie": "Wijken en gehuchten",
 				"plaats": "Geuzenhoek",
-				"fotos": 216,
+				"fotos": 41,
 				"zekerheid": "B",
 				"toelichting": "Kruispunt Dorpsstraat / Kapelsestraat. gzvka.be: \"we nemen er dus ook de Geuzenhoek bij (al is dat al wel een stukje Kapelsestraat)\" — het is het begin van de Kapelsestraat, net voorbij het einde van de dorpskern.",
 				"onzeker": false,
 				"straal_m": 250,
-				"twijfel": "De plaats is stevig — twee onafhankelijke gzvka-pagina's zeggen hetzelfde. De open vraag is de omvang: 216 foto's suggereert een stuk straat, geen punt.",
-				"onderzoek": "Overweeg een polylijn langs het begin van de Kapelsestraat in plaats van één pin.",
+				"twijfel": "De plaats is stevig — twee onafhankelijke gzvka-pagina's zeggen hetzelfde. De omvang was de open vraag, en die vraag berustte op een verkeerd getal: de map \"Dorpsstraat en Geuzenhoek\" hing bij elke foto béide plaatsen op, dus stond hier 216 waar het er 41 zijn. Bij 41 is een punt met een ruime straal verdedigbaar; een polylijn langs het begin van de Kapelsestraat blijft de betere weergave, maar niet meer omdat het getal daarom vraagt.",
+				"onderzoek": "Overweeg een polylijn langs het begin van de Kapelsestraat in plaats van één pin. Het aantal foto's is op 01.09.2026 gecorrigeerd van 216 naar 41; de oude waarde kwam van de mapnaam, niet van de foto's zelf.",
 				"kandidaten": [],
 				"type": "plaats",
 				"alias_van": "",
 				"buiten_kapellen": false,
 				"weergave": "punt_met_twijfel",
 				"corrigeerbaar": true,
-				"prioriteit": 216
+				"prioriteit": 41
 			},
 			"geometry": {
 				"type": "Point",
@@ -182,7 +182,7 @@
 			"properties": {
 				"categorie": "Wijken en gehuchten",
 				"plaats": "Mastenbos",
-				"fotos": 173,
+				"fotos": 172,
 				"zekerheid": "A",
 				"toelichting": "OSM landuse=forest.",
 				"onzeker": false,
@@ -2181,12 +2181,12 @@
 			"properties": {
 				"categorie": "Straten",
 				"plaats": "Loopgravenpad",
-				"fotos": 173,
+				"fotos": 1,
 				"zekerheid": "A",
 				"toelichting": "Bestaat wél, als wandelpad (highway=path) door het Mastenbos — daarom staat het niet in het stratenregister. Er is een parking (51.335777, 4.438717) en een bushalte. Onroerend Erfgoed kent het als \"Loopgraven en bunkers in het Mastenbos\".",
 				"onzeker": false,
 				"straal_m": 25,
-				"twijfel": "",
+				"twijfel": "Het archief telde hier 173 foto's en het is er één. Die 173 waren de hele map \"Mastenbos en Loopgravenpad\", die bij elke foto béide plaatsen ophing; op 01.09.2026 rechtgezet. Van de drie bestandsnamen die \"Loopgraven\" zeggen gaan er drie over de loopgraven ín het Mastenbos, niet over het pad.",
 				"onderzoek": "",
 				"kandidaten": [],
 				"type": "plaats",
