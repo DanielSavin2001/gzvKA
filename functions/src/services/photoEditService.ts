@@ -10,21 +10,34 @@
  * protected is writing them.
  */
 
+import { FieldPath } from '@google-cloud/firestore';
+
 import type { PhotoEdit, PhotoFields } from '../../../sharedModels/photo-edit';
 import { isEmpty, PhotoEditError } from '../../../sharedModels/photo-edit';
 import type { AdminIdentity } from './admin-auth';
 import { firestore } from './externalServices';
+import { readAllPages } from './paged-read';
 
 export const PHOTO_EDIT_COLLECTION = 'photo-edits';
 
 /**
- * How many the site will fetch at once.
+ * How many corrections the site will carry.
  *
- * This is a real ceiling rather than a paging cursor, and it is deliberate: past a few
- * thousand hand-corrections the right move is to fold them back into the generated index
- * with a build, not to ship an ever-growing overlay to every visitor.
+ * This used to be 5,000 against an archive of 4,504 photographs - 90% full - read in a
+ * single `.limit(5000).get()` with no `orderBy`. Firestore then sorts implicitly by
+ * `__name__`, so on the day a diligent curator passed the line the corrections on the
+ * alphabetically last photographs would have vanished from the site, in an order nobody
+ * would recognise as an order, with nothing anywhere saying so.
+ *
+ * A ceiling is still right - an overlay shipped to every visitor cannot be unbounded, and
+ * past a few thousand hand-corrections the right move is to fold them back into the
+ * generated index with a build. But it has to be a ceiling somebody hears about, so this is
+ * five times the size of the corpus and hitting it is logged rather than swallowed.
  */
-const MAX_EDITS = 5000;
+const MAX_EDITS = 25000;
+
+/** Read in pages of this size. Nothing depends on the number; it bounds one round trip. */
+const PAGE = 1000;
 
 function now(): string {
 	return new Date().toISOString();
@@ -52,16 +65,46 @@ export async function save(
 	return edit;
 }
 
-/** Everything the site needs to overlay. Public. */
+/**
+ * Everything the site needs to overlay. Public.
+ *
+ * Ordered by document id and paged through to the end. The order is explicit rather than
+ * left to Firestore's implicit `__name__` for one reason: the cursor needs a total order to
+ * page against, and an answer that is truncated is then truncated somewhere sayable.
+ */
 export async function all(): Promise<Record<string, PhotoEdit>> {
-	const snapshot = await firestore.collection(PHOTO_EDIT_COLLECTION).limit(MAX_EDITS).get();
+	let after: FirebaseFirestore.QueryDocumentSnapshot | undefined;
 
-	const edits: Record<string, PhotoEdit> = {};
-	for (const document of snapshot.docs) {
-		edits[document.id] = document.data() as PhotoEdit;
+	const { items, complete } = await readAllPages<PhotoEdit>(
+		async () => {
+			let query = firestore
+				.collection(PHOTO_EDIT_COLLECTION)
+				.orderBy(FieldPath.documentId())
+				.limit(PAGE);
+			if (after) query = query.startAfter(after);
+
+			const snapshot = await query.get();
+			after = snapshot.docs[snapshot.docs.length - 1];
+
+			return snapshot.docs.map((document) => ({
+				id: document.id,
+				value: document.data() as PhotoEdit
+			}));
+		},
+		{ ceiling: MAX_EDITS, pageSize: PAGE }
+	);
+
+	if (!complete) {
+		// Loud, because the alternative is what this replaced: corrections disappearing from
+		// the site with nothing to read anywhere. Whoever sees this has to fold the overlay
+		// back into the generated index with `npm run archive:index`.
+		console.error(
+			`photo-edits: more than ${MAX_EDITS} corrections stored. The overlay is truncated ` +
+				'and the rest are not reaching the site. Fold them into the generated index.'
+		);
 	}
 
-	return edits;
+	return items;
 }
 
 /**

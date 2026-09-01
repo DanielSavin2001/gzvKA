@@ -175,10 +175,14 @@ zoekbalk.
 3. Twee regels in `firebase.json`: zet `/api/photoEdits`, `/api/placePins` en
    `/api/publishedPhotos` **boven** de `**`-regel en laat de client daarheen wijzen. Dan staan
    ze achter het CDN, waar hun `s-maxage` eindelijk iets doet, en zijn ze same-origin.
-4. `MAX_EDITS` staat op 5.000 tegen 4.504 foto's — 90 % vol, en voorbij die grens verdwijnen
-   correcties in willekeurige volgorde zonder foutmelding. Verhoog of pagineer, en sorteer.
+4. ~~`MAX_EDITS` staat op 5.000 tegen 4.504 foto's — 90 % vol, en voorbij die grens verdwijnen
+   correcties in willekeurige volgorde zonder foutmelding. Verhoog of pagineer, en sorteer.~~
+   **GEDAAN.** De overlay wordt nu in pagina's van 1.000 gelezen, expliciet gesorteerd op
+   document-id, tot de collectie op is. Het plafond staat op 25.000 — vijf keer het corpus —
+   en wordt geraakt betekent nu een `console.error` die zegt wat er moet gebeuren, in plaats
+   van correcties die stil wegvallen. `functions/src/services/paged-read.ts`, met zes tests.
 
-**Moeite.** Een dag voor alle vier.
+**Moeite.** Een dag voor alle vier (stap 4 is gedaan; 1 is teruggedraaid, zie hieronder).
 
 > **Nagemeten op 1 september 2026, en de diagnose hierboven klopt niet.**
 >
@@ -203,9 +207,10 @@ zoekbalk.
 > `build/index.html` hem inline draagt en de andere 4.700 pagina's niet.
 >
 > Wat er verder van dit punt nagerekend is: `loadArchive` wacht inmiddels op **drie**
-> overlays, niet twee (`loadPlaceRecords` is erbij gekomen). `MAX_EDITS` staat op 5.000 en
-> de query heeft geen `orderBy`, dus Firestore sorteert impliciet op `__name__` — voorbij de
-> grens verdwijnen de alfabetisch laatste foto-id's, wat voorspelbaar is en nog steeds stil.
+> overlays, niet twee (`loadPlaceRecords` is erbij gekomen). `MAX_EDITS` stond op 5.000 en
+> de query had geen `orderBy`, dus Firestore sorteerde impliciet op `__name__` — voorbij de
+> grens verdwenen de alfabetisch laatste foto-id's, wat voorspelbaar is en nog steeds stil.
+> Dat is inmiddels gerepareerd; zie stap 4 hierboven.
 > En een `/foto/**`-regel die 404 teruggeeft is in `firebase.json` niet te schrijven:
 > rewrites hebben geen statuscode en redirects doen alleen 3xx.
 
