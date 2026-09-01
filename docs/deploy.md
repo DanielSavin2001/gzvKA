@@ -160,30 +160,43 @@ dingen die elk op zich redelijk zijn:
   `some((b) => b.extensions)` - en een leeg object is waar in JavaScript. Dus loopt bij élke
   functie-deploy `prepareDynamicExtensions`, en die vraagt `firebaseextensions.instances.list`.
 
-Er valt in deze repository niets aan te doen behalve het recht geven. Welke voorgedefinieerde
-rol die permissie draagt verschilt met de naamgeving (`firebasemods` is de oude naam van het
-product), dus zoek hem op in plaats van te gokken:
+Er valt in deze repository niets aan te doen behalve het recht geven.
+
+En verwacht geen nette melding van het gereedschap: `requirePermissions` in firebase-tools
+gooit zijn eigen fout binnen zijn eigen `try`, en de `catch` eronder slikt hem op en doet
+`return`. Die functie kán dus nooit zeggen welke permissie ontbreekt - je krijgt de rauwe 403
+van de API en verder niets.
+
+Welke voorgedefinieerde rol de permissie draagt, is niet te raden: op 1 september 2026 droeg
+geen van `firebasemods.viewer`, `firebasemods.admin`, `firebaseextensions.viewer` of
+`firebaseextensions.admin` hem. Zoek dus, en zoek breed:
 
 ```sh
-for R in roles/firebasemods.viewer roles/firebasemods.admin \
-         roles/firebaseextensions.viewer roles/firebaseextensions.admin
-do
-  if gcloud iam roles describe "$R" --format='value(includedPermissions)' 2>/dev/null \
-       | tr ';' '\n' | grep -qx 'firebaseextensions.instances.list'; then
-    echo "JA  -> $R"
-  else
-    echo "nee -> $R"
-  fi
+echo "== rollen met firebaseextensions.instances.list =="
+for R in $(gcloud iam roles list --filter="name:firebase" --format='value(name)'); do
+  gcloud iam roles describe "$R" --format='value(includedPermissions)' 2>/dev/null \
+    | tr ';' '\n' | grep -qx 'firebaseextensions.instances.list' && echo "  $R"
 done
+
+echo "== mag die permissie in een eigen rol? =="
+gcloud iam list-testable-permissions \
+  //cloudresourcemanager.googleapis.com/projects/gzvka-12a9f \
+  --filter="name:firebaseextensions.instances.list" \
+  --format='table(name,customRolesSupportLevel)'
 ```
 
-En geef dan de rol die `JA` zegt - de `.viewer` als beide kunnen, want opsommen is alles wat
-nodig is:
+Noemt het eerste blok een rol, geef die. Blijft het leeg en zegt het tweede `SUPPORTED`, maak
+dan een rol van precies die ene permissie - dat is sowieso strakker dan welke kant-en-klare rol
+ook:
 
 ```sh
+gcloud iam roles create firebaseExtensionsLister --project=gzvka-12a9f \
+  --title="Firebase Extensions lister" \
+  --permissions=firebaseextensions.instances.list
+
 gcloud projects add-iam-policy-binding gzvka-12a9f \
   --member="serviceAccount:$SA" \
-  --role="<de rol die JA zei>" \
+  --role="projects/gzvka-12a9f/roles/firebaseExtensionsLister" \
   --condition=None --quiet
 ```
 
