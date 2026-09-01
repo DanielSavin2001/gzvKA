@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
+	import type { Archive } from '$lib/archive';
 	import type { RemovalRequest, RemovalStatus } from '../../../sharedModels/removal-request';
 	import { GROUND_LABELS } from '../../../sharedModels/removal-request';
 	import { removalRequests, reviewRemovalRequest } from '$lib/admin';
@@ -16,7 +17,16 @@
 	 * Accepting hides the photograph through the photo-edit overlay, so it is off the site as
 	 * soon as a browser fetches that overlay. The prerendered page and the sitemap entry go at
 	 * the next deploy. Rejecting restores, which is why this hides rather than deletes.
+	 *
+	 * Hiding is the first half of the promise, not the whole of it: the generated index still
+	 * carries the record, and a re-index would put the photograph back if the overlay were
+	 * ever lost. `functions/src/data/suppressed.json` is the second half, and it is keyed by
+	 * the photograph's path in the corpus - so the desk shows that path, next to the request,
+	 * ready to copy. Asking a curator to go and look it up is asking for it not to happen.
 	 */
+
+	/** Only to look up a photograph's corpus path; the queue works without it. */
+	export let archive: Archive | null = null;
 
 	let showing: RemovalStatus = 'pending';
 	let items: RemovalRequest[] = [];
@@ -52,6 +62,24 @@
 		}
 	}
 
+	/** Where the file lives, which is the key `suppressed.json` wants. */
+	function corpusPath(photoId: string): string | null {
+		return archive?.photoById.get(photoId)?.p ?? null;
+	}
+
+	/** Copied rather than retyped: the paths are long and one wrong character does nothing. */
+	let copied: string | null = null;
+
+	async function copy(photoPath: string): Promise<void> {
+		try {
+			await navigator.clipboard.writeText(photoPath);
+			copied = photoPath;
+		} catch {
+			// No clipboard permission, in which case the path is on screen to select by hand.
+			copied = null;
+		}
+	}
+
 	const TABS: [RemovalStatus, string][] = [
 		['pending', 'Te behandelen'],
 		['accepted', 'Weggehaald'],
@@ -65,8 +93,12 @@
 		Mensen die op een foto staan en vragen of ze weg mag. Op <a
 			class="text-blue-800 underline hover:no-underline dark:text-blue-300"
 			href="/contact">Contact</a
-		> staat dat dat geen discussie is. Weghalen verbergt de foto meteen overal op de site; de opgeslagen
-		pagina en de sitemap volgen bij de eerstvolgende publicatie.
+		>
+		staat dat dat geen discussie is. Weghalen verbergt de foto meteen overal op de site; de opgeslagen
+		pagina en de sitemap volgen bij de eerstvolgende publicatie. Onder &ldquo;Weggehaald&rdquo; staat
+		van elke foto het pad voor
+		<code class="text-xs">suppressed.json</code>, waarmee ze ook uit de gegenereerde index
+		verdwijnt.
 	</p>
 
 	<nav class="mt-4 flex gap-2">
@@ -174,6 +206,35 @@
 							</button>
 						</div>
 					{:else}
+						{#if request.status === 'accepted'}
+							<!--
+								The path, because hiding a photograph is the first half of the
+								promise. `suppressed.json` is the half that survives a re-index,
+								and it is keyed by exactly this string.
+							-->
+							{@const photoPath = corpusPath(request.photoId)}
+							{#if photoPath}
+								<div
+									class="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950"
+								>
+									<p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+										Definitief maken: zet dit pad in
+										<code class="text-xs">functions/src/data/suppressed.json</code>
+									</p>
+									<p class="mt-1 break-all font-mono text-xs text-gray-800 dark:text-gray-200">
+										{photoPath}
+									</p>
+									<button
+										type="button"
+										class="mt-2 rounded border border-gray-400 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+										on:click={() => copy(photoPath)}
+									>
+										{copied === photoPath ? 'Gekopieerd' : 'Kopieer het pad'}
+									</button>
+								</div>
+							{/if}
+						{/if}
+
 						<div class="mt-3 flex flex-wrap items-center gap-3">
 							<span class="text-sm text-gray-600 dark:text-gray-400">
 								{request.status === 'accepted' ? 'Weggehaald' : 'Niet weggehaald'} door

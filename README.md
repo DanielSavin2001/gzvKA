@@ -213,6 +213,45 @@ the gazetteer, and a correction naming a photograph that is not in the corpus. E
 mean somebody recorded a fact and the archive silently dropped it, which is worse than a
 build failure.
 
+## Taking a photograph off the site
+
+`/contact` promises: "Staat u op een foto en wilt u dat ze weggaat? Dan gaat ze weg." That
+happens in two moves, and both are needed.
+
+1. **The same day.** Under every photograph is "Staat u op deze foto en wilt u dat ze
+   weggaat?". The request lands in `/beheer` → Verzoeken, where accepting writes a `hidden`
+   edit to the runtime overlay. The photograph is off the site as soon as a browser fetches
+   that overlay - no deploy, no rebuild.
+2. **Permanently.** `functions/src/data/suppressed.json` lists the paths that must never be
+   indexed:
+
+```json
+"Wedstrijden GZVKA/voorbeeld.JPG": {
+  "reason": "verzoek",
+  "by": "Daniel Savin",
+  "on": "2026-09-01",
+  "note": "op verzoek verwijderd"
+}
+```
+
+   `npm run archive:index` skips those files entirely, so the photograph is absent from
+   `archive-index.json`, and therefore from the search, the place pages, `sitemap.xml` and
+   the prerendered HTML - never written rather than filtered out afterwards. The Verzoeken
+   desk prints the path to paste, next to each accepted request.
+
+Keyed by the path under `src/lib/images/history-images`, not by the photograph id, because a
+suppression is about a file. `reason` is one of `verzoek`, `rechten`, `privacy` or `fout`;
+`by` and `on` are required. Never write down what the person said about themselves - this
+file is public.
+
+Unlike everything else the site reads, this one is strict: a malformed entry or one naming a
+file the corpus does not have stops the build. A suppression that is quietly skipped
+republishes a photograph somebody asked to have removed, and nobody finds out until they see
+it again.
+
+The file itself stays in git history, and `/contact` says so plainly rather than promising
+otherwise.
+
 ## Folding in the rest of the website
 
 The repository originally held 2,948 photographs; the live gzvka.be showed 1,556 more that

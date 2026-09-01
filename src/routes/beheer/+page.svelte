@@ -727,7 +727,7 @@
 			</datalist>
 		{:else if desk === 'verzoeken'}
 			<div class="mt-6">
-				<RemovalDesk />
+				<RemovalDesk {archive} />
 			</div>
 		{:else if desk === 'schenkers'}
 			<div class="mt-6">

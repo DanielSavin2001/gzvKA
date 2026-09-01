@@ -22,6 +22,7 @@ import * as path from 'path';
 import type { Gazetteer } from '../../sharedModels/gazetteer';
 import { familyOfPlace } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
+import { readSuppressions, staleSuppressions } from '../../sharedModels/suppression';
 import { buildIndex, matchImagePath } from '../src/gazetteer/match';
 import { yearFromFilename } from '../src/utils/photo-year';
 import type { FilenameParts } from '../src/gazetteer/segment';
@@ -46,6 +47,14 @@ const REPO_ROOT = findRepoRoot(__dirname);
 const CORPUS_DIR = path.join(REPO_ROOT, 'src', 'lib', 'images', 'history-images');
 const GAZETTEER_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'kapellen-gazetteer.json');
 const CORRECTIONS_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'photo-corrections.json');
+/**
+ * The photographs that must not be published.
+ *
+ * Read here rather than filtered later on purpose: a photograph somebody asked to have
+ * removed should never be in the index at all, so it cannot reach the sitemap, a prerendered
+ * page or a copy of the index somebody downloaded.
+ */
+const SUPPRESSED_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'suppressed.json');
 const OUTPUT_FILE = path.join(REPO_ROOT, 'static', 'data', 'archive-index.json');
 
 /**
@@ -136,6 +145,17 @@ function readCorrections(): Record<string, PhotoCorrection> {
 		corrections?: Record<string, PhotoCorrection>;
 	};
 	return parsed.corrections ?? {};
+}
+
+/**
+ * The withdrawn photographs.
+ *
+ * No `existsSync` guard the way `readCorrections` has one: this file is committed and must
+ * be there. A missing suppressions file read as "nothing is suppressed" is exactly the
+ * silent republication the file exists to prevent.
+ */
+function readSuppressed(): Record<string, ReturnType<typeof readSuppressions>[string]> {
+	return readSuppressions(JSON.parse(fs.readFileSync(SUPPRESSED_FILE, 'utf8')));
 }
 
 function listCorpusFiles(directory: string): string[] {
@@ -260,6 +280,18 @@ function main(): void {
 	const index = buildIndex(gazetteer);
 	const files = listCorpusFiles(CORPUS_DIR);
 	const corrections = readCorrections();
+	const suppressed = readSuppressed();
+
+	// Before anything is built. A suppression naming a file the corpus does not have is a
+	// record saying a photograph is withdrawn while the index says otherwise, and the only
+	// sign of it is a line in a JSON file nobody reads.
+	const strayed = staleSuppressions(suppressed, files);
+	if (strayed.length > 0) {
+		throw new Error(
+			`suppressed.json names ${strayed.length} photograph(s) that are not in the corpus:\n` +
+				strayed.map((photoPath) => `  ${photoPath}`).join('\n')
+		);
+	}
 	const knownPlaceIds = new Set(gazetteer.entries.map((entry) => entry.id));
 
 	// A correction naming a place that does not exist would silently do nothing, which is
@@ -285,6 +317,8 @@ function main(): void {
 	}
 
 	const applied = new Set<string>();
+	/** Corpus paths that were read and deliberately not indexed. */
+	const withheld: string[] = [];
 	const takenIds = new Set<string>();
 	const photos: IndexedPhoto[] = [];
 	const streetCounts = new Map<string, number>();
@@ -301,6 +335,16 @@ function main(): void {
 		const id = photoId(relativePath, takenIds);
 		const correction = corrections[id];
 		if (correction) applied.add(id);
+
+		// After the id is minted, never before. Ids are deduplicated against the ones already
+		// taken, so skipping earlier would let a later photograph claim a shorter id and
+		// every link to it would break. Marking the correction applied first is deliberate
+		// too: a withdrawn photograph may well have a correction, and that correction is
+		// legitimately unused rather than stale.
+		if (suppressed[relativePath]) {
+			withheld.push(relativePath);
+			continue;
+		}
 
 		const placeIds = correction?.places ?? result.matches.map((match) => match.entryId);
 
@@ -336,6 +380,18 @@ function main(): void {
 		if (keywords) photo.k = keywords;
 
 		photos.push(photo);
+	}
+
+	// A correction whose photograph id no longer exists does nothing at all, which is worse
+	// than an error: someone recorded a fact about the archive and the archive dropped it.
+	// Checked here rather than after the write, so a run that is going to fail does not leave
+	// a new index on disk first - the file and the exit code would then disagree.
+	const stale = Object.keys(corrections).filter((id) => !applied.has(id));
+	if (stale.length > 0) {
+		throw new Error(
+			`photo-corrections.json names ${stale.length} photograph(s) that are not in the corpus:\n` +
+				stale.map((id) => `  ${id}`).join('\n')
+		);
 	}
 
 	// Named `placeCounts` now that it counts every kind of place, not only streets.
@@ -409,15 +465,12 @@ function main(): void {
 	console.log(`With a donor            ${photos.filter((p) => p.d).length}`);
 	console.log(`Hand corrections        ${applied.size} applied`);
 
-	// A correction whose photograph id no longer exists does nothing at all, which is worse
-	// than an error: someone recorded a fact about the archive and the archive dropped it.
-	const stale = Object.keys(corrections).filter((id) => !applied.has(id));
-	if (stale.length > 0) {
-		throw new Error(
-			`photo-corrections.json names ${stale.length} photograph(s) that are not in the corpus:\n` +
-				stale.map((id) => `  ${id}`).join('\n')
-		);
-	}
+	// Printed even when it is zero, because "how many photographs are withheld" is a
+	// question with an answer, and a silent zero is indistinguishable from a builder that
+	// stopped reading the file.
+	console.log(`Withheld                ${withheld.length} not indexed`);
+	for (const photoPath of withheld) console.log(`  ${photoPath}`);
+
 	console.log(`Index size              ${(bytes / 1024).toFixed(0)} KB raw`);
 	console.log(`\nWrote ${path.relative(REPO_ROOT, OUTPUT_FILE)}`);
 

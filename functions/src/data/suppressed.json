@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "_comment": "Photographs that must not be published. Keyed by the path under src/lib/images/history-images, because a suppression is about a file rather than about a record. A path listed here never enters static/data/archive-index.json, so it is absent from the search, the place pages, the sitemap and the prerendered HTML - not filtered out afterwards, but never written. The removal desk in /beheer hides a photograph within the minute by writing a hidden edit to the runtime overlay; this file is what makes that survive the next npm run archive:index. Every entry needs a reason (verzoek, rechten, privacy or fout), who decided it and when. Never write down what the person said about themselves: this file is public.",
+  "_example": {
+    "Wedstrijden GZVKA/voorbeeld.JPG": {
+      "reason": "verzoek",
+      "by": "Daniel Savin",
+      "on": "2026-09-01",
+      "note": "op verzoek verwijderd"
+    }
+  },
+  "suppressed": {}
+}
