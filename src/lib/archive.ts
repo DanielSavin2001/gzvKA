@@ -152,9 +152,13 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 			loadPublished(fetcher),
 			loadPlaceRecords(fetcher)
 		]);
-		const photos = [...index.photos, ...published].map((photo) =>
-			applyPhotoEdit(photo, edits[photo.id])
-		);
+		// Hidden photographs are dropped before anything is built from them, not filtered at
+		// each place that lists photographs. A removal accepted for one person has to reach
+		// the search, the street pages, the maps, the donor pages, the timeline and the
+		// neighbour arrows at once; a filter per consumer is a filter somebody forgets.
+		const photos = [...index.photos, ...published]
+			.map((photo) => applyPhotoEdit(photo, edits[photo.id]))
+			.filter((photo) => !edits[photo.id]?.hidden);
 
 		cached = buildArchive({
 			...index,

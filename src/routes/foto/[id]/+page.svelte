@@ -11,6 +11,7 @@
 	import { slugify } from '../../../../sharedModels/text';
 	import Seo from '../../components/Seo.svelte';
 	import DatePhoto from '../../components/DatePhoto.svelte';
+	import RemovePhoto from '../../components/RemovePhoto.svelte';
 	import { swipe } from '$lib/gestures';
 	import {
 		download,
@@ -823,6 +824,14 @@
 					photoTitle={data.summary?.title ?? photo?.t ?? ''}
 					currentYear={photo?.y ?? data.summary?.year}
 				/>
+
+				<!--
+					And the other direction. /contact has promised since the site went up that a
+					photograph of you goes if you ask, and there was no way to ask: the page names
+					no address by design, and the comment box it pointed at cannot be sent without
+					attaching a photograph. Here is where somebody recognises themselves.
+				-->
+				<RemovePhoto photoId={data.id} photoTitle={data.summary?.title ?? photo?.t ?? ''} />
 			</figcaption>
 		</figure>
 

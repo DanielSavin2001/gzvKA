@@ -47,6 +47,7 @@
 	import DatingDesk from '../components/DatingDesk.svelte';
 	import PinPicker from '../components/PinPicker.svelte';
 	import PlaceDesk from '../components/PlaceDesk.svelte';
+	import RemovalDesk from '../components/RemovalDesk.svelte';
 
 	/**
 	 * The curator's desk.
@@ -75,7 +76,7 @@
 	 * *in*, and the 4,504 already here - every field of them read out of a filename - had no
 	 * way to be corrected at all.
 	 */
-	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' | 'schenkers' = 'fotos';
+	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' | 'schenkers' | 'verzoeken' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
 
@@ -566,7 +567,7 @@
 		</div>
 	{:else}
 		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers']] as [value, label] (value)}
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers'], ['verzoeken', 'Verzoeken']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
@@ -585,6 +586,11 @@
 							openDonorDesk();
 							return;
 						}
+						if (value === 'verzoeken') {
+							desk = 'verzoeken';
+							error = null;
+							return;
+						}
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
 						refresh();
@@ -598,7 +604,10 @@
 
 		<nav
 			class="mt-6 flex gap-2"
-			class:hidden={desk === 'archief' || desk === 'jaartallen' || desk === 'schenkers'}
+			class:hidden={desk === 'archief' ||
+				desk === 'jaartallen' ||
+				desk === 'schenkers' ||
+				desk === 'verzoeken'}
 		>
 			{#each tabs as [value, label] (value)}
 				<button
@@ -716,6 +725,10 @@
 					<option value={subject.name} />
 				{/each}
 			</datalist>
+		{:else if desk === 'verzoeken'}
+			<div class="mt-6">
+				<RemovalDesk />
+			</div>
 		{:else if desk === 'schenkers'}
 			<div class="mt-6">
 				<DonorDesk {archive} on:changed={reloadArchive} />
