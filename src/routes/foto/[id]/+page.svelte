@@ -6,6 +6,7 @@
 	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PhotoSummary } from '$lib/page-data';
 	import { SITE, summarise } from '$lib/seo';
+	import { decadeBandOf } from '../../../../sharedModels/year';
 	import { slugify } from '../../../../sharedModels/text';
 	import Seo from '../../components/Seo.svelte';
 	import DatePhoto from '../../components/DatePhoto.svelte';
@@ -186,11 +187,7 @@
 	 * Everything before 1900 is one band there, so it has to be one band here too, or the
 	 * arrows would walk a decade the timeline never drew.
 	 */
-	function decadeKeyOf(year: string | undefined): string | null {
-		if (!year || !/^\d{4}$/.test(year)) return null;
-		const value = Number(year);
-		return value < 1900 ? 'voor-1900' : String(Math.floor(value / 10) * 10);
-	}
+	const decadeKeyOf = decadeBandOf;
 
 	/** What the band is called in a breadcrumb. */
 	$: decadeLabel = ((): string | null => {

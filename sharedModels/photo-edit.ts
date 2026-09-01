@@ -1,3 +1,5 @@
+import { canonicalYear } from './year';
+
 /**
  * A curator correcting a photograph that is already in the archive.
  *
@@ -89,7 +91,10 @@ export function readPhotoFields(input: Record<string, unknown>): PhotoFields {
 			if (year && !/^\d{4}(\s?-\s?\d{4})?$/.test(year)) {
 				throw new PhotoEditError('Een jaartal ziet eruit als 1935, of als 1935-1936.');
 			}
-			fields.year = year;
+			// Stored in one shape. The regex above allows "1935 - 1936" as well as
+			// "1935-1936", and two spellings of one year is two years to anything that
+			// compares the strings.
+			fields.year = year ? canonicalYear(year) : year;
 		}
 	}
 

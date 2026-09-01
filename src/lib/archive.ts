@@ -15,6 +15,7 @@
  */
 
 import { encodePath } from '../../sharedModels/image-path';
+import { startYear } from '../../sharedModels/year';
 import type { PlaceFamily } from '../../sharedModels/place-family';
 import { familyOfPlace, isPersonKind } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
@@ -256,8 +257,14 @@ export function thumbUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
  */
 export function sortForDisplay(photos: ArchivePhoto[]): ArchivePhoto[] {
 	return [...photos].sort((a, b) => {
-		const ay = a.y ? Number(a.y) : Number.POSITIVE_INFINITY;
-		const by = b.y ? Number(b.y) : Number.POSITIVE_INFINITY;
+		// `startYear` rather than `Number`, and the difference is not cosmetic. A year may be
+		// a span - the dating form asks residents for "1957-1958" in those words - and
+		// `Number('1957-1958')` is NaN. `NaN - NaN` is NaN, which is falsy, so the comparator
+		// fell through to house number and title instead of sorting: not "spans sort last"
+		// but a comparator that is not transitive, which reorders everything around it. The
+		// photo page's arrows walk this exact list.
+		const ay = startYear(a.y) ?? Number.POSITIVE_INFINITY;
+		const by = startYear(b.y) ?? Number.POSITIVE_INFINITY;
 		return ay - by || (a.hn ?? 0) - (b.hn ?? 0) || a.t.localeCompare(b.t);
 	});
 }

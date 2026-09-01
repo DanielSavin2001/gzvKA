@@ -20,6 +20,7 @@
 
 import type { Archive, ArchivePhoto } from './archive';
 import { loadPairs } from './then-and-now';
+import { startYear } from '../../sharedModels/year';
 import type { PlaceFamily } from './archive';
 import {
 	isPerson,
@@ -154,9 +155,11 @@ export async function decades(fetcher: typeof fetch): Promise<{
 }> {
 	const archive = await loadArchive(fetcher);
 
+	// A span counts, and counts at its first year. Filtering on /^\d{4}$/ dropped every
+	// photograph whose year the site itself asks to be written as "1957-1958".
 	const dated = archive.photos
-		.filter((photo) => /^\d{4}$/.test(photo.y ?? ''))
-		.map((photo) => ({ photo, year: Number(photo.y) }));
+		.map((photo) => ({ photo, year: startYear(photo.y) }))
+		.filter((entry): entry is { photo: ArchivePhoto; year: number } => entry.year !== null);
 
 	const bands = new Map<string, { year: number; photo: ArchivePhoto }[]>();
 	for (const entry of dated) {
@@ -455,9 +458,11 @@ export async function donorSummary(
 		}))
 		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'nl'));
 
+	// Not `Number` + `isFinite`: that dropped a span, and a donor whose dated photographs are
+	// all school years then showed no span at all rather than a shorter one.
 	const years = donor.photos
-		.map((photo) => Number(photo.y))
-		.filter((year) => Number.isFinite(year))
+		.map((photo) => startYear(photo.y))
+		.filter((year): year is number => year !== null)
 		.sort((a, b) => a - b);
 
 	return {
