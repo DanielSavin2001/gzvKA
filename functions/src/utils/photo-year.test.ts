@@ -18,6 +18,35 @@ describe('yearFromFilename', () => {
 		expect(yearFromFilename('Kapellen 1940- 1945.jpg')).toBe('1945');
 	});
 
+	it('keeps a season whole rather than reading it as a period', () => {
+		// Belgium names a school year and a football season by the year they start in, and
+		// the photograph is taken near the start of it. Taking the later year put a class
+		// from the nineties in the 2000s.
+		expect(
+			yearFromFilename('Klasfoto - De Platanen 1999-2000 - 4de leerjaar - juf Chris.jpg')
+		).toBe('1999-2000');
+		expect(yearFromFilename('SP - Noorse VV - 1962-1963 - Kampioen - Hoghescote - zd.png')).toBe(
+			'1962-1963'
+		);
+	});
+
+	it('tells a season from a period by the gap alone', () => {
+		// Two consecutive years is a season; anything wider is a period, and there is not one
+		// counter-example either way in this archive.
+		expect(yearFromFilename('iets 1969-1970.jpg')).toBe('1969-1970');
+		expect(yearFromFilename('iets 1969-1971.jpg')).toBe('1971');
+	});
+
+	it('keeps the spacing of a season out of the answer', () => {
+		expect(yearFromFilename('Klasfoto 1969 - 1970 - 2de leerjaar.jpg')).toBe('1969-1970');
+	});
+
+	it('still lets an anniversary of Belgium win over a season', () => {
+		// Not a real filename, but the rule order matters more than the example: the
+		// anniversary is when somebody stood there with a camera.
+		expect(yearFromFilename('100 jaar Belgie - stoet 1929-1930.jpg')).toBe('1930');
+	});
+
 	it('keeps a trailing counter out of it', () => {
 		expect(yearFromFilename('75 jaar Belgie - Onafhankelijkheidsfeest 1830-1905 6.jpg')).toBe(
 			'1905'
