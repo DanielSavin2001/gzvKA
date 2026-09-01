@@ -150,6 +150,35 @@ zoekbalk.
 
 **Moeite.** Een dag voor alle vier.
 
+> **Nagemeten op 1 september 2026, en de diagnose hierboven klopt niet.**
+>
+> Stap 1 — `SearchResults` een laadtak geven — is geprobeerd, gemeten en teruggedraaid,
+> omdat die tak nooit te zien is. Met de index kunstmatig zes seconden vastgehouden in een
+> echte browser: de zoekbalk staat na zes seconden nog steeds leeg, `document` is niet
+> gehydrateerd, en `onMount` is dus nooit gelopen. Er is geen moment waarop de pagina wél
+> leeft en het archief nog niet binnen is.
+>
+> De oorzaak is niet `SearchResults` maar `src/routes/+page.js`: `load` wacht op
+> `archiveSummary(fetch)`, en die haalt via `loadArchive` het volledige indexbestand van
+> 1,1 MB op. SvelteKit draait een universele `load` opnieuw in de browser bij hydratatie en
+> rendert de pagina pas als die klaar is. De bezoeker ziet ondertussen de vooraf gerenderde
+> HTML — een zoekbalk die er werkt uitziet en niets doet. Twaalf vooraf gerenderde routes
+> doen dit.
+>
+> De echte oplossing is dus stap 2, en groter dan hierboven staat: de gegevens die in de
+> HTML moeten staan horen in een `+page.server.js` (die wordt geserialiseerd en niet
+> opnieuw gedraaid), niet in een universele `load`. `/straat/[slug]` doet dat al voor zijn
+> `entries()`, met `node:fs`. Let op de modulecache in `loadArchive`: die zorgt dat de index
+> precies één keer opgehaald wordt tijdens het hele vooraf renderen, en dat is de reden dat
+> `build/index.html` hem inline draagt en de andere 4.700 pagina's niet.
+>
+> Wat er verder van dit punt nagerekend is: `loadArchive` wacht inmiddels op **drie**
+> overlays, niet twee (`loadPlaceRecords` is erbij gekomen). `MAX_EDITS` staat op 5.000 en
+> de query heeft geen `orderBy`, dus Firestore sorteert impliciet op `__name__` — voorbij de
+> grens verdwijnen de alfabetisch laatste foto-id's, wat voorspelbaar is en nog steeds stil.
+> En een `/foto/**`-regel die 404 teruggeeft is in `firebase.json` niet te schrijven:
+> rewrites hebben geen statuscode en redirects doen alleen 3xx.
+
 ---
 
 ## 5. Haal het werk van de curatoren terug naar git
