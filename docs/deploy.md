@@ -140,6 +140,53 @@ Dat is de bedoeling - zie de kop van de workflow - maar het betekent ook dat er 
 de rollen niets vanzelf gebeurt. Draai de deploy opnieuw met de knop: **Actions → Deploy to
 Firebase on merge → Run workflow**, met `everything`.
 
+### En dan nog één, over Extensions die dit project niet heeft
+
+De tweede poging kwam veel verder - `storage.rules` en `firestore.rules` gecompileerd, de
+indexen gelezen, de functiebroncode geanalyseerd - en viel toen om op:
+
+```
+Error: Request to https://firebaseextensions.googleapis.com/v1beta/projects/.../instances
+had HTTP Error: 403, The caller does not have permission
+```
+
+Dit project gebruikt géén Firebase Extensions: geen `extensions`-blok in `firebase.json`, geen
+`extensions/`-map. De aanroep komt uit het gereedschap zelf, en het is een samenloop van twee
+dingen die elk op zich redelijk zijn:
+
+- `firebase-functions@5.1.1` bouwt in `lib/runtime/loader.js` altijd een `const extensions = {}`
+  en zet die in het manifest, ook als er niets is.
+- `firebase-tools` leest dat manifest en doet `if (manifest.extensions)`, en later
+  `some((b) => b.extensions)` - en een leeg object is waar in JavaScript. Dus loopt bij élke
+  functie-deploy `prepareDynamicExtensions`, en die vraagt `firebaseextensions.instances.list`.
+
+Er valt in deze repository niets aan te doen behalve het recht geven. Welke voorgedefinieerde
+rol die permissie draagt verschilt met de naamgeving (`firebasemods` is de oude naam van het
+product), dus zoek hem op in plaats van te gokken:
+
+```sh
+for R in roles/firebasemods.viewer roles/firebasemods.admin \
+         roles/firebaseextensions.viewer roles/firebaseextensions.admin
+do
+  if gcloud iam roles describe "$R" --format='value(includedPermissions)' 2>/dev/null \
+       | tr ';' '\n' | grep -qx 'firebaseextensions.instances.list'; then
+    echo "JA  -> $R"
+  else
+    echo "nee -> $R"
+  fi
+done
+```
+
+En geef dan de rol die `JA` zegt - de `.viewer` als beide kunnen, want opsommen is alles wat
+nodig is:
+
+```sh
+gcloud projects add-iam-policy-binding gzvka-12a9f \
+  --member="serviceAccount:$SA" \
+  --role="<de rol die JA zei>" \
+  --condition=None --quiet
+```
+
 ## Wat er nog steeds met de hand moet
 
 Niets aan het deployen. Wel dit, en het is goed om te weten dat het bestaat:
