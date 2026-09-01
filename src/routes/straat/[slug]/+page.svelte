@@ -248,7 +248,7 @@
 				</p>
 			{/if}
 		{:else}
-			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+			<p class="py-16 text-center text-gray-600 dark:text-gray-400">Bezig met laden ...</p>
 		{/if}
 	{:else if !place}
 		<div class="py-16 text-center">
@@ -290,11 +290,11 @@
 					{#each children as child (child.id)}
 						<li>
 							<a
-								class="inline-block rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-800 hover:border-blue-700 hover:bg-blue-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+								class="inline-block rounded-full border border-gray-300 px-3 py-3 text-sm text-gray-800 hover:border-blue-700 hover:bg-blue-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
 								href="/straat/{child.id}"
 							>
 								{child.name}
-								<span class="text-gray-500 dark:text-gray-400">{child.count}</span>
+								<span class="text-gray-600 dark:text-gray-400">{child.count}</span>
 							</a>
 						</li>
 					{/each}
@@ -352,7 +352,7 @@
 					height="320px"
 					zoom={fromRegister ? 15 : 14}
 				/>
-				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					{#if fromRegister}
 						{place.name} op de kaart{#if shape?.length}, {shape.length} meter lang{/if}. De ligging
 						komt uit het officiële stratenregister.

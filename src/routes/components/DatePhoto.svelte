@@ -82,7 +82,7 @@
 </script>
 
 <section
-	class="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/40"
+	class="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/40 print:hidden"
 >
 	{#if sent}
 		<p class="font-semibold text-amber-900 dark:text-amber-200">Bedankt.</p>

@@ -190,7 +190,7 @@
 			</a>
 		</div>
 	{:else if !story}
-		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+		<p class="py-16 text-center text-gray-600 dark:text-gray-400">Bezig met laden ...</p>
 	{:else}
 		<header class="mt-3 border-b border-gray-200 dark:border-gray-700 pb-6">
 			<h1
@@ -262,7 +262,7 @@
 					one, where there is no room for a column.
 				-->
 				<nav class="mb-6 lg:sticky lg:top-24 lg:mb-0 lg:w-60 lg:shrink-0" aria-label="Inhoud">
-					<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+					<p class="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
 						Inhoud
 					</p>
 
@@ -271,14 +271,14 @@
 							<li>
 								<a
 									href="#deel-{entry.index}"
-									class="block rounded px-2 py-1.5 text-sm leading-snug transition {activeSection ===
+									class="block rounded px-2 py-3 text-sm leading-snug transition {activeSection ===
 									entry.index
 										? 'bg-blue-50 dark:bg-blue-950 font-semibold text-blue-900 dark:text-blue-200'
 										: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 								>
 									{entry.heading}
 									{#if entry.kicker}
-										<span class="block text-xs font-normal text-gray-500 dark:text-gray-400"
+										<span class="block text-xs font-normal text-gray-600 dark:text-gray-400"
 											>{entry.kicker}</span
 										>
 									{/if}

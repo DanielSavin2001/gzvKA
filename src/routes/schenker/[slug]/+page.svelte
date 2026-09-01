@@ -102,7 +102,7 @@
 				<div class="mt-4 flex flex-wrap gap-2">
 					{#each chips as place (place.id)}
 						<a
-							class="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-800 hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-blue-950"
+							class="rounded-full border border-gray-300 bg-white px-3 py-3 text-sm text-gray-800 hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-blue-950"
 							href="/straat/{place.id}"
 						>
 							{place.name}

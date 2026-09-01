@@ -50,7 +50,7 @@
 		<p class="mt-3 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
 			Dit archief bestaat omdat mensen hun foto's afstonden. Hier staat wie, en wat ze gaven.
 		</p>
-		<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 			{data.donors.length} schenkers &middot; {photographs.toLocaleString('nl-BE')} foto's
 		</p>
 	</header>
@@ -66,11 +66,11 @@
 				{#each group.donors as donor (donor.slug)}
 					<li>
 						<a
-							class="flex items-baseline justify-between gap-3 rounded px-2 py-1.5 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:hover:bg-blue-950"
+							class="flex items-baseline justify-between gap-3 rounded px-2 py-2.5 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:hover:bg-blue-950"
 							href="/schenker/{donor.slug}"
 						>
 							<span class="font-medium text-gray-900 dark:text-gray-100">{donor.name}</span>
-							<span class="shrink-0 text-sm tabular-nums text-gray-500 dark:text-gray-400"
+							<span class="shrink-0 text-sm tabular-nums text-gray-600 dark:text-gray-400"
 								>{donor.count}</span
 							>
 						</a>

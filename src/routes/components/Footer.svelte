@@ -43,7 +43,7 @@
 
 		<div class="mt-10">
 			<p
-				class="text-center text-xs font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500"
+				class="text-center text-xs font-medium uppercase tracking-widest text-gray-600 dark:text-gray-400"
 			>
 				Met dank aan
 			</p>
@@ -69,12 +69,16 @@
 					target="_blank"
 					class="flex h-16 items-center rounded-lg bg-white px-5 py-2 ring-1 ring-gray-200 dark:ring-0"
 				>
-					<img class="max-h-10 w-auto" src={dirk_logo} alt="Dirk Van Laer & Co bvba, sanitair & cv" />
+					<img
+						class="max-h-10 w-auto"
+						src={dirk_logo}
+						alt="Dirk Van Laer & Co bvba, sanitair & cv"
+					/>
 				</a>
 			</div>
 		</div>
 
-		<p class="mt-10 text-center text-xs text-gray-400 dark:text-gray-500">
+		<p class="mt-10 text-center text-xs text-gray-600 dark:text-gray-400">
 			© {currentYear} <a class="hover:underline" href="/">gzvKA</a> · Alle rechten voorbehouden
 		</p>
 	</div>

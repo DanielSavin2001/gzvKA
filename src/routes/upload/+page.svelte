@@ -357,7 +357,7 @@
 			</button>
 		</div>
 
-		<p class="mt-10 text-center text-sm text-gray-500 dark:text-gray-400">
+		<p class="mt-10 text-center text-sm text-gray-600 dark:text-gray-400">
 			Zin om te bladeren?
 			<a class="text-blue-800 underline hover:no-underline dark:text-blue-300" href="/straten">
 				Alle straten
@@ -542,7 +542,7 @@
 						placeholder="Alleen om iets te kunnen vragen"
 						class={FIELD_CLASSES}
 					/>
-					<span class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
+					<span class="mt-1 block text-xs text-gray-600 dark:text-gray-400"
 						>Komt niet op de website.</span
 					>
 				</label>

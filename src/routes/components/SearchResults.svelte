@@ -30,7 +30,7 @@
 {#if archive && trimmed !== ''}
 	<section class="mt-8" aria-label="Zoekresultaten">
 		{#if matchedPlaces.length > 0}
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+			<h2 class="text-sm font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
 				Plaatsen
 			</h2>
 			<ul class="mt-2 flex flex-wrap gap-2">

@@ -186,7 +186,7 @@
 		</div>
 
 		{#if ready && mapped.length > 0}
-			<p class="text-sm text-gray-500 dark:text-gray-400">
+			<p class="text-sm text-gray-600 dark:text-gray-400">
 				{split.on.length === mapped.length
 					? `Alle ${mapped.length} ${noun} staan op de kaart.`
 					: `${split.on.length} van de ${mapped.length} ${noun} staan op de kaart.`}
@@ -261,7 +261,9 @@
 						{/each}
 					</div>
 				{:else if loadingPhotos}
-					<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Foto's worden geladen &hellip;</p>
+					<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+						Foto's worden geladen &hellip;
+					</p>
 				{/if}
 			</slot>
 		{:else}

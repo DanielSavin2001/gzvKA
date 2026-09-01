@@ -444,17 +444,20 @@
 		-->
 		{#if data.summary}
 			<figure class="mt-4">
-				<div class="flex h-[58vh] items-center justify-center sm:h-[64vh]">
+				<div class="flex h-[58vh] items-center justify-center sm:h-[64vh] print:h-auto">
 					<img
 						src={data.summary.image}
 						alt={data.summary.alt}
 						{...{ fetchpriority: 'high' }}
 						decoding="async"
-						class="max-h-full max-w-full rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+						class="max-h-full max-w-full rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800 print:max-h-none print:border-0"
 					/>
 				</div>
 				<figcaption class="mt-4">
-					<h1 class="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-gray-100">
+					<h1
+						class="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-gray-100"
+						data-url="{SITE}/foto/{data.id}"
+					>
 						{data.summary.title}
 					</h1>
 					<p class="mt-2 text-gray-700 dark:text-gray-300">{photoDescription}</p>
@@ -480,7 +483,7 @@
 				</figcaption>
 			</figure>
 		{:else}
-			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+			<p class="py-16 text-center text-gray-600 dark:text-gray-400">Bezig met laden ...</p>
 		{/if}
 	{:else if !photo}
 		<div class="py-16 text-center">
@@ -502,7 +505,7 @@
 			says where somebody came from - it is what the arrows walk - so the trail says it
 			too.
 		-->
-		<nav class="text-sm text-gray-600 dark:text-gray-400">
+		<nav class="text-sm text-gray-600 dark:text-gray-400 print:hidden">
 			<a class="text-blue-800 underline hover:no-underline dark:text-blue-300" href="/"
 				>Startpagina</a
 			>
@@ -544,13 +547,13 @@
 				one photograph and the next - measured, and thoroughly annoying to click.
 			-->
 			<div
-				class="relative flex h-[58vh] touch-pan-y select-none items-center justify-center gap-3 sm:h-[64vh]"
+				class="relative flex h-[58vh] touch-pan-y select-none items-center justify-center gap-3 sm:h-[64vh] print:h-auto"
 				use:swipe={{ onLeft: () => step(next), onRight: () => step(previous) }}
 			>
 				{#if previous}
 					<a
 						href="/foto/{previous.id}{neighbourQuery}"
-						class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32"
+						class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32 print:lg:hidden"
 						aria-label="Vorige foto: {previous.t}"
 					>
 						<img
@@ -563,7 +566,7 @@
 						/>
 					</a>
 				{:else}
-					<div class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32" />
+					<div class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32 print:lg:hidden" />
 				{/if}
 
 				<div class="relative flex h-full min-w-0 flex-1 items-center justify-center">
@@ -581,7 +584,7 @@
 							alt={photoAlt(archive, photo)}
 							{...{ fetchpriority: 'high' }}
 							draggable="false"
-							class="max-h-full max-w-full cursor-zoom-in select-none rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+							class="max-h-full max-w-full cursor-zoom-in select-none rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800 print:max-h-none print:border-0"
 						/>
 					</button>
 
@@ -591,7 +594,7 @@
 					-->
 					<button
 						type="button"
-						class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lg text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:bg-gray-900/85 dark:text-gray-100 dark:hover:bg-gray-700"
+						class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 print:hidden text-lg text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:bg-gray-900/85 dark:text-gray-100 dark:hover:bg-gray-700"
 						aria-label="Volledig scherm"
 						title="Volledig scherm"
 						on:click={() => (openAt = lightboxStart)}
@@ -602,7 +605,7 @@
 					{#if previous}
 						<a
 							href="/foto/{previous.id}{neighbourQuery}"
-							class="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="print:hidden absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Vorige foto"
 						>
 							&#8592;
@@ -611,7 +614,7 @@
 					{#if next}
 						<a
 							href="/foto/{next.id}{neighbourQuery}"
-							class="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="print:hidden absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Volgende foto"
 						>
 							&#8594;
@@ -622,7 +625,7 @@
 				{#if next}
 					<a
 						href="/foto/{next.id}{neighbourQuery}"
-						class="hidden w-24 shrink-0 lg:block xl:w-32"
+						class="hidden w-24 shrink-0 lg:block xl:w-32 print:lg:hidden"
 						aria-label="Volgende foto: {next.t}"
 					>
 						<img
@@ -632,12 +635,12 @@
 						/>
 					</a>
 				{:else}
-					<div class="hidden w-24 shrink-0 lg:block xl:w-32" />
+					<div class="hidden w-24 shrink-0 lg:block xl:w-32 print:lg:hidden" />
 				{/if}
 			</div>
 
 			{#if siblings.length > 1 && position >= 0}
-				<p class="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
+				<p class="mt-3 text-center text-sm text-gray-600 dark:text-gray-400 print:hidden">
 					Foto {position + 1} van {siblings.length}
 					{#if listKey.startsWith('straat:') && archive.placeById.get(listKey.slice(7))}
 						in de {archive.placeById.get(listKey.slice(7))?.name}
@@ -648,7 +651,12 @@
 			{/if}
 
 			<figcaption class="mt-4">
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">{photo.t}</h1>
+				<h1
+					class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl"
+					data-url="{SITE}/foto/{photo.id}"
+				>
+					{photo.t}
+				</h1>
 
 				<!--
 					Take it with you, or send it to somebody.
@@ -657,7 +665,7 @@
 					finds their grandparents' house and the only way to keep it was a long-press
 					on a file called `... .jpg.thumb.webp`.
 				-->
-				<div class="mt-4 flex flex-wrap gap-2">
+				<div class="mt-4 flex flex-wrap gap-2 print:hidden">
 					{#if keepsake}
 						<!--
 							A button rather than a link: the file is re-encoded before it is handed
@@ -685,6 +693,18 @@
 						on:click={share}
 					>
 						&#8631; Delen
+					</button>
+
+					<!--
+						Nobody finds the print menu on a phone, and this heemkring prints: members
+						bring photographs to the meeting and post them to a sister in Canada.
+					-->
+					<button
+						type="button"
+						class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+						on:click={() => window.print()}
+					>
+						&#128424; Afdrukken
 					</button>
 				</div>
 
@@ -797,7 +817,7 @@
 				{/if}
 
 				<a
-					class="mt-5 inline-block rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900"
+					class="mt-5 inline-block rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900 print:hidden"
 					href="/verhaal/{context.story.slug}#deel-{context.sectionIndex}"
 				>
 					Lees &ldquo;{context.story.title}&rdquo;

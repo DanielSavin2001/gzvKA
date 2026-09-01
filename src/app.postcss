@@ -88,3 +88,50 @@ body {
 		background-image: none;
 	}
 }
+
+/*
+ * What a photograph looks like on paper.
+ *
+ * This heemkring prints. Members bring photographs to the meeting and post them to a sister
+ * in Canada, and until now the sheet carried the sticky header with its three dropdowns of
+ * street names, the breadcrumb, the Bewaren and Delen buttons, the dating form, the cookie
+ * banner if it was still up - and the photograph itself squeezed into a box measured in
+ * screen heights.
+ *
+ * Everything that can be said with a Tailwind `print:` utility is said at the element, where
+ * the next person editing that element will see it. Only the four things no utility can
+ * reach are here: elements rendered by a library, and the page box itself.
+ */
+@media print {
+	/* Rendered where no `class` of ours can reach them. */
+	footer,
+	[aria-label='Cookies'],
+	.toast-container,
+	[role='dialog'][aria-modal='true'] {
+		display: none !important;
+	}
+
+	@page {
+		margin: 15mm;
+	}
+
+	/* The caption table is the point of printing the page at all - the place, the year and
+	   who gave it. Splitting it over two sheets loses the pairing. */
+	figcaption dl {
+		break-inside: avoid;
+	}
+
+	/*
+	 * Where this sheet came from, so somebody holding it can get back to the archive.
+	 * `data-url` is set on both captions: the one rendered from `load` before the index
+	 * arrives, which is what a cold visit prints, and the full one.
+	 */
+	figcaption h1[data-url]::after {
+		content: ' — ' attr(data-url);
+		display: block;
+		margin-top: 0.35rem;
+		font-size: 0.75rem;
+		font-weight: 400;
+		word-break: break-all;
+	}
+}

@@ -74,7 +74,7 @@
 </script>
 
 <header
-	class="sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+	class="sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 print:hidden"
 >
 	<div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-2">
 		<a href="/" class="flex shrink-0 items-center gap-3" aria-label="Naar de startpagina">
