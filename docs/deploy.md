@@ -40,14 +40,30 @@ denied"_ of _"missing required permission"_, dan is dit het. De foutmelding noem
 permissie die ontbreekt - die is het betrouwbaarst, betrouwbaarder dan onderstaande lijst.
 
 Rollen die het nodig heeft, te geven in Cloud Shell (`console.cloud.google.com`, het
-terminal-icoon rechtsboven). Vervang `SA` door het `client_email` uit de JSON-sleutel -
-meestal `github-action-…@gzvka-12a9f.iam.gserviceaccount.com`:
+terminal-icoon rechtsboven).
+
+**Eerst het adres van het service-account opzoeken, niet invullen uit het hoofd.** Het is het
+`client_email` uit de JSON-sleutel die in het secret staat. Dit haalt het op uit het project
+zelf, en zegt het als het er niet precies één vindt in plaats van door te gaan met een naam die
+niet bestaat:
 
 ```sh
 gcloud config set project gzvka-12a9f
 
-SA=github-action-XXXXXXXX@gzvka-12a9f.iam.gserviceaccount.com
+SA=$(gcloud iam service-accounts list --project gzvka-12a9f \
+  --filter='email:github-action-*' --format='value(email)')
 
+if [ -z "$SA" ] || [ "$(printf '%s\n' "$SA" | wc -l)" -ne 1 ]; then
+  echo "Niet precies één github-action-account gevonden. Alle accounts:"
+  gcloud iam service-accounts list --project gzvka-12a9f
+else
+  echo "Gevonden: $SA"
+fi
+```
+
+Zegt dat één adres, dan de rollen toekennen:
+
+```sh
 for ROLE in \
   roles/firebase.developAdmin \
   roles/firebasehosting.admin \
@@ -65,6 +81,20 @@ do
     --condition=None \
     --quiet
 done
+```
+
+Gaat dat mis met _"Service account github-action-XXXXXXXX@… does not exist"_, dan is `SA` nog de
+letterlijke plaatshouder en is er niets gewijzigd - zoek het adres op met het blok hierboven en
+draai de lus opnieuw. Herhalen is ongevaarlijk: een rol die er al staat, wordt gewoon opnieuw
+gezet.
+
+Controleren wat het account nu mag:
+
+```sh
+gcloud projects get-iam-policy gzvka-12a9f \
+  --flatten='bindings[].members' \
+  --filter="bindings.members:$SA" \
+  --format='value(bindings.role)'
 ```
 
 Waarom deze:
