@@ -22,7 +22,7 @@ import { normalizeText, slugify } from '../../sharedModels/text';
 import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
 import { loadPublished } from './published';
 import type { PlaceRecord } from './place-records';
-import { loadPlaceRecords } from './place-records';
+import { loadCommittedPlaceRecords, loadPlaceRecords } from './place-records';
 import { withPlaceRecords } from '../../sharedModels/place-record';
 
 export { withPlaceRecords };
@@ -147,11 +147,17 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 		// that only exists in the overlay has to be a place everywhere at once, or a
 		// photograph filed under it belongs nowhere - which is what happened before, because
 		// nothing validated the id a curator typed.
-		const [edits, published, records] = await Promise.all([
+		const [edits, published, live] = await Promise.all([
 			loadPhotoEdits(fetcher),
 			loadPublished(fetcher),
 			loadPlaceRecords(fetcher)
 		]);
+
+		// The committed copy is the floor under the overlay, not a layer over it: a curator
+		// who deletes a place deletes it, and a union would keep putting it back for as long
+		// as the last pull remembered it. Reached for only when the overlay could not be
+		// read, which is also the state a fresh clone is permanently in.
+		const records = live ?? (await loadCommittedPlaceRecords(fetcher));
 		// Hidden photographs are dropped before anything is built from them, not filtered at
 		// each place that lists photographs. A removal accepted for one person has to reach
 		// the search, the street pages, the maps, the donor pages, the timeline and the
@@ -164,7 +170,7 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 			...index,
 			imageCount: photos.length,
 			photos,
-			places: withPlaceRecords(index.places, records ?? {})
+			places: withPlaceRecords(index.places, records)
 		});
 		return cached;
 	})();

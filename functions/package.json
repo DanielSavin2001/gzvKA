@@ -6,6 +6,7 @@
     "corpus:report": "npm run build && node lib/functions/scripts/corpus-report.js",
     "map:labels": "npm run build && node lib/functions/scripts/extract-map-labels.js",
     "archive:index": "npm run build && node lib/functions/scripts/build-archive-index.js",
+    "archive:pull": "npm run build && node lib/functions/scripts/pull-archive.js",
     "stories": "npm run build && node lib/functions/scripts/build-stories.js",
     "streets": "npm run build && node lib/functions/scripts/build-street-geometry.js",
     "plaatsen": "npm run build && node lib/functions/scripts/build-place-approximations.js",

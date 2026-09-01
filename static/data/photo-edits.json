@@ -1,0 +1,5 @@
+{
+	"version": 1,
+	"_comment": "Corrections curators made to photographs, pulled out of Firestore by `npm run archive:pull`. The live overlay is what the site uses; this is the copy that survives the database and what a fresh clone runs on. Do not edit by hand: the next pull overwrites it with whatever the overlay says.",
+	"edits": {}
+}

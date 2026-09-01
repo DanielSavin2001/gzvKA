@@ -11,7 +11,7 @@ export * from '../../sharedModels/approximation';
 
 import type { Approximation, ApproximationFile } from '../../sharedModels/approximation';
 import { withApproximationRecords } from '../../sharedModels/place-overlay';
-import { loadPlaceRecords } from './place-records';
+import { loadCommittedPlaceRecords, loadPlaceRecords } from './place-records';
 
 let cache: Record<string, Approximation> | null = null;
 
@@ -45,7 +45,10 @@ export async function loadApproximations(
 	}
 
 	const records = await loadPlaceRecords(fetcher);
-	const merged = withApproximationRecords(shipped ?? {}, records ?? {});
+	const merged = withApproximationRecords(
+		shipped ?? {},
+		records ?? (await loadCommittedPlaceRecords(fetcher))
+	);
 
 	if (shipped !== null && records !== null) cache = merged;
 	return merged;

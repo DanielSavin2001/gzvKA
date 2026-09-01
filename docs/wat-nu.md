@@ -211,7 +211,7 @@ zoekbalk.
 
 ---
 
-## 5. Haal het werk van de curatoren terug naar git
+## 5. ~~Haal het werk van de curatoren terug naar git~~ — GEDEELTELIJK GEDAAN
 
 **Wat er mis is.** Alles wat een curator sinds de lancering gedaan heeft, staat in Firestore en
 nergens anders. Er is geen export: geen `firestore:export`, geen `gcloud firestore`, geen
@@ -244,6 +244,20 @@ npm run thumbs && npm run build` op elke machine de volledige site op, zonder Fi
 Dat is het eerlijke antwoord op "wat als de beheerder ermee stopt".
 
 **Moeite.** Anderhalve dag.
+
+**Wat er gebeurd is.** `npm run archive:pull` bestaat, met
+`.github/workflows/pull-curator-work.yml` die het elke nacht draait en een pull request
+opent als er iets verschilt. Het schrijft `place-coordinates.json` (de pins, in het bestand
+dat het zelf al beloofde), `photo-edits.json` en `place-records.json`. De loaders lezen die
+bestanden nu als de bodem onder de live-overlay: een koude functie betekent de laatst
+opgehaalde stand in plaats van stilletjes elke correctie terugdraaien, en zonder
+`VITE_BASE_URL_GF` zijn de gecommitte kopieën het hele antwoord — een verse clone bouwt het
+archief zoals de curatoren het gemaakt hebben, zonder Firebase-project.
+
+Twee dingen bewust níét: de wachtrijen (`photo-facts`, `submissions`, `removal-requests`)
+worden niet geëxporteerd, want die dragen namen, e-mailadressen en vrije tekst van mensen —
+en deze repository is openbaar. Die horen in een privé Firestore-export, niet in een commit.
+En de afbeeldingen in Storage staan er nog steeds los van; dat blijft open.
 
 ---
 
