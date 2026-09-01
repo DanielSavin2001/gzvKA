@@ -27,19 +27,26 @@
 	import type { CoordinateSource, PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import {
 		forgetCoordinates,
+		forgetStreetGeometry,
 		loadCommittedPlaces,
 		loadStreetGeometry,
 		locate
 	} from '$lib/coordinates';
 	import { isPersonKind } from '../../../sharedModels/place-family';
 	import type { Approximation } from '$lib/approximations';
-	import { loadApproximations } from '$lib/approximations';
+	import { forgetApproximations, loadApproximations } from '$lib/approximations';
+	import type { PlaceRecord } from '$lib/place-records';
+	import { forgetPlaceRecords, loadPlaceRecords } from '$lib/place-records';
 	import type { PlacePin } from '$lib/place-pins';
 	import { forgetPlacePins, loadPlacePins } from '$lib/place-pins';
 	import { normalizeText } from '../../../sharedModels/text';
+	import DonorPicker from '../components/DonorPicker.svelte';
+	import DonorDesk from '../components/DonorDesk.svelte';
+	import PlaceChooser from '../components/PlaceChooser.svelte';
 	import PhotoEditor from '../components/PhotoEditor.svelte';
 	import DatingDesk from '../components/DatingDesk.svelte';
 	import PinPicker from '../components/PinPicker.svelte';
+	import PlaceDesk from '../components/PlaceDesk.svelte';
 
 	/**
 	 * The curator's desk.
@@ -68,7 +75,7 @@
 	 * *in*, and the 4,504 already here - every field of them read out of a filename - had no
 	 * way to be corrected at all.
 	 */
-	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' = 'fotos';
+	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' | 'schenkers' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
 
@@ -85,6 +92,8 @@
 	let streetGeometry: Record<string, StreetGeometry> = {};
 	let approximations: Record<string, Approximation> = {};
 	let picking: ArchivePlace | null = null;
+	let managing: ArchivePlace | null = null;
+	let placeRecords: Record<string, PlaceRecord> = {};
 	let pinBusy = false;
 
 	async function loadPlacesData(): Promise<void> {
@@ -92,6 +101,20 @@
 		// sees their own last pin rather than the answer of up to a minute ago.
 		forgetPlacePins();
 		forgetCoordinates();
+		// The place records feed both the research and the register through their loaders, so
+		// they are forgotten first and re-fetched fresh - otherwise a curator who has just
+		// redrawn a shape reads it back from the up-to-a-minute-old answer they started from.
+		forgetPlaceRecords();
+		forgetApproximations();
+		forgetStreetGeometry();
+
+		// Awaited before the two that read it, not raced alongside them. Both call
+		// `loadPlaceRecords` themselves, and theirs would go through the browser's cache while
+		// this one bypasses it - so a parallel fetch can leave the map holding a minute-old
+		// answer while the desk beside it shows the new one.
+		const records = await loadPlaceRecords(fetch, { fresh: true });
+		placeRecords = records ?? {};
+
 		const [committed, geometry, research, livePins] = await Promise.all([
 			loadCommittedPlaces(),
 			loadStreetGeometry(),
@@ -177,6 +200,36 @@
 	}
 
 	/**
+	 * After a place has been edited or reverted, both halves are rebuilt.
+	 *
+	 * The places data, because the desk changes the point, the circle and the shape at once
+	 * and each of the three is read from a different loader. The archive, because a name, a
+	 * kind or a parent changed is a change to the list every other desk searches - and that
+	 * list is built once and cached.
+	 */
+	/**
+	 * A blank place for the desk to fill in. The id stays empty on purpose: the server derives
+	 * it from the name, the same way the gazetteer build does, so a place made here and the
+	 * same place added to the seed later land on one id rather than two.
+	 */
+	function newPlace(): void {
+		managing = {
+			id: '',
+			name: '',
+			kind: 'building',
+			district: 'unknown',
+			isStreet: false,
+			count: 0
+		};
+	}
+
+	async function placeChanged(): Promise<void> {
+		managing = null;
+		error = null;
+		await Promise.all([loadPlacesData(), reloadArchive()]);
+	}
+
+	/**
 	 * One click for the common case: the visitor pointed at the right spot, so accepting
 	 * the report and placing the pin are the same decision.
 	 *
@@ -255,6 +308,32 @@
 		desk = 'jaartallen';
 		error = null;
 		await refreshEdits();
+	}
+
+	/**
+	 * The donor desk reads the archive - donors are derived from it, not stored anywhere - and
+	 * the edit overlay, because a rename writes edits and the list has to show the result.
+	 */
+	async function openDonorDesk(): Promise<void> {
+		desk = 'schenkers';
+		openPhoto = null;
+		error = null;
+		await refreshEdits();
+	}
+
+	/**
+	 * After a rename, the archive in memory still carries the old names: `donors()` reads
+	 * `photo.d`, and the overlay that has just changed is applied when the archive is built.
+	 * So it is thrown away and rebuilt rather than patched.
+	 */
+	async function reloadArchive(): Promise<void> {
+		forgetPhotoEdits();
+		forgetArchive();
+		try {
+			archive = await loadArchive();
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+		}
 	}
 
 	async function refreshEdits(): Promise<void> {
@@ -432,20 +511,6 @@
 		}
 	}
 
-	/** Places a curator can file a photograph under, busiest first so the common ones lead. */
-	$: places = archive
-		? [...archive.places].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
-		: [];
-
-	function togglePlace(item: QueuedSubmission, placeId: string): void {
-		const current = editsFor(item);
-		const chosen = current.places ?? [];
-		current.places = chosen.includes(placeId)
-			? chosen.filter((id) => id !== placeId)
-			: [...chosen, placeId];
-		edits = edits;
-	}
-
 	function readableSize(bytes: number): string {
 		return bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.round(bytes / 1e3)} KB`;
 	}
@@ -501,7 +566,7 @@
 		</div>
 	{:else}
 		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart']] as [value, label] (value)}
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
@@ -516,6 +581,10 @@
 							openDatingDesk();
 							return;
 						}
+						if (value === 'schenkers') {
+							openDonorDesk();
+							return;
+						}
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
 						refresh();
@@ -527,7 +596,10 @@
 			{/each}
 		</nav>
 
-		<nav class="mt-6 flex gap-2" class:hidden={desk === 'archief' || desk === 'jaartallen'}>
+		<nav
+			class="mt-6 flex gap-2"
+			class:hidden={desk === 'archief' || desk === 'jaartallen' || desk === 'schenkers'}
+		>
 			{#each tabs as [value, label] (value)}
 				<button
 					type="button"
@@ -644,6 +716,10 @@
 					<option value={subject.name} />
 				{/each}
 			</datalist>
+		{:else if desk === 'schenkers'}
+			<div class="mt-6">
+				<DonorDesk {archive} on:changed={reloadArchive} />
+			</div>
 		{:else if desk === 'correcties'}
 			<h2 class="mt-6 text-xl font-bold text-gray-900 dark:text-gray-100">
 				Meldingen van bezoekers
@@ -771,6 +847,13 @@
 				>
 					Bewaar als place-coordinates.json
 				</button>
+				<button
+					type="button"
+					class="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900"
+					on:click={newPlace}
+				>
+					Nieuwe plaats
+				</button>
 			</div>
 
 			<input
@@ -810,6 +893,20 @@
 							>
 								{sourceLabel(row)}
 							</span>
+							{#if placeRecords[row.place.id]?.geometry}
+								<span
+									class="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+									title="Er is een vorm getekend voor deze plaats"
+								>
+									Vorm getekend
+								</span>
+							{/if}
+							{#if row.place.parentId}
+								<span class="text-xs text-gray-500 dark:text-gray-400">
+									onder {archive?.places.find((entry) => entry.id === row.place.parentId)?.name ??
+										row.place.parentId}
+								</span>
+							{/if}
 							<button
 								type="button"
 								class="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -817,9 +914,31 @@
 							>
 								{row.located === null ? 'Plaats' : 'Verplaats'}
 							</button>
+							<button
+								type="button"
+								class="rounded-lg border border-gray-300 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+								on:click={() => (managing = row.place)}
+								title="Naam, soort, twijfel, straal en de getekende vorm"
+							>
+								Beheer
+							</button>
 						</li>
 					{/each}
 				</ul>
+			{/if}
+
+			{#if managing && archive}
+				<PlaceDesk
+					place={managing}
+					{archive}
+					approximation={approximations[managing.id]}
+					located={locate(managing.id, allCoordinates, streetGeometry, approximations)}
+					geometry={streetGeometry[managing.id]}
+					record={placeRecords[managing.id]}
+					on:saved={placeChanged}
+					on:reverted={placeChanged}
+					on:close={() => (managing = null)}
+				/>
 			{/if}
 
 			{#if picking}
@@ -967,55 +1086,16 @@
 										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</label>
-								<label class="block">
-									<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-										>Ingezonden door</span
-									>
-									<input
-										bind:value={edits[item.id].donor}
-										class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-									/>
-								</label>
+								<DonorPicker bind:value={edits[item.id].donor} {archive} />
 							</div>
 
 							<div class="mt-3">
-								<p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-									Plaats
-									{#if ready.places && ready.places.length > 0}
-										<span class="font-normal text-gray-500 dark:text-gray-400"
-											>({ready.places.length} gekozen)</span
-										>
-									{/if}
-								</p>
-
-								{#if ready.places && ready.places.length > 0}
-									<ul class="mt-1 flex flex-wrap gap-1">
-										{#each ready.places as placeId (placeId)}
-											<li>
-												<button
-													type="button"
-													class="rounded-full bg-blue-800 px-3 py-1 text-sm text-white"
-													on:click={() => togglePlace(item, placeId)}
-												>
-													{archive?.placeById.get(placeId)?.name ?? placeId} &times;
-												</button>
-											</li>
-										{/each}
-									</ul>
-								{/if}
-
-								<select
-									class="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-									on:change={(event) => {
-										if (event.currentTarget.value) togglePlace(item, event.currentTarget.value);
-										event.currentTarget.value = '';
-									}}
-								>
-									<option value="">Straat of plaats toevoegen ...</option>
-									{#each places as place (place.id)}
-										<option value={place.id}>{place.name} ({place.count})</option>
-									{/each}
-								</select>
+								<PlaceChooser
+									chosen={ready.places ?? []}
+									{archive}
+									on:change={(event) => (edits[item.id].places = event.detail)}
+									on:created={reloadArchive}
+								/>
 							</div>
 
 							<div class="mt-5 flex flex-wrap gap-2">

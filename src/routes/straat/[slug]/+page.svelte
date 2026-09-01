@@ -65,6 +65,21 @@
 	$: place = archive?.placeById.get(data.slug);
 
 	/**
+	 * What this place sits under, and what sits under it.
+	 *
+	 * Absent on all 131 generated places - a curator sets it - so on nearly every page these
+	 * are both empty and the page reads exactly as it did before. Where they are not, they
+	 * are the whole point of the nesting: "Begin van de Dorpsstraat" tells a reader nothing
+	 * unless the Dorpsstraat is one click away.
+	 */
+	$: parent = place?.parentId ? archive?.placeById.get(place.parentId) : undefined;
+	$: children = place
+		? (archive?.places ?? [])
+				.filter((entry) => entry.parentId === place.id)
+				.sort((a, b) => b.count - a.count)
+		: [];
+
+	/**
 	 * The head reads from `load`, not from the archive.
 	 *
 	 * `place` comes out of the archive index, which is fetched in the browser and therefore
@@ -158,6 +173,13 @@
 		<a class="text-blue-800 dark:text-blue-300 underline hover:no-underline" href="/">Startpagina</a
 		>
 		<span class="mx-2">/</span>
+		{#if parent}
+			<a
+				class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+				href="/straat/{parent.id}">{parent.name}</a
+			>
+			<span class="mx-2">/</span>
+		{/if}
 		<span>{place ? place.name : data.slug}</span>
 	</nav>
 
@@ -262,6 +284,22 @@
 					{#if withNumbers.length > 0}&middot; {withNumbers.length} met huisnummer{/if}
 				{/if}
 			</p>
+
+			{#if children.length > 0}
+				<ul class="mt-3 flex flex-wrap gap-2">
+					{#each children as child (child.id)}
+						<li>
+							<a
+								class="inline-block rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-800 hover:border-blue-700 hover:bg-blue-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+								href="/straat/{child.id}"
+							>
+								{child.name}
+								<span class="text-gray-500 dark:text-gray-400">{child.count}</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		</header>
 
 		{#if stories.length > 0}

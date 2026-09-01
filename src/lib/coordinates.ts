@@ -11,7 +11,9 @@
  * at `/kaart`, which hands back a replacement for this file.
  */
 
+import { withGeometryRecords } from '../../sharedModels/place-overlay';
 import { loadPlacePins } from './place-pins';
+import { loadPlaceRecords } from './place-records';
 
 /**
  * `locate` and the two record shapes it reads live in the shared models, so the jest suite
@@ -97,6 +99,11 @@ export function forgetCoordinates(): void {
 	cached = null;
 }
 
+/** The same, for a shape a curator has just drawn. */
+export function forgetStreetGeometry(): void {
+	geometryCache = null;
+}
+
 /**
  * Loads the street centrelines derived from the official register by `npm run streets`.
  *
@@ -108,16 +115,27 @@ export async function loadStreetGeometry(
 ): Promise<Record<string, StreetGeometry>> {
 	if (geometryCache) return geometryCache;
 
+	let committed: Record<string, StreetGeometry> | null = null;
 	try {
 		const response = await fetcher('/data/street-geometry.json');
-		if (!response.ok) return {};
-
-		const parsed = (await response.json()) as Partial<StreetGeometryFile>;
-		geometryCache = parsed.streets ?? {};
-		return geometryCache;
+		if (response.ok) {
+			const parsed = (await response.json()) as Partial<StreetGeometryFile>;
+			committed = parsed.streets ?? {};
+		}
 	} catch {
-		return {};
+		committed = null;
 	}
+
+	// A shape a curator drew wins over the register for that place, for the reason
+	// `withGeometryRecords` gives: the only reason to draw over a street already in the
+	// register is that the register is wrong about it, and drawing both shows two answers
+	// with no way to tell which is meant. The register has nothing at all to say about a
+	// castle estate or a hamlet, which is most of what gets drawn.
+	const records = await loadPlaceRecords(fetcher);
+	const merged = withGeometryRecords(committed ?? {}, records ?? {});
+
+	if (committed !== null && records !== null) geometryCache = merged;
+	return merged;
 }
 
 /** Rounds to about a metre - more precision than that is false precision from a map click. */

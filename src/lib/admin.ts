@@ -14,6 +14,8 @@
 import type { PlaceCorrection } from '../../sharedModels/correction';
 import type { PhotoFact } from '../../sharedModels/photo-fact';
 import type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
+import type { CuratorApproximation, CuratorGeometry } from '../../sharedModels/place-overlay';
+import type { PlaceRecord } from '../../sharedModels/place-record';
 import type { Submission } from '../../sharedModels/submission';
 
 /**
@@ -217,6 +219,60 @@ export function savePhotoEdit(photoId: string, fields: PhotoFields): Promise<Pho
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ photoId, ...fields })
+	});
+}
+
+/**
+ * Creates a place, or corrects what the gazetteer says about one.
+ *
+ * The site merges these over the generated index, so the place is real everywhere the moment
+ * this returns - the maps, the browse lists, search, the photo pages. What it does not have
+ * until the next build is prerendered HTML of its own, which costs a crawler and not a
+ * visitor: the static build falls back to the app shell and the page renders client-side.
+ */
+export function savePlaceRecord(fields: {
+	id?: string;
+	name: string;
+	kind: string;
+	parentId?: string;
+	district?: string;
+	/**
+	 * Where the place is and how sure we are. Sent whole, because the record is stored with a
+	 * plain `set` - omitting the block is how "the site should fall back to the shipped
+	 * research" is said, so a caller that only means to rename must send what it already has.
+	 */
+	approximation?: CuratorApproximation;
+	geometry?: CuratorGeometry;
+}): Promise<PlaceRecord> {
+	return call<PlaceRecord>('savePlaceRecord', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(fields)
+	});
+}
+
+/** Drops the overlay, so the place reverts to the gazetteer or stops existing. */
+export function revertPlaceRecord(placeId: string): Promise<{ id: string }> {
+	return call<{ id: string }>('deletePlaceRecord', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ placeId })
+	});
+}
+
+/**
+ * Writes one donor's name onto many photographs at once - a rename, or a merge of two
+ * spellings of one person.
+ *
+ * The ids are worked out here rather than on the server, because a donor is not a record
+ * anywhere: it is the string on each photograph, and only the archive index knows which
+ * photographs carry it. The page is already holding that index; the functions never load it.
+ */
+export function renameDonor(photoIds: string[], donor: string): Promise<{ changed: number }> {
+	return call<{ changed: number }>('renameDonor', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ photoIds, donor })
 	});
 }
 

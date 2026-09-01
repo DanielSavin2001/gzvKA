@@ -74,10 +74,18 @@ export async function archiveSummary(fetcher: typeof fetch): Promise<ArchiveSumm
 export async function placeFamily(
 	fetcher: typeof fetch,
 	family: PlaceFamily
-): Promise<{ id: string; name: string; count: number }[]> {
+): Promise<{ id: string; name: string; count: number; parentId?: string }[]> {
 	const archive = await loadArchive(fetcher);
 
-	return placesInFamily(archive, family).map(({ id, name, count }) => ({ id, name, count }));
+	// `parentId` travels with the rest so the index can show what sits under what. It is
+	// absent on all 131 generated places and set only by a curator, so on a prerendered page
+	// it is usually not there at all - and the list reads exactly as it did before.
+	return placesInFamily(archive, family).map(({ id, name, count, parentId }) => ({
+		id,
+		name,
+		count,
+		...(parentId ? { parentId } : {})
+	}));
 }
 
 /** A place a page draws on its own map. */

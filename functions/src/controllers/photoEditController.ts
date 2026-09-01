@@ -78,6 +78,39 @@ export const savePhotoEdit: HttpsFunction = https.onRequest(
 	}
 );
 
+/**
+ * Curator only. Writes one donor's name onto many photographs - a rename, or a merge.
+ *
+ * The photo ids come from the request because the archive index is a static file the site
+ * fetches and the functions never read; the curator's page is already holding it. The name
+ * is validated in the service, which also merges rather than replacing, so a rename cannot
+ * undo a title or a place somebody corrected earlier.
+ */
+export const renameDonor: HttpsFunction = https.onRequest(
+	async (request: Request, response: Response): Promise<any> => {
+		response = validateCors(request, response);
+		if (response.headersSent) return response;
+
+		try {
+			const curator = await requireAdmin(request.headers.authorization);
+			if (request.method !== 'POST') return response.status(405).send('Method Not Allowed');
+
+			const body = (request.body ?? {}) as Record<string, unknown>;
+			const donor = typeof body.donor === 'string' ? body.donor : '';
+			const photoIds = Array.isArray(body.photoIds)
+				? body.photoIds.filter((id): id is string => typeof id === 'string')
+				: [];
+
+			const changed = await edits.renameDonor(photoIds, donor, curator);
+
+			logger.info(`${curator.email} renamed a donor across ${changed} photographs.`);
+			return response.status(200).json({ changed, donor: donor.trim() });
+		} catch (error) {
+			return fail(response, error);
+		}
+	}
+);
+
 /** Curator only. Drops the patch, so the photograph reverts to the generated index. */
 export const deletePhotoEdit: HttpsFunction = https.onRequest(
 	async (request: Request, response: Response): Promise<any> => {
