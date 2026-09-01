@@ -66,26 +66,29 @@ ervan zetten.
 > plaatspagina een superset, dus die is altijd de betere. Blijven over: 37 mappen, 2.705
 > foto's, en daar zitten **alle twaalf mappen met plaatsloze foto's** in.
 >
-> Daarvan is er één achtergehouden: `wedstrijden-gzvka` (555 foto's). Een bladerbare index
-> van 555 namen van levende personen is precies waar punt 3 hieronder over gaat, en dat is
-> een beslissing van de heemkring. De regel staat in `sharedModels/subject-pages.ts` en het
-> weghalen is één regel. Er zijn nu dus 36 pagina's met 2.150 foto's, waarvan er 281 op geen
-> enkele kaart staan.
+> Eén was er eerst achtergehouden: `wedstrijden-gzvka` (555 foto's). Een bladerbare index
+> van 555 namen van levende personen is precies waar punt 3 hieronder over gaat.
+> **De heemkring heeft beslist: bouw de pagina.** `WITHHELD_SUBJECTS` in
+> `sharedModels/subject-pages.ts` staat nu leeg, dus het zijn 37 pagina's met 2.705 foto's.
+> Het verzoekmechanisme uit punt 3 is de tegenhanger ervan: wie er niet op wil staan, vraagt
+> het onder de foto zelf.
+>
+> **De jaartalreeksen zijn gerepareerd, en de beslissing viel de andere kant op dan hierboven
+> staat.** De parser plakte een reeks op het laatste jaar. Dat is juist voor een periode — de
+> molen van 1801-1908 is niet in 1801 gefotografeerd — maar fout voor de 118 bestandsnamen
+> met twee opeenvolgende jaren, want dat zijn schooljaren en voetbalseizoenen, en België
+> noemt een seizoen naar het jaar waarin het begint. Er is geen enkel tegenvoorbeeld in het
+> corpus. Een opeenvolgend paar wordt nu heel bewaard als `1999-2000` en op het eerste jaar
+> ingedeeld; 15 foto's verhuizen van decennium, allemaal klasfoto's op een decenniumgrens.
+> Zie `functions/src/utils/photo-year.ts`.
 >
 > Wat er van dit punt níét gedaan is: de klasfoto's als school + leerjaar + meester
-> uitsplitsen. Dat is echt werk — 216 van de 259 zijn met een aliastabel aan een school te
-> koppelen, maar zes vallen erbuiten omdat de dubbelmarkering een underscore is
-> (`Klasfoto - Irishof_2`) of omdat de schoolnaam als persoonsnaam wordt opgegeten
-> (`KTA Technisch Atheneum`).
->
-> En de jaartalreeksen: de _lezers_ zijn gerepareerd (zie de commit over `startYear`), maar
-> de parser plakt een reeks nog steeds op het laatste jaar. Dat veranderen verplaatst 15
-> foto's over een decenniumgrens — negen `1969-1970`-klasfoto's van de jaren 70 naar de
-> jaren 60 — en dat is een zichtbare gegevenswijziging die een beslissing verdient.
+> uitsplitsen. Dat is nagemeten en staat nu als punt 9 hieronder, met de reden waarom het
+> een gesprek nodig heeft en geen regex.
 
 ---
 
-## 2. Een pagina voor elke straat in Kapellen, niet alleen voor de 45 met foto's
+## 2. ~~Een pagina voor elke straat in Kapellen, niet alleen voor de 45 met foto's~~ — GEDAAN
 
 **Wat er mis is.** Het meest voorkomende bezoek is iemand die zijn eigen straat intikt, en dat
 mislukt meestal. Het archief kent 45 straten. Het officiële register dat al meegeleverd wordt —
@@ -109,9 +112,32 @@ vertrekt tenminste met de Hoevensebaan gezien.
 
 **Moeite.** Een dag.
 
+> **Gedaan op 1 september 2026, precies zoals hierboven, met één keuze erbij.**
+>
+> `npm run streets` schrijft nu ook `static/data/street-register.json`: 277 straten, 24 KB,
+> elk met naam, punt en lengte. `/straat/<slug>` antwoordt voor alle 313 — de straat in het
+> oranje op de kaart met de dichtstbijzijnde gefotografeerde plaatsen erbij, hun afstand
+> erbij, en een uitnodiging die de straat meeneemt naar `/upload?straat=<slug>`, waar ze
+> getoond en voorgevuld wordt. De Berkenlaan biedt Kasteel Beukenhof op 158 m, Mastbeekhof op
+> 158 m en de Koerspleindreef op 202 m.
+>
+> Gesorteerd op afstand en op niets anders. Wegen op het aantal foto's was het voor de hand
+> liggende alternatief en is hier fout: wie naar de Berkenlaan kijkt wil de straat om de hoek,
+> niet de drukste straat van het dorp.
+>
+> De zoekbalk en het resultatenpaneel vallen terug op het register, ónder de plaatsen die wél
+> foto's hebben en nooit erboven. "berken" biedt nu Berkenlaan en Berkensweg aan, gemarkeerd
+> als _nog geen foto's_, in plaats van niets.
+>
+> **De keuze: ze staan bewust niet in de sitemap.** Deze pagina's zijn voor de persoon die
+> zijn eigen straat intikt, niet voor een crawler die zijn budget aan 277 pagina's zonder één
+> foto besteedt. `/straten` staat er wel in en somt ze allemaal op onder _"Straten waar we nog
+> niets van hebben"_. `build-sitemap.ts` zegt dat op de plek waar iemand het anders zou
+> "repareren".
+
 ---
 
-## 3. Wat het archief over levende mensen publiceert
+## 3. ~~Wat het archief over levende mensen publiceert~~ — STAP 1 EN 2 GEDAAN
 
 **Wat er mis is.** Drie dingen, alle drie nagetrokken.
 
@@ -146,6 +172,35 @@ het in de geschiedenis blijft staan. `/beheer` heeft er geen bureau voor.
    buiten de sitemap, of laten staan. Dat is een keuze, geen bug — maar hij is nog niet gemaakt.
 
 **Moeite.** Twee dagen. Stap 1 en 2 zijn het echte werk; stap 3 is een gesprek.
+
+> **Stap 1 en 2 gedaan op 1 september 2026. Stap 3 is beslist en het antwoord was "laten
+> staan, maar geef ze een deur".**
+>
+> **Stap 2 eerst, en met opzet in die volgorde.** Onder elke foto staat nu _"Staat u op deze
+> foto en wilt u dat ze weggaat? Laat het weten — dat is geen discussie."_ Vier gronden, verder
+> alles optioneel, geen naam nodig. Het bureau _Verzoeken_ op `/beheer` heeft weghalen als de
+> primaire knop en vraagt een notitie als u het níét doet — niet om het aan de aanvrager uit te
+> leggen, die ziet het nooit, maar zodat het archief zijn eigen verslag heeft. Weghalen schrijft
+> een `hidden`-correctie in de overlay, dus de foto is binnen de minuut van de site.
+>
+> En de tekst op `/contact` is herschreven naar wat het mechanisme werkelijk doet, geen woord
+> meer: verbergen loopt via de overlay en bereikt de hele site tegelijk; de opgeslagen pagina en
+> de sitemap zijn bouwartefacten en volgen bij de eerstvolgende publicatie. _"Overal weg,
+> meteen"_ was de makkelijkere zin en was niet waar. Wat het archief níét kan beloven — het
+> bestand blijft in de geschiedenis van deze repository staan — staat er nu ook.
+>
+> **Stap 1 daarna:** `functions/src/data/suppressed.json`. Op het **corpuspad** gesleuteld en
+> niet op het foto-id, want een correctie gaat over een record en een verwijdering over een
+> bestand; het id wordt uit het pad afgeleid en botsende slugs krijgen een `-2`, dus een
+> onverwante toevoeging zou een verwijdering stil ongedaan kunnen maken. De bouw slaat zo'n
+> bestand volledig over — het staat dus niet in de index, niet in de zoekfunctie, niet in de
+> sitemap en niet in de vooraf gerenderde HTML, en wordt niet achteraf weggefilterd maar nooit
+> geschreven. Streng waar al het andere in deze repository zacht faalt: een ontbrekend bestand,
+> een onbekende reden of een regel die naar een niet-bestaand bestand wijst stopt de bouw. Het
+> bureau toont het pad om te plakken naast elk toegekend verzoek.
+>
+> **Stap 3, beslist door de heemkring: bouw de pagina.** De 555 wedstrijdfoto's blijven staan
+> en krijgen een onderwerppagina zoals elk ander onderwerp — zie punt 1.
 
 ---
 
@@ -412,28 +467,83 @@ oplevert.
 > groepen die niets met die map te maken hebben**, waarvan er **119 het oneens zijn over de
 > plaats**: dezelfde opname op twee straatpagina's, twee keer geteld op de kaart.
 >
-> **Maar het mastenbos-verhaal hierboven klopt niet, en het is goed dat er niets aan
-> veranderd is.** Er zijn geen 173 dubbele bestanden: het zijn 173 verschillende foto's,
-> waarvan er één record elk twee plaats-id's draagt. En dat is waarschijnlijk terecht.
-> Alle 173 bestandsnamen bevatten _allebei_ de woorden, en het onderzoek in dit archief zegt
-> het zelf, bij `loopgravenpad`: _"Bestaat wél, als wandelpad (highway=path) door het
-> Mastenbos."_ Een pad dat door een bos loopt ligt in dat bos. De twee spelden staan 870 m
-> uit elkaar omdat de ene het zwaartepunt van het bos is en de andere een punt op het pad —
-> niet omdat het twee plaatsen zijn waar een foto tussen moet kiezen.
+> **Het mastenbos-verhaal hierboven klopt niet — er zijn geen 173 dubbele bestanden.** Het
+> zijn 173 verschillende foto's, waarvan er één record elk twee plaats-id's draagt.
 >
-> Hetzelfde geldt voor _Dorpsstraat en Geuzenhoek_: 215 foto's, allemaal met beide id's, en
-> de twee punten liggen **231 m** uit elkaar — binnen de twijfelcirkel van 250 m die het
-> onderzoek zelf om de Geuzenhoek legt.
+> **En de eerste lezing hiervan was zelf fout, wat hier hoort te staan.** Ze werd getest op
+> `photo.p`, en dat pad bevat de mapnaam "Mastenbos en Loopgravenpad" — dus "beide woorden"
+> matchte altijd, en de conclusie was dat het dubbele label waarschijnlijk terecht was.
+> Opnieuw gemeten op alleen de bestandsnaam: **169 noemen alleen het Mastenbos, 1 alleen het
+> Loopgravenpad, 3 allebei, 0 geen van beide.** De map is een verzameling van twee plaatsen,
+> geen plaats die twee namen heeft.
 >
-> Wat er dan wél aan de hand is, is smaller en is een vraag voor de heemkring, geen bug:
-> beide plaatspagina's tonen alle 215 respectievelijk 173 foto's, dus de teller zegt "215
-> foto's van de Dorpsstraat" waar een deel ervan van het Geuzenhoek-eind is. Of dat erg is,
-> weet alleen iemand die Kapellen kent.
+> Hetzelfde gold voor _Dorpsstraat en Geuzenhoek_: 215 foto's, allemaal met beide id's.
 >
-> Zeven mappen geven meer dan één plaats aan al hun foto's. Vijf ervan zijn onbetwist juist
-> — _Fort van Ertbrand_ → `ertbrand + fort-van-ertbrand`, _Kasteel San Salvador - Nelson
-> Mandelapark_, _Villa De Maretak - Kapellenbos_. Een regel die op "twee of meer plaatsen"
-> zou afgaan, haalt die dus ook onderuit.
+> **Gerepareerd op 1 september 2026, en de heemkring heeft de keuze gemaakt: splitsen.** Een
+> map met "en" in de naam wier segmenten twee verschillende plaatsen aanwijzen geeft die
+> plaats niet meer aan al haar foto's; de bestandsnaam beslist per foto. Zie
+> `functions/src/gazetteer/match.ts` en `conjunction-folder.test.ts`.
+>
+> De regel gaat op **de mapnaam plus twee of meer verschillende plaatsen**, niet op "twee of
+> meer plaatsen" alleen, en dat is precies waarom hij de vijf terechte gevallen laat staan:
+> _Fort van Ertbrand_ → `ertbrand + fort-van-ertbrand`, _Kasteel San Salvador - Nelson
+> Mandelapark_, _Villa De Maretak - Kapellenbos_ — geen van die mapnamen bevat " en ". Van de
+> elf mappen met twee plaatsen zijn er precies twee die door de regel geraakt worden, en dat
+> zijn de twee hierboven.
+>
+> Wat er daarna nog aan hing: de tellers en het onderzoek moesten mee. `plaatsen.geojson`
+> weigerde de bouw met _"Geuzenhoek was researched against 216 photographs but the archive
+> holds 41"_ — terecht, want de twijfeltekst voor de Geuzenhoek redeneerde zelf vanuit die 216. Die tekst en die van het Loopgravenpad zijn herschreven naar wat er nu staat.
+
+---
+
+## 9. 259 klasfoto's, en niemand kan zijn eigen klas vinden
+
+**Wat er mis is.** `Klasfoto's` is na _Wedstrijden GZVKA_ de grootste map van het archief en de
+enige manier om erin te zoeken is de zoekbalk. De bestandsnamen dragen nochtans bijna alles wat
+een bezoeker wil: de school, het schooljaar, het leerjaar en vaak de meester of de juf.
+
+```
+Klasfoto - De Platanen 1999-2000 - 4de leerjaar A - juf Chris en meester De Sitter - ...
+Broedersschool 2de lj 1963-1964.jpg
+Klasfoto - Kleuterschool Hoevensebaan 1969-1970 - Sonja Linders - 22.12.2014.jpg
+```
+
+Nagemeten op 1 september 2026, over alle 259: **100 noemen een leerjaar**, 20 noemen een
+kleuterklas, 153 dragen een jaartal, en er zijn **105 verschillende namen vooraan**. Dat laatste
+getal is het echte werk, want het zijn geen 105 scholen.
+
+**Drie dingen die eerst beslist moeten worden — en het zijn beslissingen, geen bugs.**
+
+1. **Welke namen dezelfde school zijn.** "Broedersschool St. Jozef" (29), "Broederschool St.
+   Jozef" (1), "Broedersschool" en "Broedersschool 2de lj" (13) zijn er één. "Basisschool
+   Irishof" (16) en "Irishof" (5) ook. Bij het atheneum bewijst het archief het zelf:
+
+   ```
+   Klasfoto - KA 1965-1966 Mevr. Du Bosch - Rosa Blanckaerts - 22.01.2015.jpg
+   Klasfoto - Kon. Atheneum 1965-1966 - Mevr. Du Bosch - Rosa Blanckaerts - 22.01.2015.JPG
+   ```
+
+   Zelfde foto, zelfde schenker, zelfde datum, twee spellingen. Hetzelfde paar bestaat voor
+   `KTA 1976` en `Kon. Atheneum 1976` (Nancy Lamine, 28.02.2014). Maar KTA is wel degelijk een
+   ándere school dan het KA — `Klasfoto - KTA Technisch Atheneum.jpg` zegt het — en het archief
+   heeft ze door elkaar gehaald. Dat samenvoegen is lokale kennis, geen regex.
+
+2. **Wat er níét in die map thuishoort.** Vier van de "Kon. Atheneum"-bestanden zijn beelden van
+   Ernest Wynants (_Diana_, _Fortuna_, _Nadenken_, _de 3 gratieën_) en één is een Oscar Jespers.
+   Dat zijn beeldhouwwerken op de school, geen klasfoto's.
+
+3. **De dubbels.** De paren hierboven zijn niet alleen een spellingskwestie, het zijn twee
+   records van één foto — dus dit punt loopt via punt 8 en niet ernaast.
+
+**Wat te bouwen, zodra dat beslist is.** Een lezer in `sharedModels/` die school, schooljaar,
+leerjaar en leerkracht uit de naam haalt, met een aliastabel voor de schoolnamen naar het model
+van de gazetteer, en een `/school/<slug>` per school met de jaren eronder. Het jaartal is al in
+orde: een schooljaar wordt sinds vandaag als `1999-2000` bewaard en op het eerste jaar gesorteerd
+(zie `functions/src/utils/photo-year.ts`).
+
+**Moeite.** Een halve dag voor de lezer en de pagina's. De aliastabel is een gesprek van een half
+uur met iemand die de scholen kent, en zonder dat gesprek is de rest verkeerd.
 
 ---
 
