@@ -21,7 +21,7 @@ volgorde van waarde gedeeld door moeite.
 
 ---
 
-## 1. Bladeren op onderwerp — 793 foto's zijn alleen met gokken te vinden
+## 1. ~~Bladeren op onderwerp — 793 foto's zijn alleen met gokken te vinden~~ — HALF GEDAAN
 
 **Wat er mis is.** 793 foto's matchen geen plaats, dus ze staan op geen enkele straatpagina en
 niet op de kaart; 557 daarvan dragen ook geen jaartal, dus ze staan ook niet op de tijdlijn.
@@ -52,6 +52,36 @@ reeks in de naam. Bewaar de reeks — het veld is al tekst — en laat de tijdli
 ervan zetten.
 
 **Moeite.** Een dag voor de routes, een tweede voor de klasfoto's.
+
+> **Routes gedaan op 1 september 2026. De klasfoto-behandeling niet.**
+>
+> `/onderwerpen` en `/onderwerp/[slug]` staan er, in het menu en in de sitemap, en de regel
+> "Onderwerp" op elke fotopagina is nu een link. De pijltjes lopen de map af: op een klasfoto
+> staat "Foto 1 van 259" in plaats van de straat van die foto.
+>
+> **Niet alle 79 mappen krijgen een pagina, en dat is de belangrijkste beslissing hier.**
+> 42 van de 79 slugs zijn óók een plaats-id: `hoevensebaan` is een map van 104 foto's én een
+> straat met 128. Twee pagina's, dezelfde naam, twee verschillende getallen — en de kleinste
+> heeft geen kaart, geen huisnummers en geen verhalen. In alle 42 gevallen is de
+> plaatspagina een superset, dus die is altijd de betere. Blijven over: 37 mappen, 2.705
+> foto's, en daar zitten **alle twaalf mappen met plaatsloze foto's** in.
+>
+> Daarvan is er één achtergehouden: `wedstrijden-gzvka` (555 foto's). Een bladerbare index
+> van 555 namen van levende personen is precies waar punt 3 hieronder over gaat, en dat is
+> een beslissing van de heemkring. De regel staat in `sharedModels/subject-pages.ts` en het
+> weghalen is één regel. Er zijn nu dus 36 pagina's met 2.150 foto's, waarvan er 281 op geen
+> enkele kaart staan.
+>
+> Wat er van dit punt níét gedaan is: de klasfoto's als school + leerjaar + meester
+> uitsplitsen. Dat is echt werk — 216 van de 259 zijn met een aliastabel aan een school te
+> koppelen, maar zes vallen erbuiten omdat de dubbelmarkering een underscore is
+> (`Klasfoto - Irishof_2`) of omdat de schoolnaam als persoonsnaam wordt opgegeten
+> (`KTA Technisch Atheneum`).
+>
+> En de jaartalreeksen: de _lezers_ zijn gerepareerd (zie de commit over `startYear`), maar
+> de parser plakt een reeks nog steeds op het laatste jaar. Dat veranderen verplaatst 15
+> foto's over een decenniumgrens — negen `1969-1970`-klasfoto's van de jaren 70 naar de
+> jaren 60 — en dat is een zichtbare gegevenswijziging die een beslissing verdient.
 
 ---
 

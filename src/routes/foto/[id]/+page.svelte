@@ -6,7 +6,8 @@
 	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PhotoSummary } from '$lib/page-data';
 	import { SITE, summarise } from '$lib/seo';
-	import { decadeBandOf } from '../../../../sharedModels/year';
+	import { decadeBandOf, startYear } from '../../../../sharedModels/year';
+	import { subjectsWithPages } from '../../../../sharedModels/subject-pages';
 	import { slugify } from '../../../../sharedModels/text';
 	import Seo from '../../components/Seo.svelte';
 	import DatePhoto from '../../components/DatePhoto.svelte';
@@ -165,9 +166,17 @@
 		// here read it - so arriving from the sixties walked the photograph's street
 		// instead, and the counter said "1 van 401" of a decade holding eighty-three.
 		if (kind === 'jaren') {
-			return archive.photos
-				.filter((other) => decadeKeyOf(other.y) === value)
-				.sort((a, b) => Number(a.y) - Number(b.y) || a.t.localeCompare(b.t));
+			return (
+				archive.photos
+					.filter((other) => decadeKeyOf(other.y) === value)
+					// `startYear`, not `Number`: a span year is NaN here too, and NaN is falsy, so
+					// this comparator had the same non-transitive fault `sortForDisplay` had.
+					.sort(
+						(a, b) =>
+							(startYear(a.y) ?? Number.POSITIVE_INFINITY) -
+								(startYear(b.y) ?? Number.POSITIVE_INFINITY) || a.t.localeCompare(b.t)
+					)
+			);
 		}
 
 		const street = places.find((place) => place.isStreet) ?? places[0];
@@ -188,6 +197,26 @@
 	 * arrows would walk a decade the timeline never drew.
 	 */
 	const decadeKeyOf = decadeBandOf;
+
+	/**
+	 * Whether this photograph's folder has a page of its own.
+	 *
+	 * Not every value of `s` does. 42 folders share a slug with a place and are deliberately
+	 * not built, and `published.ts` stamps every approved upload with the literal subject
+	 * "Ingestuurd door bezoekers", which is no folder at all. Linking without checking would
+	 * produce a 404 from the one line on the page whose job is to say where the photograph
+	 * belongs.
+	 */
+	$: subjectPage = ((): string | null => {
+		if (!archive || !photo) return null;
+
+		const placeIds = new Set(archive.places.map((place) => place.id));
+		const match = subjectsWithPages(archive.subjects, placeIds).find(
+			(subject) => subject.name === photo.s
+		);
+
+		return match ? `/onderwerp/${match.slug}` : null;
+	})();
 
 	/** What the band is called in a breadcrumb. */
 	$: decadeLabel = ((): string | null => {
@@ -732,7 +761,16 @@
 					{/if}
 					<div class="flex gap-2">
 						<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">Onderwerp</dt>
-						<dd class="text-gray-900 dark:text-gray-100">{photo.s}</dd>
+						<dd class="text-gray-900 dark:text-gray-100">
+							{#if subjectPage}
+								<a
+									class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+									href={subjectPage}>{photo.s}</a
+								>
+							{:else}
+								{photo.s}
+							{/if}
+						</dd>
 					</div>
 					{#if photo.y}
 						<div class="flex gap-2">

@@ -15,6 +15,8 @@
  */
 
 import * as fs from 'fs';
+
+import { subjectsWithPages } from '../../sharedModels/subject-pages';
 import * as path from 'path';
 
 import type { SitemapEntry } from '../src/utils/sitemap';
@@ -53,6 +55,7 @@ function main(): void {
 	const archive = read<{
 		photos: { id: string; d?: string }[];
 		places: { id: string; count: number }[];
+		subjects: { slug: string; name: string; count: number }[];
 	}>(ARCHIVE_INDEX);
 
 	const stories = read<{ stories?: { slug: string }[] } | { slug: string }[]>(STORIES);
@@ -66,6 +69,10 @@ function main(): void {
 		{ path: '/straten', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/kastelen', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/wijken', priority: 0.9, changefreq: 'monthly' },
+		// The fourth way in, and the only one that is not geographic. It is how a crawler
+		// reaches the photographs that match no place at all - 793 of them, on no street
+		// page and no map.
+		{ path: '/onderwerpen', priority: 0.9, changefreq: 'monthly' },
 		{ path: '/tijdlijn', priority: 0.8, changefreq: 'monthly' },
 		{ path: '/schenker', priority: 0.7, changefreq: 'monthly' },
 		{ path: '/toen-en-nu', priority: 0.7, changefreq: 'monthly' },
@@ -79,6 +86,14 @@ function main(): void {
 	// no reason to ask anybody to index that.
 	for (const place of archive.places.filter((place) => place.count > 0)) {
 		entries.push({ path: `/straat/${place.id}`, priority: 0.8, changefreq: 'monthly' });
+	}
+
+	// The subject folders that have a page. `subjectsWithPages` decides which - the 42 whose
+	// slug is also a place id are left out, because /straat/<id> is the same photographs plus
+	// a map, and asking a crawler to index both is asking it to pick.
+	const placeIds = new Set(archive.places.map((place) => place.id));
+	for (const subject of subjectsWithPages(archive.subjects, placeIds)) {
+		entries.push({ path: `/onderwerp/${subject.slug}`, priority: 0.7, changefreq: 'monthly' });
 	}
 
 	for (const story of storyList) {

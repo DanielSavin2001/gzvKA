@@ -21,6 +21,7 @@
 import type { Archive, ArchivePhoto } from './archive';
 import { loadPairs } from './then-and-now';
 import { startYear } from '../../sharedModels/year';
+import { subjectsWithPages } from '../../sharedModels/subject-pages';
 import type { PlaceFamily } from './archive';
 import {
 	isPerson,
@@ -537,5 +538,110 @@ export async function thenAndNow(fetcher: typeof fetch): Promise<{
 	return {
 		pairs,
 		card: pairs[0] ? cardUrl(archive, archive.photoById.get(curated[0].then)!) : null
+	};
+}
+
+/** One subject folder as the index lists it. */
+export interface SubjectRow {
+	slug: string;
+	name: string;
+	count: number;
+	/** How many of its photographs match no place, so the index can say where the gap is. */
+	placeless: number;
+}
+
+/** A subject folder, and the photographs in it. */
+export interface SubjectSummary {
+	slug: string;
+	name: string;
+	count: number;
+	placeless: number;
+	photos: PhotoLink[];
+	card: string | null;
+	/** The places its photographs do carry, so the page can put them on a map. */
+	places: MappablePlace[];
+}
+
+/**
+ * The subject folders that have a page, for `/onderwerpen`.
+ *
+ * `subjectsWithPages` decides which ones, and says why in its own comments: the 42 folders
+ * whose slug is also a place id are left out, because the place page holds the same
+ * photographs plus a map, house numbers and stories.
+ */
+export async function subjectIndex(fetcher: typeof fetch): Promise<SubjectRow[]> {
+	const archive = await loadArchive(fetcher);
+	const placeIds = new Set(archive.places.map((place) => place.id));
+
+	const placeless = new Map<string, number>();
+	for (const photo of archive.photos) {
+		if ((photo.st ?? []).length === 0) {
+			placeless.set(photo.s, (placeless.get(photo.s) ?? 0) + 1);
+		}
+	}
+
+	return subjectsWithPages(archive.subjects, placeIds).map((subject) => ({
+		slug: subject.slug,
+		name: subject.name,
+		count: subject.count,
+		placeless: placeless.get(subject.name) ?? 0
+	}));
+}
+
+/**
+ * One subject folder and everything in it, for `/onderwerp/[slug]`.
+ *
+ * Built the way `donorSummary` is: the whole page comes out of `load`, so it is in the HTML
+ * rather than behind a 1.1 MB download. These pages exist to be a way in.
+ */
+export async function subjectSummary(
+	fetcher: typeof fetch,
+	slug: string
+): Promise<SubjectSummary | null> {
+	const archive = await loadArchive(fetcher);
+	const placeIds = new Set(archive.places.map((place) => place.id));
+
+	const subject = subjectsWithPages(archive.subjects, placeIds).find(
+		(candidate) => candidate.slug === slug
+	);
+	if (!subject) return null;
+
+	// Matched on the folder NAME, because that is what a photograph carries in `s` and what
+	// the photo page's `?lijst=onderwerp:` walk compares against. Matching on the slug here
+	// and emitting the slug in the link would give the arrows nothing to walk.
+	const held = archive.photos.filter((photo) => photo.s === subject.name);
+	const ordered = sortForDisplay(held);
+
+	const counts = new Map<string, number>();
+	for (const photo of held) {
+		for (const placeId of photo.st ?? []) counts.set(placeId, (counts.get(placeId) ?? 0) + 1);
+	}
+
+	const places = [...counts.entries()]
+		.map(([id, count]) => ({ place: archive.placeById.get(id), count }))
+		.filter(({ place }) => place !== undefined && !isPerson(place))
+		.map(({ place }) => ({
+			id: place!.id,
+			name: place!.name,
+			count: counts.get(place!.id) ?? 0,
+			isStreet: place!.isStreet
+		}))
+		.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'nl'));
+
+	return {
+		slug: subject.slug,
+		name: subject.name,
+		count: held.length,
+		placeless: held.filter((photo) => (photo.st ?? []).length === 0).length,
+		photos: ordered.map((photo) => ({
+			id: photo.id,
+			title: photo.t,
+			alt: photoAlt(archive, photo),
+			image: thumbUrl(archive, photo),
+			...(photo.y ? { year: photo.y } : {}),
+			...(photo.hn ? { houseNumber: photo.hn } : {})
+		})),
+		card: ordered[0] ? cardUrl(archive, ordered[0]) : null,
+		places
 	};
 }
