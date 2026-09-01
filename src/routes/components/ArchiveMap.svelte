@@ -32,6 +32,14 @@
 	export let places: ArchivePlace[] | null = null;
 	/** Draw this street's centreline and open on it. */
 	export let focusId: string | null = null;
+	/**
+	 * Open the map here, whatever else is on it.
+	 *
+	 * A register street's page shows the street itself plus the nearest streets that do have
+	 * photographs, so more than one place is drawn and the map would otherwise open on the
+	 * middle of Kapellen - the one spot the page is not about.
+	 */
+	export let centreOn: { lat: number; lng: number } | null = null;
 	/** The place whose marker is drawn as selected. */
 	export let selectedId: string | null = null;
 	export let height = '420px';
@@ -133,7 +141,9 @@
 
 	$: focus = focusId ? geometry[focusId] : undefined;
 
-	$: centre = focus
+	$: centre = centreOn
+		? ([centreOn.lng, centreOn.lat] as [number, number])
+		: focus
 		? ([focus.lng, focus.lat] as [number, number])
 		: located.length === 1
 		? ([located[0].at.lng, located[0].at.lat] as [number, number])

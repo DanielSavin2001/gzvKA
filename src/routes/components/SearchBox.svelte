@@ -1,9 +1,12 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 
 	import { goto } from '$app/navigation';
-	import type { Archive, ArchivePlace } from '$lib/archive';
+	import type { Archive } from '$lib/archive';
 	import { suggestPlaces } from '$lib/archive';
+	import { registerStreets } from '$lib/page-data';
+	import type { RegisterStreet } from '../../../sharedModels/street-register';
+	import { suggestRegisterStreets } from '../../../sharedModels/street-register';
 
 	const dispatch = createEventDispatcher<{ search: string }>();
 
@@ -12,11 +15,48 @@
 	export let autofocus = false;
 	export let placeholder = 'Zoek een straat, een plaats, een naam ...';
 
-	let suggestions: ArchivePlace[] = [];
+	/** One row of the dropdown. `count` is 0 for a street the archive has nothing of yet. */
+	type Suggestion = { id: string; name: string; count: number };
+
+	let suggestions: Suggestion[] = [];
 	let highlighted = -1;
 	let open = false;
 
-	$: suggestions = archive && value.trim() !== '' ? suggestPlaces(archive, value) : [];
+	/**
+	 * The streets with no photographs, so typing one of them is not a dead end.
+	 *
+	 * 24 KB against the archive's 1.1 MB, loaded once and cached, and only in the browser -
+	 * a missing file simply means the box behaves as it did before.
+	 */
+	let register: RegisterStreet[] = [];
+
+	onMount(async () => {
+		try {
+			register = await registerStreets(fetch);
+		} catch {
+			register = [];
+		}
+	});
+
+	$: withPhotos = archive && value.trim() !== '' ? suggestPlaces(archive, value) : [];
+
+	/**
+	 * Places with photographs first, then streets without.
+	 *
+	 * Never the other way round: somebody typing "hoevense" wants the 96 photographs of the
+	 * Hoevensebaan, not an alphabetical neighbour with nothing behind it.
+	 */
+	$: suggestions = [
+		...withPhotos.map((place) => ({ id: place.id, name: place.name, count: place.count })),
+		...(value.trim() === ''
+			? []
+			: suggestRegisterStreets(
+					register,
+					value,
+					new Set(withPhotos.map((place) => place.id)),
+					Math.max(0, 8 - withPhotos.length)
+			  ).map((street) => ({ id: street.slug, name: street.name, count: 0 })))
+	];
 	$: if (suggestions.length === 0) highlighted = -1;
 
 	/**
@@ -34,7 +74,7 @@
 		dispatch('search', query);
 	}
 
-	function choose(place: ArchivePlace): void {
+	function choose(place: Suggestion): void {
 		open = false;
 		value = place.name;
 		goto(`/straat/${place.id}`);
@@ -102,7 +142,13 @@
 						on:click={() => choose(place)}
 					>
 						<span class="font-medium">{place.name}</span>
-						<span class="text-sm text-gray-500 dark:text-gray-400">{place.count} foto's</span>
+						<span class="text-sm text-gray-600 dark:text-gray-400">
+							{#if place.count === 0}
+								nog geen foto's
+							{:else}
+								{place.count} foto's
+							{/if}
+						</span>
 					</button>
 				</li>
 			{/each}

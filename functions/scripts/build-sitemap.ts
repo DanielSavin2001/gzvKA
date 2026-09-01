@@ -84,6 +84,13 @@ function main(): void {
 
 	// Places carrying photographs. A place with none is a page that says so, and there is
 	// no reason to ask anybody to index that.
+	//
+	// The 277 register streets are deliberately not here either, and this is the one place
+	// that decision is visible. They have pages - `/straat/<slug>` answers for every street
+	// in Kapellen now, with a map, the nearest photographed streets and an invitation - and
+	// those pages exist for the person who types their own street name, not for a crawler
+	// to spend its budget on 277 pages without a photograph between them. They are reached
+	// from `/straten`, which is in the sitemap.
 	for (const place of archive.places.filter((place) => place.count > 0)) {
 		entries.push({ path: `/straat/${place.id}`, priority: 0.8, changefreq: 'monthly' });
 	}

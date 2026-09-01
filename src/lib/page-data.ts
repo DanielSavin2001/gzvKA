@@ -21,6 +21,14 @@
 import type { Archive, ArchivePhoto } from './archive';
 import { loadPairs } from './then-and-now';
 import { startYear } from '../../sharedModels/year';
+import type {
+	NearbyPlace,
+	RegisterStreet,
+	StreetRegisterFile
+} from '../../sharedModels/street-register';
+import { nearestWithPhotos } from '../../sharedModels/street-register';
+import { loadCoordinates, loadStreetGeometry, locate } from './coordinates';
+import { loadApproximations } from './approximations';
 import { subjectsWithPages } from '../../sharedModels/subject-pages';
 import type { PlaceFamily } from './archive';
 import {
@@ -643,5 +651,94 @@ export async function subjectSummary(
 		})),
 		card: ordered[0] ? cardUrl(archive, ordered[0]) : null,
 		places
+	};
+}
+
+/** A street the register knows and the archive has no photograph of. */
+export interface RegisterStreetView {
+	slug: string;
+	name: string;
+	lat: number;
+	lng: number;
+	length?: number;
+	/** The nearest places that do hold photographs, so the visit is not wasted. */
+	nearby: { id: string; name: string; count: number; metres: number }[];
+}
+
+/** The whole register, cached like everything else the pages read. */
+let registerCache: RegisterStreet[] | null = null;
+
+async function loadStreetRegister(fetcher: typeof fetch): Promise<RegisterStreet[]> {
+	if (registerCache) return registerCache;
+
+	try {
+		const response = await fetcher('/data/street-register.json');
+		if (!response.ok) return [];
+
+		const parsed = (await response.json()) as Partial<StreetRegisterFile>;
+		registerCache = parsed.streets ?? [];
+		return registerCache;
+	} catch {
+		// Missing means "no register", never an error: /straat/<slug> answered nothing at all
+		// for these streets before this file existed, and must keep working if it goes.
+		return [];
+	}
+}
+
+/** Every register street with no photographs, for `/straten` and for the prerenderer. */
+export async function registerStreets(fetcher: typeof fetch): Promise<RegisterStreet[]> {
+	return loadStreetRegister(fetcher);
+}
+
+/**
+ * One street the register knows and the archive does not, for `/straat/[slug]`.
+ *
+ * Returns null when the archive does have it - `placeSummary` answers those, and its page is
+ * the better page.
+ */
+export async function registerStreetView(
+	fetcher: typeof fetch,
+	slug: string
+): Promise<RegisterStreetView | null> {
+	const [archive, register] = await Promise.all([
+		loadArchive(fetcher),
+		loadStreetRegister(fetcher)
+	]);
+
+	if (archive.placeById.has(slug)) return null;
+
+	const street = register.find((candidate) => candidate.slug === slug);
+	if (!street) return null;
+
+	// Where the archive's own places are, so the nearest ones can be offered. Only places
+	// that resolve to a coordinate: a place nobody has located cannot be "round the corner".
+	const [coordinates, geometry, approximations] = await Promise.all([
+		loadCoordinates(fetcher),
+		loadStreetGeometry(fetcher),
+		loadApproximations(fetcher)
+	]);
+
+	const located: NearbyPlace[] = [];
+	for (const place of archive.places) {
+		if (place.count <= 0 || isPerson(place)) continue;
+
+		const at = locate(place.id, coordinates.places, geometry, approximations);
+		if (!at) continue;
+
+		located.push({ id: place.id, name: place.name, count: place.count, lat: at.lat, lng: at.lng });
+	}
+
+	return {
+		slug: street.slug,
+		name: street.name,
+		lat: street.lat,
+		lng: street.lng,
+		...(street.length ? { length: street.length } : {}),
+		nearby: nearestWithPhotos(street, located).map(({ id, name, count, metres }) => ({
+			id,
+			name,
+			count,
+			metres
+		}))
 	};
 }

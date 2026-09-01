@@ -175,6 +175,19 @@ Two rules hold:
 `docs/streets-not-in-register.md` lists the gazetteer streets today's register has never
 heard of. That is the archive's own evidence about which street names are historical.
 
+### The streets with no photographs
+
+The same run writes `static/data/street-register.json`: the 277 streets the register knows
+and the archive has never photographed, each with its name, its point and its length. They
+get a page at `/straat/<slug>` like any other place — the street on the map, the nearest
+places that do hold photographs, and an invitation to send one in, which carries the street
+through to `/upload?straat=<slug>`. Without it, four out of five people typing their own
+street name got "Geen foto's gevonden. Probeer een straatnaam".
+
+They are deliberately **not** in `sitemap.xml`. They are for the person who types their own
+street, not for a crawler to spend its budget on 277 pages without a photograph between
+them; `/straten`, which lists them all, is in the sitemap.
+
 ## Correcting a photograph
 
 Everything the archive knows about a photograph is worked out from its filename, which is
