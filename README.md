@@ -38,6 +38,7 @@ npm run archive:index   # rebuild the photo index after adding or renaming photo
 npm run stories         # rebuild the stories after editing legacy-site/ (run the index first)
 npm run streets         # rebuild street positions from the official register
 npm run sitemap         # rebuild sitemap.xml and robots.txt (run last: it reads the two above)
+npm run archive:pull    # bring the curators' live work back into static/data (needs credentials)
 ```
 
 `sitemap.xml` is committed rather than built in CI, because it is derived entirely from
@@ -175,6 +176,19 @@ Two rules hold:
 `docs/streets-not-in-register.md` lists the gazetteer streets today's register has never
 heard of. That is the archive's own evidence about which street names are historical.
 
+### The streets with no photographs
+
+The same run writes `static/data/street-register.json`: the 277 streets the register knows
+and the archive has never photographed, each with its name, its point and its length. They
+get a page at `/straat/<slug>` like any other place — the street on the map, the nearest
+places that do hold photographs, and an invitation to send one in, which carries the street
+through to `/upload?straat=<slug>`. Without it, four out of five people typing their own
+street name got "Geen foto's gevonden. Probeer een straatnaam".
+
+They are deliberately **not** in `sitemap.xml`. They are for the person who types their own
+street, not for a crawler to spend its budget on 277 pages without a photograph between
+them; `/straten`, which lists them all, is in the sitemap.
+
 ## Correcting a photograph
 
 Everything the archive knows about a photograph is worked out from its filename, which is
@@ -199,6 +213,82 @@ Two things the build refuses rather than ignores: a correction naming a place th
 the gazetteer, and a correction naming a photograph that is not in the corpus. Either would
 mean somebody recorded a fact and the archive silently dropped it, which is worse than a
 build failure.
+
+## Taking a photograph off the site
+
+`/contact` promises: "Staat u op een foto en wilt u dat ze weggaat? Dan gaat ze weg." That
+happens in two moves, and both are needed.
+
+1. **The same day.** Under every photograph is "Staat u op deze foto en wilt u dat ze
+   weggaat?". The request lands in `/beheer` → Verzoeken, where accepting writes a `hidden`
+   edit to the runtime overlay. The photograph is off the site as soon as a browser fetches
+   that overlay - no deploy, no rebuild.
+2. **Permanently.** `functions/src/data/suppressed.json` lists the paths that must never be
+   indexed:
+
+```json
+"Wedstrijden GZVKA/voorbeeld.JPG": {
+  "reason": "verzoek",
+  "by": "Daniel Savin",
+  "on": "2026-09-01",
+  "note": "op verzoek verwijderd"
+}
+```
+
+   `npm run archive:index` skips those files entirely, so the photograph is absent from
+   `archive-index.json`, and therefore from the search, the place pages, `sitemap.xml` and
+   the prerendered HTML - never written rather than filtered out afterwards. The Verzoeken
+   desk prints the path to paste, next to each accepted request.
+
+Keyed by the path under `src/lib/images/history-images`, not by the photograph id, because a
+suppression is about a file. `reason` is one of `verzoek`, `rechten`, `privacy` or `fout`;
+`by` and `on` are required. Never write down what the person said about themselves - this
+file is public.
+
+Unlike everything else the site reads, this one is strict: a malformed entry or one naming a
+file the corpus does not have stops the build. A suppression that is quietly skipped
+republishes a photograph somebody asked to have removed, and nobody finds out until they see
+it again.
+
+The file itself stays in git history, and `/contact` says so plainly rather than promising
+otherwise.
+
+## The curators' work, and getting it back
+
+Everything a curator does on the live site lands in Firestore: corrections to photographs,
+coordinates they placed, places they created. That is deliberate - a wrong street has to be
+right again the moment somebody fixes it, not after a rebuild and a deploy - and it used to
+mean that work existed in exactly one place, with no export and no backup.
+
+```bash
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json npm run archive:pull
+```
+
+reads the three public overlays and writes three committed files:
+
+| file | what it holds |
+| --- | --- |
+| `static/data/place-coordinates.json` | the pins, folded into the file that already promises to be their durable record |
+| `static/data/photo-edits.json` | corrections to photographs |
+| `static/data/place-records.json` | places a curator created or corrected |
+
+`.github/workflows/pull-curator-work.yml` runs it nightly and opens a pull request when the
+files differ, so the diff is the readable account of what changed on the live site.
+
+The loaders read those files as the floor under the live overlay: when a function is cold or
+the network is down, the site shows the last pulled state rather than silently reverting
+every correction. With no `VITE_BASE_URL_GF` at all - a fresh clone - the committed copies
+are the whole answer, so `npm install && npm run thumbs && npm run build` reproduces the
+archive the curators made, with no Firebase project.
+
+The live answer replaces the committed one rather than merging over it. A curator who
+reverts an edit or removes a place means it, and a union would put it back on every visit
+for as long as the last pull remembered it.
+
+**The queues are deliberately not exported.** `photo-facts`, `submissions` and
+`removal-requests` carry names, email addresses and free text written by members of the
+public - including, in the removal queue, somebody's reason for not wanting to be in a
+photograph. This repository is public. Those need a private Firestore export, not a commit.
 
 ## Folding in the rest of the website
 

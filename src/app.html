@@ -2,7 +2,12 @@
 <html lang="nl">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<!--
+			initial-scale=1 was missing, so a phone that had been zoomed on the previous page
+			kept that zoom here. No maximum-scale and no user-scalable=no: pinch zoom is exactly
+			what this audience uses on a photograph.
+		-->
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<!--
 			No title element here on purpose.
 

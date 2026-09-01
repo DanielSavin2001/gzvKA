@@ -471,6 +471,19 @@ export interface PathMatchResult {
 }
 
 /**
+ * Whether this folder name joins two or more different places with the word "en".
+ *
+ * "Mastenbos en Loopgravenpad" and "Dorpsstraat en Geuzenhoek" are the only two in the
+ * corpus, and they are the only folder names in it that mean "either of these" rather than
+ * "this thing, which is in that place".
+ */
+function isConjunctionOfPlaces(folder: string, matched: PlaceMatch[]): boolean {
+	if (!/\s+en\s+/i.test(folder)) return false;
+
+	return new Set(matched.map((match) => match.entryId)).size >= 2;
+}
+
+/**
  * Matches a full repository-relative image path: its folder chain and its filename.
  *
  * The filename is trusted above the folder, because a folder groups a subject while the
@@ -487,19 +500,10 @@ export function matchImagePath(
 
 	const matches: PlaceMatch[] = [];
 
-	for (const [i, folder] of folderSegments.entries()) {
-		matches.push(
-			...matchPlacesInText(folder, index, {
-				source: 'folder',
-				segmentIndex: i,
-				districtHint: options.districtHint,
-				guardContext: relativePath
-			})
-		);
-	}
-
+	// The filename first, because the folder is read against it below.
+	const fromFilename: PlaceMatch[] = [];
 	for (const segment of parts.placeSegments) {
-		matches.push(
+		fromFilename.push(
 			...matchPlacesInText(segment.text, index, {
 				source: 'filename',
 				segmentIndex: segment.index,
@@ -508,6 +512,39 @@ export function matchImagePath(
 			})
 		);
 	}
+
+	for (const [i, folder] of folderSegments.entries()) {
+		const fromFolder = matchPlacesInText(folder, index, {
+			source: 'folder',
+			segmentIndex: i,
+			districtHint: options.districtHint,
+			guardContext: relativePath
+		});
+
+		// A folder that names two places with "en" is a container holding both, not a claim
+		// that every photograph in it is of both - and that is what it used to mean.
+		//
+		// "Dorpsstraat en Geuzenhoek" put BOTH ids on all 215 of its photographs, so both
+		// pages counted 215 and both pins carried it, while 28 of those photographs are of the
+		// Kerkstraat and say so in their own filename. "Mastenbos en Loopgravenpad" did the
+		// same to 173, of which exactly one names the Loopgravenpad.
+		//
+		// So when the filename has named a place, this folder says nothing further: the
+		// docstring above already promised that the filename is trusted over the folder, and
+		// this is the one shape where the code did the opposite. When the filename names
+		// nothing, the folder still supplies both - losing the only placing a photograph has
+		// would be a worse answer than a broad one.
+		//
+		// Scoped to "en" deliberately. Nine other folders yield two places and every one of
+		// them is right: "Fort van Ertbrand" really is in Ertbrand, "Kasteel San Salvador -
+		// Nelson Mandelapark" really is in that park, and a corner like
+		// "Chr. Pallemansstraat-Heidestraat" is two streets by design.
+		if (isConjunctionOfPlaces(folder, fromFolder) && fromFilename.length > 0) continue;
+
+		matches.push(...fromFolder);
+	}
+
+	matches.push(...fromFilename);
 
 	const deduped = dedupeById(matches);
 	const streets = deduped.filter((match) => index.byId.get(match.entryId)?.isStreet === true);

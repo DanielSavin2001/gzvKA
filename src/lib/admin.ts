@@ -16,6 +16,7 @@ import type { PhotoFact } from '../../sharedModels/photo-fact';
 import type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
 import type { CuratorApproximation, CuratorGeometry } from '../../sharedModels/place-overlay';
 import type { PlaceRecord } from '../../sharedModels/place-record';
+import type { RemovalRequest } from '../../sharedModels/removal-request';
 import type { Submission } from '../../sharedModels/submission';
 
 /**
@@ -248,6 +249,38 @@ export function savePlaceRecord(fields: {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(fields)
+	});
+}
+
+/**
+ * The requests from people who are in a photograph and want it gone.
+ *
+ * Curator only, and the list itself is the sensitive part: every row names a living person
+ * and says where they are in a picture.
+ */
+export async function removalRequests(status = 'pending'): Promise<RemovalRequest[]> {
+	const result = await call<{ requests: RemovalRequest[] }>(
+		`listRemovalRequests?status=${encodeURIComponent(status)}`
+	);
+	return result.requests;
+}
+
+/**
+ * Honours a request, or declines it.
+ *
+ * Accepting hides the photograph through the photo-edit overlay, so it leaves the search,
+ * the lists, the maps and its own page as soon as a browser fetches that overlay. Rejecting
+ * restores it, which is why this hides rather than deletes.
+ */
+export function reviewRemovalRequest(
+	id: string,
+	status: 'accepted' | 'rejected' | 'pending',
+	note?: string
+): Promise<RemovalRequest> {
+	return call<RemovalRequest>('reviewRemovalRequest', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ id, status, ...(note ? { note } : {}) })
 	});
 }
 

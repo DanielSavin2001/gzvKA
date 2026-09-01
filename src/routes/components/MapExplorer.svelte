@@ -678,7 +678,7 @@
 						<li>
 							<button
 								type="button"
-								class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50 dark:hover:bg-blue-950"
+								class="flex w-full justify-between rounded px-2 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-950"
 								on:click={() => choose(place)}
 							>
 								<span>{place.name}</span><span class="text-gray-500 dark:text-gray-400"
@@ -699,7 +699,7 @@
 							<li>
 								<button
 									type="button"
-									class="flex w-full justify-between rounded px-2 py-1 text-left hover:bg-blue-50 dark:hover:bg-blue-950"
+									class="flex w-full justify-between rounded px-2 py-3 text-left hover:bg-blue-50 dark:hover:bg-blue-950"
 									on:click={() => choose(place)}
 								>
 									<span>{place.name}</span><span class="text-gray-500 dark:text-gray-400"

@@ -29,6 +29,20 @@
 			]
 		},
 		{
+			"collectionGroup": "removal-requests",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "status",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "submittedAt",
+					"order": "DESCENDING"
+				}
+			]
+		},
+		{
 			"collectionGroup": "submissions",
 			"queryScope": "COLLECTION",
 			"fields": [

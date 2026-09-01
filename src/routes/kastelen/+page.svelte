@@ -29,7 +29,7 @@
 		<p class="mt-3 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
 			De kastelen, forten en landgoederen van Kapellen en omgeving.
 		</p>
-		<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 			{data.places.length} plaatsen &middot; {photographs.toLocaleString('nl-BE')} foto's
 		</p>
 	</header>

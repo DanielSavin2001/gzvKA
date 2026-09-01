@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
+	import { page } from '$app/stores';
 
 	import Seo from '../components/Seo.svelte';
+	import { registerStreets } from '$lib/page-data';
 	import { MAX_SUBMISSION_BYTES, ALLOWED_CONTENT_TYPES } from '../../../sharedModels/submission';
 
 	/**
@@ -49,6 +51,30 @@
 	let name = '';
 	let email = '';
 	let note = '';
+
+	/**
+	 * Which street this submission is about, when the reader arrived from one.
+	 *
+	 * The 277 register streets have a page and no photographs, and their whole purpose is to
+	 * ask. Somebody who says yes there should not have to type the street name again - and
+	 * more importantly, the curator on the other end should not have to guess it. The slug
+	 * is resolved against the register rather than de-slugified, so what is shown and sent
+	 * is the register's own spelling.
+	 */
+	let aboutStreet: string | null = null;
+
+	onMount(async () => {
+		const slug = $page.url.searchParams.get('straat');
+		if (!slug) return;
+
+		const street = (await registerStreets(fetch)).find((entry) => entry.slug === slug);
+		if (!street) return;
+
+		aboutStreet = street.name;
+		// Prefilled rather than sent invisibly: a contributor can see exactly what goes
+		// along with their photographs, and delete it if they came for something else.
+		if (!note.trim()) note = `Foto's van: ${street.name}.`;
+	});
 
 	let dragging = false;
 	let stage: Stage = 'form';
@@ -357,7 +383,7 @@
 			</button>
 		</div>
 
-		<p class="mt-10 text-center text-sm text-gray-500 dark:text-gray-400">
+		<p class="mt-10 text-center text-sm text-gray-600 dark:text-gray-400">
 			Zin om te bladeren?
 			<a class="text-blue-800 underline hover:no-underline dark:text-blue-300" href="/straten">
 				Alle straten
@@ -392,6 +418,14 @@
 				Hebt u een oude foto van Kapellen &mdash; uw straat, uw school, het café op de hoek? Stuur
 				ze in. U hoeft geen account te maken en u hoeft niets in te vullen behalve de foto zelf.
 			</p>
+
+			{#if aboutStreet}
+				<p
+					class="mt-4 inline-block rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-gray-800 dark:border-blue-900 dark:bg-blue-950 dark:text-gray-200"
+				>
+					Straat: {aboutStreet}
+				</p>
+			{/if}
 		</header>
 
 		{#if error}
@@ -542,7 +576,7 @@
 						placeholder="Alleen om iets te kunnen vragen"
 						class={FIELD_CLASSES}
 					/>
-					<span class="mt-1 block text-xs text-gray-500 dark:text-gray-400"
+					<span class="mt-1 block text-xs text-gray-600 dark:text-gray-400"
 						>Komt niet op de website.</span
 					>
 				</label>

@@ -77,3 +77,6 @@ export const deletePlaceRecord = controllers.placeRecordController.deletePlaceRe
 export const submitPhotoFact = controllers.photoFactController.submitPhotoFact;
 export const listPhotoFacts = controllers.photoFactController.listPhotoFacts;
 export const reviewPhotoFact = controllers.photoFactController.reviewPhotoFact;
+export const submitRemovalRequest = controllers.removalRequestController.submitRemovalRequest;
+export const listRemovalRequests = controllers.removalRequestController.listRemovalRequests;
+export const reviewRemovalRequest = controllers.removalRequestController.reviewRemovalRequest;

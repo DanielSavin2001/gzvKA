@@ -138,7 +138,7 @@
 		</div>
 
 		{#if archive}
-			<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+			<p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
 				Bijvoorbeeld:
 				<a
 					class="text-blue-800 dark:text-blue-300 underline hover:no-underline"

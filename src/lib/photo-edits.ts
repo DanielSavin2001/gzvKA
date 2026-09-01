@@ -47,26 +47,59 @@ const TIMEOUT_MS = 3_000;
 
 let cache: Record<string, PhotoEdit> | null = null;
 
+/**
+ * The last copy `npm run archive:pull` wrote, which is the answer whenever the live overlay
+ * is not one.
+ *
+ * Until this existed, an unreachable overlay meant the site quietly showed the generated
+ * index with every correction undone - a wrong street back on a photograph, a title somebody
+ * fixed reverted - and nothing said so. It is also what makes a fresh clone reproduce the
+ * archive the curators actually made: `npm install && npm run build`, no Firebase project.
+ *
+ * Missing is not an error. The file only exists once somebody has run the pull.
+ */
+async function committed(fetcher: typeof fetch): Promise<Record<string, PhotoEdit>> {
+	try {
+		const response = await fetcher('/data/photo-edits.json');
+		if (!response.ok) return {};
+
+		const parsed = (await response.json()) as Partial<PhotoEditFile>;
+		return parsed.edits ?? {};
+	} catch {
+		return {};
+	}
+}
+
+/**
+ * The corrections, live where possible and from the committed copy otherwise.
+ *
+ * The live answer replaces the committed one rather than merging over it, and that is the
+ * whole of why this is not a union: a curator who reverts an edit deletes it, and a merge
+ * would put it back on every visit for as long as the committed file remembered it.
+ *
+ * A fallback answer is never cached, for the reason the pins give: the next call should
+ * reach for the overlay again rather than freeze a bad minute into the whole session.
+ */
 export async function loadPhotoEdits(
 	fetcher: typeof fetch = fetch
 ): Promise<Record<string, PhotoEdit>> {
 	if (cache) return cache;
 
-	// No backend configured: this is the normal state for a fresh clone, and the archive
-	// works completely without it.
-	if (!FUNCTIONS_BASE) return {};
+	// No backend configured: the normal state for a fresh clone, where the committed copy is
+	// the whole answer and the archive is complete without Firebase at all.
+	if (!FUNCTIONS_BASE) return committed(fetcher);
 
 	try {
 		const response = await fetcher(`${FUNCTIONS_BASE}photoEdits`, {
 			signal: AbortSignal.timeout(TIMEOUT_MS)
 		});
-		if (!response.ok) return {};
+		if (!response.ok) return committed(fetcher);
 
 		const parsed = (await response.json()) as Partial<PhotoEditFile>;
 		cache = parsed.edits ?? {};
 		return cache;
 	} catch {
-		return {};
+		return committed(fetcher);
 	}
 }
 

@@ -1,3 +1,5 @@
+import { canonicalYear } from './year';
+
 /**
  * A curator correcting a photograph that is already in the archive.
  *
@@ -28,6 +30,20 @@ export interface PhotoFields {
 	donor?: string;
 	/** Free text. Nothing in a filename can hold this, so nothing ever has. */
 	description?: string;
+	/**
+	 * Taken off the site.
+	 *
+	 * Set when a curator accepts a removal request - somebody who is in the photograph and
+	 * has asked for it to go. The site drops a hidden photograph before it builds anything
+	 * from the index, so it leaves the search, the lists, the maps, the donor pages and its
+	 * own page as soon as this overlay is fetched.
+	 *
+	 * It is a field on the overlay rather than a deletion because a deletion is not
+	 * reversible and this decision has to be: a request accepted in error, or one the person
+	 * later withdraws, is a checkbox rather than a restore from a backup. What it cannot
+	 * reach on its own is the prerendered HTML and the sitemap, which go at the next build.
+	 */
+	hidden?: boolean;
 }
 
 export interface PhotoEdit extends PhotoFields {
@@ -82,6 +98,10 @@ export function readPhotoFields(input: Record<string, unknown>): PhotoFields {
 		(fields as Record<string, unknown>)[name] = input[name] === null ? undefined : value;
 	}
 
+	// A boolean rather than a string, and only ever set explicitly: `'hidden' in input` is
+	// what lets a curator un-hide, the same way clearing a title works.
+	if ('hidden' in input) fields.hidden = input.hidden === true;
+
 	if ('year' in input) {
 		if (input.year === null) fields.year = undefined;
 		else {
@@ -89,7 +109,10 @@ export function readPhotoFields(input: Record<string, unknown>): PhotoFields {
 			if (year && !/^\d{4}(\s?-\s?\d{4})?$/.test(year)) {
 				throw new PhotoEditError('Een jaartal ziet eruit als 1935, of als 1935-1936.');
 			}
-			fields.year = year;
+			// Stored in one shape. The regex above allows "1935 - 1936" as well as
+			// "1935-1936", and two spellings of one year is two years to anything that
+			// compares the strings.
+			fields.year = year ? canonicalYear(year) : year;
 		}
 	}
 

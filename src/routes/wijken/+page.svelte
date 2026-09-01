@@ -29,19 +29,13 @@
 		<p class="mt-3 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
 			Wijken en gehuchten, kerken en scholen, cafés, bossen en parken.
 		</p>
-		<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 			{data.places.length} plaatsen &middot; {photographs.toLocaleString('nl-BE')} foto's
 		</p>
 	</header>
 
 	<div class="mt-8">
-		<PlaceMap
-			places={data.places}
-			noun="plaatsen"
-			title="Op de kaart"
-			height="460px"
-			zoom={12.2}
-		/>
+		<PlaceMap places={data.places} noun="plaatsen" title="Op de kaart" height="460px" zoom={12.2} />
 	</div>
 
 	<div class="mt-10 border-t border-gray-200 pt-8 dark:border-gray-700">

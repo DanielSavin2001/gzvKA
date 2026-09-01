@@ -15,13 +15,14 @@
  */
 
 import { encodePath } from '../../sharedModels/image-path';
+import { startYear } from '../../sharedModels/year';
 import type { PlaceFamily } from '../../sharedModels/place-family';
 import { familyOfPlace, isPersonKind } from '../../sharedModels/place-family';
 import { normalizeText, slugify } from '../../sharedModels/text';
 import { applyPhotoEdit, loadPhotoEdits } from './photo-edits';
 import { loadPublished } from './published';
 import type { PlaceRecord } from './place-records';
-import { loadPlaceRecords } from './place-records';
+import { loadCommittedPlaceRecords, loadPlaceRecords } from './place-records';
 import { withPlaceRecords } from '../../sharedModels/place-record';
 
 export { withPlaceRecords };
@@ -146,20 +147,30 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 		// that only exists in the overlay has to be a place everywhere at once, or a
 		// photograph filed under it belongs nowhere - which is what happened before, because
 		// nothing validated the id a curator typed.
-		const [edits, published, records] = await Promise.all([
+		const [edits, published, live] = await Promise.all([
 			loadPhotoEdits(fetcher),
 			loadPublished(fetcher),
 			loadPlaceRecords(fetcher)
 		]);
-		const photos = [...index.photos, ...published].map((photo) =>
-			applyPhotoEdit(photo, edits[photo.id])
-		);
+
+		// The committed copy is the floor under the overlay, not a layer over it: a curator
+		// who deletes a place deletes it, and a union would keep putting it back for as long
+		// as the last pull remembered it. Reached for only when the overlay could not be
+		// read, which is also the state a fresh clone is permanently in.
+		const records = live ?? (await loadCommittedPlaceRecords(fetcher));
+		// Hidden photographs are dropped before anything is built from them, not filtered at
+		// each place that lists photographs. A removal accepted for one person has to reach
+		// the search, the street pages, the maps, the donor pages, the timeline and the
+		// neighbour arrows at once; a filter per consumer is a filter somebody forgets.
+		const photos = [...index.photos, ...published]
+			.map((photo) => applyPhotoEdit(photo, edits[photo.id]))
+			.filter((photo) => !edits[photo.id]?.hidden);
 
 		cached = buildArchive({
 			...index,
 			imageCount: photos.length,
 			photos,
-			places: withPlaceRecords(index.places, records ?? {})
+			places: withPlaceRecords(index.places, records)
 		});
 		return cached;
 	})();
@@ -256,8 +267,14 @@ export function thumbUrl(archive: ArchiveIndex, photo: ArchivePhoto): string {
  */
 export function sortForDisplay(photos: ArchivePhoto[]): ArchivePhoto[] {
 	return [...photos].sort((a, b) => {
-		const ay = a.y ? Number(a.y) : Number.POSITIVE_INFINITY;
-		const by = b.y ? Number(b.y) : Number.POSITIVE_INFINITY;
+		// `startYear` rather than `Number`, and the difference is not cosmetic. A year may be
+		// a span - the dating form asks residents for "1957-1958" in those words - and
+		// `Number('1957-1958')` is NaN. `NaN - NaN` is NaN, which is falsy, so the comparator
+		// fell through to house number and title instead of sorting: not "spans sort last"
+		// but a comparator that is not transitive, which reorders everything around it. The
+		// photo page's arrows walk this exact list.
+		const ay = startYear(a.y) ?? Number.POSITIVE_INFINITY;
+		const by = startYear(b.y) ?? Number.POSITIVE_INFINITY;
 		return ay - by || (a.hn ?? 0) - (b.hn ?? 0) || a.t.localeCompare(b.t);
 	});
 }

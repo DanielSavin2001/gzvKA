@@ -101,11 +101,11 @@
 	{#each visible as group (group.place.id)}
 		<li>
 			<a
-				class="flex items-baseline justify-between gap-3 rounded px-2 py-1.5 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:hover:bg-blue-950"
+				class="flex items-baseline justify-between gap-3 rounded px-2 py-2.5 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:hover:bg-blue-950"
 				href="/straat/{group.place.id}"
 			>
 				<span class="font-medium text-gray-900 dark:text-gray-100">{group.place.name}</span>
-				<span class="shrink-0 text-sm tabular-nums text-gray-500 dark:text-gray-400"
+				<span class="shrink-0 text-sm tabular-nums text-gray-600 dark:text-gray-400"
 					>{group.place.count}</span
 				>
 			</a>
@@ -115,11 +115,11 @@
 					{#each group.children as child (child.id)}
 						<li>
 							<a
-								class="flex items-baseline justify-between gap-3 rounded px-2 py-1 text-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:hover:bg-blue-950"
+								class="flex items-baseline justify-between gap-3 rounded px-2 py-3 text-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:hover:bg-blue-950"
 								href="/straat/{child.id}"
 							>
 								<span class="text-gray-700 dark:text-gray-300">{child.name}</span>
-								<span class="shrink-0 tabular-nums text-gray-500 dark:text-gray-400"
+								<span class="shrink-0 tabular-nums text-gray-600 dark:text-gray-400"
 									>{child.count}</span
 								>
 							</a>
@@ -139,6 +139,6 @@
 	>
 		Toon {Math.min(STEP, remaining)}
 		{noun} meer
-		<span class="font-normal text-gray-500 dark:text-gray-400">({remaining} nog)</span>
+		<span class="font-normal text-gray-600 dark:text-gray-400">({remaining} nog)</span>
 	</button>
 {/if}

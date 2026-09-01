@@ -46,9 +46,9 @@
 	</header>
 
 	{#if stories.length === 0}
-		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Er zijn nog geen verhalen.</p>
+		<p class="py-16 text-center text-gray-600 dark:text-gray-400">Er zijn nog geen verhalen.</p>
 	{:else}
-		<p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+		<p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
 			{stories.length} verhalen &middot; {Math.round(totalProse / 1000)}.000 tekens
 		</p>
 
@@ -122,7 +122,9 @@
 			</div>
 		{/if}
 
-		<h2 class="mt-10 border-t border-gray-200 pt-8 text-2xl font-bold text-gray-900 dark:border-gray-700 dark:text-gray-100">
+		<h2
+			class="mt-10 border-t border-gray-200 pt-8 text-2xl font-bold text-gray-900 dark:border-gray-700 dark:text-gray-100"
+		>
 			Alle verhalen
 		</h2>
 

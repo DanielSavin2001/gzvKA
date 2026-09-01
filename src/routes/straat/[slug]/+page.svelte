@@ -14,9 +14,13 @@
 	import ArchiveMap from '../../components/ArchiveMap.svelte';
 	import PhotoCard from '../../components/PhotoCard.svelte';
 
-	import type { PlaceSummary } from '$lib/page-data';
+	import type { PlaceSummary, RegisterStreetView } from '$lib/page-data';
 
-	export let data: { slug: string; summary: PlaceSummary | null };
+	export let data: {
+		slug: string;
+		summary: PlaceSummary | null;
+		street?: RegisterStreetView | null;
+	};
 
 	let archive: Archive | null = null;
 	let storyIndex: StoryIndex | null = null;
@@ -86,13 +90,16 @@
 	 * absent while the page is being prerendered - so a title built from it was the raw
 	 * slug in the HTML that crawlers and link previews actually receive.
 	 */
-	$: named = data.summary?.name ?? place?.name ?? data.slug;
+	$: named = data.summary?.name ?? data.street?.name ?? place?.name ?? data.slug;
 	$: counted = data.summary?.count ?? place?.count ?? 0;
 
 	/** From `load` first, so the prerendered head is right before the archive arrives. */
 	$: aboutAPerson = data.summary?.person ?? (place ? isPerson(place) : false);
 
-	$: placeDescription = !counted
+	$: placeDescription = data.street
+		? `${named} in Kapellen. Van deze straat heeft het fotoarchief nog geen foto - wel van ` +
+		  `straten in de buurt.`
+		: !counted
 		? `Foto's van ${named} in Kapellen, uit het fotoarchief van de gemeente.`
 		: summarise(
 				aboutAPerson
@@ -140,6 +147,62 @@
 	 * somewhere the marker is not.
 	 */
 	$: circled = research ? hasCircle(research) : false;
+
+	/**
+	 * A street the official register knows and the archive has never photographed.
+	 *
+	 * There are 277 of them against the archive's 45, so for most people typing their own
+	 * street this is the page they land on. It cannot show a photograph. It can say the
+	 * street is real, put it on the map, and point at the photographed streets around it -
+	 * which is why the map here carries the neighbours too.
+	 */
+	$: street = data.street ?? null;
+
+	/**
+	 * The register street as a place, only so the shared map can draw it.
+	 *
+	 * `count: 0` is the truth and the marker says so: a small circle reading 0 next to the
+	 * neighbours' 12 and 45 is the honest version of "we have nothing of this street yet".
+	 */
+	$: registerPlace = street
+		? ({
+				id: street.slug,
+				name: street.name,
+				kind: 'straat',
+				district: 'unknown',
+				isStreet: true,
+				count: 0
+		  } satisfies ArchivePlace)
+		: null;
+
+	/**
+	 * The register's own point, handed to the map as geometry.
+	 *
+	 * That makes `locate` answer `register` for it, which is exactly where the coordinate
+	 * came from - the marker's tooltip then says so rather than implying somebody placed it.
+	 * No centreline: `street-geometry.json` only holds the streets the archive photographs,
+	 * and an empty `lines` is never drawn because this page passes no `focusId`.
+	 */
+	$: registerGeometry = street
+		? {
+				...geometry,
+				[street.slug]: {
+					name: street.name,
+					municipality: 'Kapellen',
+					lat: street.lat,
+					lng: street.lng,
+					lines: [],
+					...(street.length ? { length: street.length } : {})
+				}
+		  }
+		: geometry;
+
+	/** The neighbours, as the archive's own places, once the archive has arrived. */
+	$: neighbours = street
+		? street.nearby
+				.map((near) => archive?.placeById.get(near.id))
+				.filter((place): place is ArchivePlace => place !== undefined)
+		: [];
 </script>
 
 <Seo
@@ -180,10 +243,110 @@
 			>
 			<span class="mx-2">/</span>
 		{/if}
-		<span>{place ? place.name : data.slug}</span>
+		<span>{place?.name ?? street?.name ?? data.slug}</span>
 	</nav>
 
-	{#if error}
+	{#if street}
+		<!--
+			A street the register knows and the archive has never photographed - 277 of the
+			313 streets in Kapellen. This branch comes first because it needs nothing from the
+			archive: everything on it is in the prerendered HTML, which is the difference
+			between somebody finding their street and reading "Deze plaats kennen we niet".
+		-->
+		<header class="mt-3">
+			<h1
+				class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100"
+			>
+				{street.name}
+			</h1>
+			<p class="mt-3 max-w-2xl text-lg text-gray-700 dark:text-gray-300">
+				Deze straat staat in het stratenregister van Kapellen, maar het fotoarchief heeft er nog
+				geen enkele foto van.
+			</p>
+			{#if street.length}
+				<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+					{street.length.toLocaleString('nl-BE')} meter lang, volgens het register.
+				</p>
+			{/if}
+		</header>
+
+		<section
+			class="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5 sm:p-6 dark:border-blue-900 dark:bg-blue-950"
+		>
+			<h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Heeft u er een?</h2>
+			<p class="mt-2 max-w-2xl text-gray-700 dark:text-gray-300">
+				Een foto uit deze straat - een huis, een stoet, een gevel, een tuin, wat dan ook - hoort
+				hier thuis. U hoeft ze niet weg te geven: een scan volstaat, en u blijft de eigenaar.
+			</p>
+			<a
+				class="mt-4 inline-block rounded-lg bg-blue-800 px-5 py-3 font-semibold text-white hover:bg-blue-900"
+				href="/upload?straat={street.slug}">Foto insturen</a
+			>
+		</section>
+
+		{#if archive}
+			<section class="mt-8">
+				<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Waar deze straat ligt</h2>
+				<div class="mt-3">
+					<!--
+						The street plus its photographed neighbours, so the map answers both
+						questions at once: where am I, and where is there something to look at.
+						`centreOn` because more than one place is drawn and the map would
+						otherwise open on the middle of Kapellen.
+					-->
+					<ArchiveMap
+						{archive}
+						{placed}
+						geometry={registerGeometry}
+						{approximations}
+						places={registerPlace ? [registerPlace, ...neighbours] : neighbours}
+						centreOn={{ lat: street.lat, lng: street.lng }}
+						selectedId={street.slug}
+						height="360px"
+						zoom={14.5}
+					/>
+				</div>
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+					{street.name} in het oranje, met de dichtstbijzijnde plaatsen waar het archief wel foto's van
+					heeft. De ligging komt uit het officiële stratenregister.
+				</p>
+			</section>
+		{/if}
+
+		{#if street.nearby.length > 0}
+			<section class="mt-8 border-t border-gray-200 pt-8 dark:border-gray-700">
+				<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+					Wel foto's van, hier vlakbij
+				</h2>
+				<ul class="mt-4 divide-y divide-gray-200 dark:divide-gray-700">
+					{#each street.nearby as near (near.id)}
+						<li>
+							<a
+								class="flex items-baseline justify-between gap-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800"
+								href="/straat/{near.id}"
+							>
+								<span
+									class="font-medium text-blue-800 underline hover:no-underline dark:text-blue-300"
+									>{near.name}</span
+								>
+								<span class="shrink-0 text-sm text-gray-600 dark:text-gray-400">
+									{near.count}
+									{near.count === 1 ? 'foto' : "foto's"} &middot; {near.metres < 1000
+										? `${near.metres} m`
+										: `${(near.metres / 1000).toFixed(1)} km`}
+								</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+				<p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+					<a class="text-blue-800 underline hover:no-underline dark:text-blue-300" href="/straten"
+						>Alle straten met foto's &rarr;</a
+					>
+				</p>
+			</section>
+		{/if}
+	{:else if error}
 		<div
 			class="my-8 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-5 text-red-900 dark:text-red-200"
 		>
@@ -248,7 +411,7 @@
 				</p>
 			{/if}
 		{:else}
-			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+			<p class="py-16 text-center text-gray-600 dark:text-gray-400">Bezig met laden ...</p>
 		{/if}
 	{:else if !place}
 		<div class="py-16 text-center">
@@ -290,11 +453,11 @@
 					{#each children as child (child.id)}
 						<li>
 							<a
-								class="inline-block rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-800 hover:border-blue-700 hover:bg-blue-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+								class="inline-block rounded-full border border-gray-300 px-3 py-3 text-sm text-gray-800 hover:border-blue-700 hover:bg-blue-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
 								href="/straat/{child.id}"
 							>
 								{child.name}
-								<span class="text-gray-500 dark:text-gray-400">{child.count}</span>
+								<span class="text-gray-600 dark:text-gray-400">{child.count}</span>
 							</a>
 						</li>
 					{/each}
@@ -352,7 +515,7 @@
 					height="320px"
 					zoom={fromRegister ? 15 : 14}
 				/>
-				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					{#if fromRegister}
 						{place.name} op de kaart{#if shape?.length}, {shape.length} meter lang{/if}. De ligging
 						komt uit het officiële stratenregister.

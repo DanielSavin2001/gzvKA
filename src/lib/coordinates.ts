@@ -13,7 +13,7 @@
 
 import { withGeometryRecords } from '../../sharedModels/place-overlay';
 import { loadPlacePins } from './place-pins';
-import { loadPlaceRecords } from './place-records';
+import { loadCommittedPlaceRecords, loadPlaceRecords } from './place-records';
 
 /**
  * `locate` and the two record shapes it reads live in the shared models, so the jest suite
@@ -132,7 +132,10 @@ export async function loadStreetGeometry(
 	// with no way to tell which is meant. The register has nothing at all to say about a
 	// castle estate or a hamlet, which is most of what gets drawn.
 	const records = await loadPlaceRecords(fetcher);
-	const merged = withGeometryRecords(committed ?? {}, records ?? {});
+	const merged = withGeometryRecords(
+		committed ?? {},
+		records ?? (await loadCommittedPlaceRecords(fetcher))
+	);
 
 	if (committed !== null && records !== null) geometryCache = merged;
 	return merged;

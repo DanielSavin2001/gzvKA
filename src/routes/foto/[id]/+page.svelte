@@ -6,9 +6,12 @@
 	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PhotoSummary } from '$lib/page-data';
 	import { SITE, summarise } from '$lib/seo';
+	import { decadeBandOf, startYear } from '../../../../sharedModels/year';
+	import { subjectsWithPages } from '../../../../sharedModels/subject-pages';
 	import { slugify } from '../../../../sharedModels/text';
 	import Seo from '../../components/Seo.svelte';
 	import DatePhoto from '../../components/DatePhoto.svelte';
+	import RemovePhoto from '../../components/RemovePhoto.svelte';
 	import { swipe } from '$lib/gestures';
 	import {
 		download,
@@ -164,9 +167,17 @@
 		// here read it - so arriving from the sixties walked the photograph's street
 		// instead, and the counter said "1 van 401" of a decade holding eighty-three.
 		if (kind === 'jaren') {
-			return archive.photos
-				.filter((other) => decadeKeyOf(other.y) === value)
-				.sort((a, b) => Number(a.y) - Number(b.y) || a.t.localeCompare(b.t));
+			return (
+				archive.photos
+					.filter((other) => decadeKeyOf(other.y) === value)
+					// `startYear`, not `Number`: a span year is NaN here too, and NaN is falsy, so
+					// this comparator had the same non-transitive fault `sortForDisplay` had.
+					.sort(
+						(a, b) =>
+							(startYear(a.y) ?? Number.POSITIVE_INFINITY) -
+								(startYear(b.y) ?? Number.POSITIVE_INFINITY) || a.t.localeCompare(b.t)
+					)
+			);
 		}
 
 		const street = places.find((place) => place.isStreet) ?? places[0];
@@ -186,11 +197,27 @@
 	 * Everything before 1900 is one band there, so it has to be one band here too, or the
 	 * arrows would walk a decade the timeline never drew.
 	 */
-	function decadeKeyOf(year: string | undefined): string | null {
-		if (!year || !/^\d{4}$/.test(year)) return null;
-		const value = Number(year);
-		return value < 1900 ? 'voor-1900' : String(Math.floor(value / 10) * 10);
-	}
+	const decadeKeyOf = decadeBandOf;
+
+	/**
+	 * Whether this photograph's folder has a page of its own.
+	 *
+	 * Not every value of `s` does. 42 folders share a slug with a place and are deliberately
+	 * not built, and `published.ts` stamps every approved upload with the literal subject
+	 * "Ingestuurd door bezoekers", which is no folder at all. Linking without checking would
+	 * produce a 404 from the one line on the page whose job is to say where the photograph
+	 * belongs.
+	 */
+	$: subjectPage = ((): string | null => {
+		if (!archive || !photo) return null;
+
+		const placeIds = new Set(archive.places.map((place) => place.id));
+		const match = subjectsWithPages(archive.subjects, placeIds).find(
+			(subject) => subject.name === photo.s
+		);
+
+		return match ? `/onderwerp/${match.slug}` : null;
+	})();
 
 	/** What the band is called in a breadcrumb. */
 	$: decadeLabel = ((): string | null => {
@@ -444,17 +471,20 @@
 		-->
 		{#if data.summary}
 			<figure class="mt-4">
-				<div class="flex h-[58vh] items-center justify-center sm:h-[64vh]">
+				<div class="flex h-[58vh] items-center justify-center sm:h-[64vh] print:h-auto">
 					<img
 						src={data.summary.image}
 						alt={data.summary.alt}
 						{...{ fetchpriority: 'high' }}
 						decoding="async"
-						class="max-h-full max-w-full rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+						class="max-h-full max-w-full rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800 print:max-h-none print:border-0"
 					/>
 				</div>
 				<figcaption class="mt-4">
-					<h1 class="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-gray-100">
+					<h1
+						class="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-gray-100"
+						data-url="{SITE}/foto/{data.id}"
+					>
 						{data.summary.title}
 					</h1>
 					<p class="mt-2 text-gray-700 dark:text-gray-300">{photoDescription}</p>
@@ -480,7 +510,7 @@
 				</figcaption>
 			</figure>
 		{:else}
-			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
+			<p class="py-16 text-center text-gray-600 dark:text-gray-400">Bezig met laden ...</p>
 		{/if}
 	{:else if !photo}
 		<div class="py-16 text-center">
@@ -502,7 +532,7 @@
 			says where somebody came from - it is what the arrows walk - so the trail says it
 			too.
 		-->
-		<nav class="text-sm text-gray-600 dark:text-gray-400">
+		<nav class="text-sm text-gray-600 dark:text-gray-400 print:hidden">
 			<a class="text-blue-800 underline hover:no-underline dark:text-blue-300" href="/"
 				>Startpagina</a
 			>
@@ -544,13 +574,13 @@
 				one photograph and the next - measured, and thoroughly annoying to click.
 			-->
 			<div
-				class="relative flex h-[58vh] touch-pan-y select-none items-center justify-center gap-3 sm:h-[64vh]"
+				class="relative flex h-[58vh] touch-pan-y select-none items-center justify-center gap-3 sm:h-[64vh] print:h-auto"
 				use:swipe={{ onLeft: () => step(next), onRight: () => step(previous) }}
 			>
 				{#if previous}
 					<a
 						href="/foto/{previous.id}{neighbourQuery}"
-						class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32"
+						class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32 print:lg:hidden"
 						aria-label="Vorige foto: {previous.t}"
 					>
 						<img
@@ -563,7 +593,7 @@
 						/>
 					</a>
 				{:else}
-					<div class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32" />
+					<div class="hidden h-40 w-24 shrink-0 lg:block xl:h-52 xl:w-32 print:lg:hidden" />
 				{/if}
 
 				<div class="relative flex h-full min-w-0 flex-1 items-center justify-center">
@@ -581,7 +611,7 @@
 							alt={photoAlt(archive, photo)}
 							{...{ fetchpriority: 'high' }}
 							draggable="false"
-							class="max-h-full max-w-full cursor-zoom-in select-none rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+							class="max-h-full max-w-full cursor-zoom-in select-none rounded-lg border border-gray-200 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800 print:max-h-none print:border-0"
 						/>
 					</button>
 
@@ -591,7 +621,7 @@
 					-->
 					<button
 						type="button"
-						class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 text-lg text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:bg-gray-900/85 dark:text-gray-100 dark:hover:bg-gray-700"
+						class="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/85 print:hidden text-lg text-gray-900 shadow-md transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:bg-gray-900/85 dark:text-gray-100 dark:hover:bg-gray-700"
 						aria-label="Volledig scherm"
 						title="Volledig scherm"
 						on:click={() => (openAt = lightboxStart)}
@@ -602,7 +632,7 @@
 					{#if previous}
 						<a
 							href="/foto/{previous.id}{neighbourQuery}"
-							class="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="print:hidden absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Vorige foto"
 						>
 							&#8592;
@@ -611,7 +641,7 @@
 					{#if next}
 						<a
 							href="/foto/{next.id}{neighbourQuery}"
-							class="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+							class="print:hidden absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-gray-900/85 text-2xl text-gray-900 dark:text-gray-100 shadow-md transition hover:bg-white dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
 							aria-label="Volgende foto"
 						>
 							&#8594;
@@ -622,7 +652,7 @@
 				{#if next}
 					<a
 						href="/foto/{next.id}{neighbourQuery}"
-						class="hidden w-24 shrink-0 lg:block xl:w-32"
+						class="hidden w-24 shrink-0 lg:block xl:w-32 print:lg:hidden"
 						aria-label="Volgende foto: {next.t}"
 					>
 						<img
@@ -632,12 +662,12 @@
 						/>
 					</a>
 				{:else}
-					<div class="hidden w-24 shrink-0 lg:block xl:w-32" />
+					<div class="hidden w-24 shrink-0 lg:block xl:w-32 print:lg:hidden" />
 				{/if}
 			</div>
 
 			{#if siblings.length > 1 && position >= 0}
-				<p class="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
+				<p class="mt-3 text-center text-sm text-gray-600 dark:text-gray-400 print:hidden">
 					Foto {position + 1} van {siblings.length}
 					{#if listKey.startsWith('straat:') && archive.placeById.get(listKey.slice(7))}
 						in de {archive.placeById.get(listKey.slice(7))?.name}
@@ -648,7 +678,12 @@
 			{/if}
 
 			<figcaption class="mt-4">
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">{photo.t}</h1>
+				<h1
+					class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl"
+					data-url="{SITE}/foto/{photo.id}"
+				>
+					{photo.t}
+				</h1>
 
 				<!--
 					Take it with you, or send it to somebody.
@@ -657,7 +692,7 @@
 					finds their grandparents' house and the only way to keep it was a long-press
 					on a file called `... .jpg.thumb.webp`.
 				-->
-				<div class="mt-4 flex flex-wrap gap-2">
+				<div class="mt-4 flex flex-wrap gap-2 print:hidden">
 					{#if keepsake}
 						<!--
 							A button rather than a link: the file is re-encoded before it is handed
@@ -685,6 +720,18 @@
 						on:click={share}
 					>
 						&#8631; Delen
+					</button>
+
+					<!--
+						Nobody finds the print menu on a phone, and this heemkring prints: members
+						bring photographs to the meeting and post them to a sister in Canada.
+					-->
+					<button
+						type="button"
+						class="inline-flex items-center gap-2 rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-blue-700 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-blue-950"
+						on:click={() => window.print()}
+					>
+						&#128424; Afdrukken
 					</button>
 				</div>
 
@@ -715,7 +762,16 @@
 					{/if}
 					<div class="flex gap-2">
 						<dt class="w-36 shrink-0 font-semibold text-gray-700 dark:text-gray-300">Onderwerp</dt>
-						<dd class="text-gray-900 dark:text-gray-100">{photo.s}</dd>
+						<dd class="text-gray-900 dark:text-gray-100">
+							{#if subjectPage}
+								<a
+									class="text-blue-800 underline hover:no-underline dark:text-blue-300"
+									href={subjectPage}>{photo.s}</a
+								>
+							{:else}
+								{photo.s}
+							{/if}
+						</dd>
 					</div>
 					{#if photo.y}
 						<div class="flex gap-2">
@@ -768,6 +824,14 @@
 					photoTitle={data.summary?.title ?? photo?.t ?? ''}
 					currentYear={photo?.y ?? data.summary?.year}
 				/>
+
+				<!--
+					And the other direction. /contact has promised since the site went up that a
+					photograph of you goes if you ask, and there was no way to ask: the page names
+					no address by design, and the comment box it pointed at cannot be sent without
+					attaching a photograph. Here is where somebody recognises themselves.
+				-->
+				<RemovePhoto photoId={data.id} photoTitle={data.summary?.title ?? photo?.t ?? ''} />
 			</figcaption>
 		</figure>
 
@@ -797,7 +861,7 @@
 				{/if}
 
 				<a
-					class="mt-5 inline-block rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900"
+					class="mt-5 inline-block rounded-lg bg-blue-800 px-4 py-2 font-semibold text-white hover:bg-blue-900 print:hidden"
 					href="/verhaal/{context.story.slug}#deel-{context.sectionIndex}"
 				>
 					Lees &ldquo;{context.story.title}&rdquo;

@@ -82,7 +82,7 @@
 			timeline that showed an eighth of the archive as though it were the whole of it
 			would be a prettier page and a worse one.
 		-->
-		<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 			{data.dated.toLocaleString('nl-BE')} van de {data.total.toLocaleString('nl-BE')} foto's dragen
 			een jaartal.
 		</p>
@@ -102,7 +102,7 @@
 			{#each data.decades as decade (decade.key)}
 				<li class="flex min-w-0 flex-1 flex-col items-center gap-1">
 					<span
-						class="text-[10px] tabular-nums text-gray-500 transition-opacity sm:text-xs dark:text-gray-400"
+						class="text-xs tabular-nums text-gray-600 transition-opacity dark:text-gray-400"
 						class:opacity-100={here === decade.key}
 						class:opacity-0={here !== decade.key}
 					>
@@ -130,7 +130,7 @@
 					</div>
 
 					<span
-						class="w-full truncate text-center text-[10px] tabular-nums text-gray-600 sm:text-xs dark:text-gray-400"
+						class="w-full truncate text-center text-xs tabular-nums text-gray-600 dark:text-gray-400"
 						class:font-bold={here === decade.key}
 					>
 						{decade.key === 'voor-1900' ? '<1900' : decade.key}

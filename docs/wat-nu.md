@@ -5,23 +5,28 @@ onafhankelijke lezers en een die hun bevindingen tegen de code natrok. Elk cijfe
 zelf geteld, niet overgenomen.
 
 **Waar het archief staat.** 4.504 foto's. Daarvan dragen er **3.890 (86,4 %) geen jaartal** en
-hangen er **796 (17,7 %) aan geen enkele plaats**; 3.139 dragen een schenker, verdeeld over 298
-namen. De gazetteer kent 131 plaatsen, 45 daarvan straten. De 396 tests draaien in acht
+hangen er **793 (17,6 %) aan geen enkele plaats**; 3.139 dragen een schenker, verdeeld over 298
+namen. De gazetteer kent 131 plaatsen, 45 daarvan straten. De 485 tests draaien in tien
 seconden en `svelte-check` geeft nul fouten. Dit is geen slecht gebouwde site — het is een
 goede site met een paar gaten op de naden, en die naden zijn waar dit bestand over gaat.
 
+> **Nagerekend op 1 september 2026.** Zes lezers hebben elk punt hieronder tegen de code
+> gelegd. Wat er veranderd is: 796 zonder plaats was 793 en 560 zonder plaats én jaartal was
+> 557; het waren 396 tests en het zijn er 485; punt 6 is gedaan en punt 7 ook. Elk getal dat
+> hier nog staat is opnieuw geteld, niet overgeschreven.
+
 Twee van de gaten zijn tijdens deze doorlichting al gedicht, omdat ze te scherp waren om te
-laten liggen; ze staan onderaan onder *Al gedaan*. Wat hier staat is wat er nog ligt, op
+laten liggen; ze staan onderaan onder _Al gedaan_. Wat hier staat is wat er nog ligt, op
 volgorde van waarde gedeeld door moeite.
 
 ---
 
-## 1. Bladeren op onderwerp — 796 foto's zijn alleen met gokken te vinden
+## 1. ~~Bladeren op onderwerp — 793 foto's zijn alleen met gokken te vinden~~ — HALF GEDAAN
 
-**Wat er mis is.** 796 foto's matchen geen plaats, dus ze staan op geen enkele straatpagina en
-niet op de kaart; 560 daarvan dragen ook geen jaartal, dus ze staan ook niet op de tijdlijn.
-`docs/fotos-zonder-plaats.md` schrijft de oplossing in zijn eigen woorden — *"Wat ze wél nodig
-hebben is een andere ingang: bladeren op onderwerp in plaats van op plaats"* — en die ingang
+**Wat er mis is.** 793 foto's matchen geen plaats, dus ze staan op geen enkele straatpagina en
+niet op de kaart; 557 daarvan dragen ook geen jaartal, dus ze staan ook niet op de tijdlijn.
+`docs/fotos-zonder-plaats.md` schrijft de oplossing in zijn eigen woorden — _"Wat ze wél nodig
+hebben is een andere ingang: bladeren op onderwerp in plaats van op plaats"_ — en die ingang
 bestaat niet.
 
 De helft ervan is al gebouwd en ligt ongebruikt. `archive-index.json` levert al een `subjects`-
@@ -42,24 +47,57 @@ klasfoto's een eigen behandeling: school, leerjaar en meester als drie velden ui
 bestandsnaam, gegroepeerd per school en gesorteerd op schooljaar.
 
 **Eén waarheidsfoutje in dezelfde beweging:** de jaarparser plakt een reeks dicht op het
-laatste jaar, dus *1966-1967* wordt getoond als 1967. Van de 259 klasfoto's dragen er 107 een
+laatste jaar, dus _1966-1967_ wordt getoond als 1967. Van de 259 klasfoto's dragen er 107 een
 reeks in de naam. Bewaar de reeks — het veld is al tekst — en laat de tijdlijn ze aan het begin
 ervan zetten.
 
 **Moeite.** Een dag voor de routes, een tweede voor de klasfoto's.
 
+> **Routes gedaan op 1 september 2026. De klasfoto-behandeling niet.**
+>
+> `/onderwerpen` en `/onderwerp/[slug]` staan er, in het menu en in de sitemap, en de regel
+> "Onderwerp" op elke fotopagina is nu een link. De pijltjes lopen de map af: op een klasfoto
+> staat "Foto 1 van 259" in plaats van de straat van die foto.
+>
+> **Niet alle 79 mappen krijgen een pagina, en dat is de belangrijkste beslissing hier.**
+> 42 van de 79 slugs zijn óók een plaats-id: `hoevensebaan` is een map van 104 foto's én een
+> straat met 128. Twee pagina's, dezelfde naam, twee verschillende getallen — en de kleinste
+> heeft geen kaart, geen huisnummers en geen verhalen. In alle 42 gevallen is de
+> plaatspagina een superset, dus die is altijd de betere. Blijven over: 37 mappen, 2.705
+> foto's, en daar zitten **alle twaalf mappen met plaatsloze foto's** in.
+>
+> Eén was er eerst achtergehouden: `wedstrijden-gzvka` (555 foto's). Een bladerbare index
+> van 555 namen van levende personen is precies waar punt 3 hieronder over gaat.
+> **De heemkring heeft beslist: bouw de pagina.** `WITHHELD_SUBJECTS` in
+> `sharedModels/subject-pages.ts` staat nu leeg, dus het zijn 37 pagina's met 2.705 foto's.
+> Het verzoekmechanisme uit punt 3 is de tegenhanger ervan: wie er niet op wil staan, vraagt
+> het onder de foto zelf.
+>
+> **De jaartalreeksen zijn gerepareerd, en de beslissing viel de andere kant op dan hierboven
+> staat.** De parser plakte een reeks op het laatste jaar. Dat is juist voor een periode — de
+> molen van 1801-1908 is niet in 1801 gefotografeerd — maar fout voor de 118 bestandsnamen
+> met twee opeenvolgende jaren, want dat zijn schooljaren en voetbalseizoenen, en België
+> noemt een seizoen naar het jaar waarin het begint. Er is geen enkel tegenvoorbeeld in het
+> corpus. Een opeenvolgend paar wordt nu heel bewaard als `1999-2000` en op het eerste jaar
+> ingedeeld; 15 foto's verhuizen van decennium, allemaal klasfoto's op een decenniumgrens.
+> Zie `functions/src/utils/photo-year.ts`.
+>
+> Wat er van dit punt níét gedaan is: de klasfoto's als school + leerjaar + meester
+> uitsplitsen. Dat is nagemeten en staat nu als punt 9 hieronder, met de reden waarom het
+> een gesprek nodig heeft en geen regex.
+
 ---
 
-## 2. Een pagina voor elke straat in Kapellen, niet alleen voor de 45 met foto's
+## 2. ~~Een pagina voor elke straat in Kapellen, niet alleen voor de 45 met foto's~~ — GEDAAN
 
 **Wat er mis is.** Het meest voorkomende bezoek is iemand die zijn eigen straat intikt, en dat
 mislukt meestal. Het archief kent 45 straten. Het officiële register dat al meegeleverd wordt —
 `functions/src/data/streets/11023_Kapellen_streets.geojson` — kent er **313**, elk met
 coördinaat en lengte. Er zijn er dus **280 zonder foto's, zonder pagina en zonder iets**.
 
-Wie zo'n straat zoekt krijgt: *"Probeer een straatnaam, een deel van een naam, of een jaartal."*
+Wie zo'n straat zoekt krijgt: _"Probeer een straatnaam, een deel van een naam, of een jaartal."_
 Geen kaart, geen buurstraten, geen uitnodiging. De site spreekt zichzelf zelfs tegen: `/straten`
-adverteert de index als lopend *"van de Antwerpsesteenweg tot de Zilverenhoeklaan"*, en de
+adverteert de index als lopend _"van de Antwerpsesteenweg tot de Zilverenhoeklaan"_, en de
 Zilverenhoeklaan heeft geen pagina.
 
 **Wat te bouwen.** Genereer `static/data/street-register.json` uit de geojson (313 regels, ~20
@@ -74,27 +112,50 @@ vertrekt tenminste met de Hoevensebaan gezien.
 
 **Moeite.** Een dag.
 
+> **Gedaan op 1 september 2026, precies zoals hierboven, met één keuze erbij.**
+>
+> `npm run streets` schrijft nu ook `static/data/street-register.json`: 277 straten, 24 KB,
+> elk met naam, punt en lengte. `/straat/<slug>` antwoordt voor alle 313 — de straat in het
+> oranje op de kaart met de dichtstbijzijnde gefotografeerde plaatsen erbij, hun afstand
+> erbij, en een uitnodiging die de straat meeneemt naar `/upload?straat=<slug>`, waar ze
+> getoond en voorgevuld wordt. De Berkenlaan biedt Kasteel Beukenhof op 158 m, Mastbeekhof op
+> 158 m en de Koerspleindreef op 202 m.
+>
+> Gesorteerd op afstand en op niets anders. Wegen op het aantal foto's was het voor de hand
+> liggende alternatief en is hier fout: wie naar de Berkenlaan kijkt wil de straat om de hoek,
+> niet de drukste straat van het dorp.
+>
+> De zoekbalk en het resultatenpaneel vallen terug op het register, ónder de plaatsen die wél
+> foto's hebben en nooit erboven. "berken" biedt nu Berkenlaan en Berkensweg aan, gemarkeerd
+> als _nog geen foto's_, in plaats van niets.
+>
+> **De keuze: ze staan bewust niet in de sitemap.** Deze pagina's zijn voor de persoon die
+> zijn eigen straat intikt, niet voor een crawler die zijn budget aan 277 pagina's zonder één
+> foto besteedt. `/straten` staat er wel in en somt ze allemaal op onder _"Straten waar we nog
+> niets van hebben"_. `build-sitemap.ts` zegt dat op de plek waar iemand het anders zou
+> "repareren".
+
 ---
 
-## 3. Wat het archief over levende mensen publiceert
+## 3. ~~Wat het archief over levende mensen publiceert~~ — STAP 1 EN 2 GEDAAN
 
 **Wat er mis is.** Drie dingen, alle drie nagetrokken.
 
 De map `Wedstrijden GZVKA` bevat **555 foto's**, alle vooraf gerenderd, alle 556 keer in
-`sitemap.xml`, elk met een deelkaart van 1200×630. Hun titels zijn namen van mensen: *"15000
-leden - Annelies Vandenbroek - foto overhandiging"*. Dat is de eigen evenementenfotografie van
+`sitemap.xml`, elk met een deelkaart van 1200×630. Hun titels zijn namen van mensen: _"15000
+leden - Annelies Vandenbroek - foto overhandiging"_. Dat is de eigen evenementenfotografie van
 de vereniging uit 2014-2021 — levende privépersonen op recente privé-evenementen, op naam
-vindbaar via Google. `docs/fotos-zonder-plaats.md` classificeert er 512 van als *"Waarschijnlijk
-géén plaats"*.
+vindbaar via Google. `docs/fotos-zonder-plaats.md` classificeert er 512 van als _"Waarschijnlijk
+géén plaats"_.
 
 `/verhaal/einduitslag` publiceerde de eindstand van de fietszoektocht van 2014 als een
-genummerde lijst van ongeveer 140 inwoners met hun score. *Dat is inmiddels weggehaald* — zie
-*Al gedaan* hieronder — maar in de lopende tekst van diezelfde pagina staan nog wel de namen van
+genummerde lijst van ongeveer 140 inwoners met hun score. _Dat is inmiddels weggehaald_ — zie
+_Al gedaan_ hieronder — maar in de lopende tekst van diezelfde pagina staan nog wel de namen van
 de prijswinnaars van de sponsorvragen. Dat is een ander soort publicatie (de vereniging heeft
 het zelf zo aangekondigd) en het is een beslissing van de heemkring, niet van een programmeur.
 
-En: `/contact` belooft *"Staat u ergens op en wilt u dat een foto weggaat, zeg het dan — dat is
-geen discussie."* **Er bestaat geen mechanisme dat die belofte kan waarmaken.** De index wordt
+En: `/contact` belooft _"Staat u ergens op en wilt u dat een foto weggaat, zeg het dan — dat is
+geen discussie."_ **Er bestaat geen mechanisme dat die belofte kan waarmaken.** De index wordt
 opgebouwd uit wat er op schijf staat, dus weghalen betekent vandaag: uit git verwijderen, waar
 het in de geschiedenis blijft staan. `/beheer` heeft er geen bureau voor.
 
@@ -105,12 +166,41 @@ het in de geschiedenis blijft staan. `/beheer` heeft er geen bureau voor.
    luidruchtig op een verouderde regel, en dat is precies wat je wil voor een verwijdering die
    stilletjes gestopt is met werken.
 2. Een knop **"Ik sta hierop"** op de fotopagina, naast het bestaande dateringsformulier, en een
-   bureau *Verzoeken* op `/beheer` naar het model van de jaartallenwachtrij. De wachtrij, de
+   bureau _Verzoeken_ op `/beheer` naar het model van de jaartallenwachtrij. De wachtrij, de
    snelheidsbegrenzing en de beoordelings-UI bestaan alle drie al.
 3. Beslis dan wat er met die 555 wedstrijdfoto's moet gebeuren: een aparte `/vereniging`-sectie
    buiten de sitemap, of laten staan. Dat is een keuze, geen bug — maar hij is nog niet gemaakt.
 
 **Moeite.** Twee dagen. Stap 1 en 2 zijn het echte werk; stap 3 is een gesprek.
+
+> **Stap 1 en 2 gedaan op 1 september 2026. Stap 3 is beslist en het antwoord was "laten
+> staan, maar geef ze een deur".**
+>
+> **Stap 2 eerst, en met opzet in die volgorde.** Onder elke foto staat nu _"Staat u op deze
+> foto en wilt u dat ze weggaat? Laat het weten — dat is geen discussie."_ Vier gronden, verder
+> alles optioneel, geen naam nodig. Het bureau _Verzoeken_ op `/beheer` heeft weghalen als de
+> primaire knop en vraagt een notitie als u het níét doet — niet om het aan de aanvrager uit te
+> leggen, die ziet het nooit, maar zodat het archief zijn eigen verslag heeft. Weghalen schrijft
+> een `hidden`-correctie in de overlay, dus de foto is binnen de minuut van de site.
+>
+> En de tekst op `/contact` is herschreven naar wat het mechanisme werkelijk doet, geen woord
+> meer: verbergen loopt via de overlay en bereikt de hele site tegelijk; de opgeslagen pagina en
+> de sitemap zijn bouwartefacten en volgen bij de eerstvolgende publicatie. _"Overal weg,
+> meteen"_ was de makkelijkere zin en was niet waar. Wat het archief níét kan beloven — het
+> bestand blijft in de geschiedenis van deze repository staan — staat er nu ook.
+>
+> **Stap 1 daarna:** `functions/src/data/suppressed.json`. Op het **corpuspad** gesleuteld en
+> niet op het foto-id, want een correctie gaat over een record en een verwijdering over een
+> bestand; het id wordt uit het pad afgeleid en botsende slugs krijgen een `-2`, dus een
+> onverwante toevoeging zou een verwijdering stil ongedaan kunnen maken. De bouw slaat zo'n
+> bestand volledig over — het staat dus niet in de index, niet in de zoekfunctie, niet in de
+> sitemap en niet in de vooraf gerenderde HTML, en wordt niet achteraf weggefilterd maar nooit
+> geschreven. Streng waar al het andere in deze repository zacht faalt: een ontbrekend bestand,
+> een onbekende reden of een regel die naar een niet-bestaand bestand wijst stopt de bouw. Het
+> bureau toont het pad om te plakken naast elk toegekend verzoek.
+>
+> **Stap 3, beslist door de heemkring: bouw de pagina.** De 555 wedstrijdfoto's blijven staan
+> en krijgen een onderwerppagina zoals elk ander onderwerp — zie punt 1.
 
 ---
 
@@ -120,19 +210,19 @@ het in de geschiedenis blijft staan. `/beheer` heeft er geen bureau voor.
 correctielaag en de goedgekeurde inzendingen voordat iemand iets ziet — twee verzoeken naar
 functies die koud kunnen staan, met een grens van drie seconden. En `SearchResults` heeft geen
 enkele tak voor "nog aan het laden": bij een leeg archief rendert het niets. Op een oude
-Android op dorps-4G tikt iemand zijn straat in, drukt op *Zoek*, en de pagina verandert drie
+Android op dorps-4G tikt iemand zijn straat in, drukt op _Zoek_, en de pagina verandert drie
 seconden lang niet. Dat leest als kapot.
 
-De helft van deze diagnose staat al in de code zelf, in `src/lib/photo-edits.ts`: *"a cold
-function held the whole site behind a third party"* en *"The real fix is for the archive not to
+De helft van deze diagnose staat al in de code zelf, in `src/lib/photo-edits.ts`: _"a cold
+function held the whole site behind a third party"_ en _"The real fix is for the archive not to
 wait on this at all: resolve on the generated index and lay the corrections over it when they
-arrive."* Dat was toen de juiste afweging. Nu staat het tussen een bezoeker en een werkende
+arrive."_ Dat was toen de juiste afweging. Nu staat het tussen een bezoeker en een werkende
 zoekbalk.
 
 **Wat te bouwen.**
 
 1. Geef `SearchResults` een laadtak: bij een niet-lege zoekterm en een leeg archief een regel
-   tekst en een paar lege kaarten, zodat drukken op *Zoek* altijd iets doet. Een half uur.
+   tekst en een paar lege kaarten, zodat drukken op _Zoek_ altijd iets doet. Een half uur.
 2. Splits `loadArchive` in twee antwoorden: meteen op de gegenereerde index, en de overlay via
    een store zodra ze binnen is. De aanroepers zijn er vijf en die verwerken allemaal al dat
    `archive` verandert. De vooraf gerenderde HTML draagt de gecorrigeerde titels al, dus voor
@@ -140,14 +230,48 @@ zoekbalk.
 3. Twee regels in `firebase.json`: zet `/api/photoEdits`, `/api/placePins` en
    `/api/publishedPhotos` **boven** de `**`-regel en laat de client daarheen wijzen. Dan staan
    ze achter het CDN, waar hun `s-maxage` eindelijk iets doet, en zijn ze same-origin.
-4. `MAX_EDITS` staat op 5.000 tegen 4.504 foto's — 90 % vol, en voorbij die grens verdwijnen
-   correcties in willekeurige volgorde zonder foutmelding. Verhoog of pagineer, en sorteer.
+4. ~~`MAX_EDITS` staat op 5.000 tegen 4.504 foto's — 90 % vol, en voorbij die grens verdwijnen
+   correcties in willekeurige volgorde zonder foutmelding. Verhoog of pagineer, en sorteer.~~
+   **GEDAAN.** De overlay wordt nu in pagina's van 1.000 gelezen, expliciet gesorteerd op
+   document-id, tot de collectie op is. Het plafond staat op 25.000 — vijf keer het corpus —
+   en wordt geraakt betekent nu een `console.error` die zegt wat er moet gebeuren, in plaats
+   van correcties die stil wegvallen. `functions/src/services/paged-read.ts`, met zes tests.
 
-**Moeite.** Een dag voor alle vier.
+**Moeite.** Een dag voor alle vier (stap 4 is gedaan; 1 is teruggedraaid, zie hieronder).
+
+> **Nagemeten op 1 september 2026, en de diagnose hierboven klopt niet.**
+>
+> Stap 1 — `SearchResults` een laadtak geven — is geprobeerd, gemeten en teruggedraaid,
+> omdat die tak nooit te zien is. Met de index kunstmatig zes seconden vastgehouden in een
+> echte browser: de zoekbalk staat na zes seconden nog steeds leeg, `document` is niet
+> gehydrateerd, en `onMount` is dus nooit gelopen. Er is geen moment waarop de pagina wél
+> leeft en het archief nog niet binnen is.
+>
+> De oorzaak is niet `SearchResults` maar `src/routes/+page.js`: `load` wacht op
+> `archiveSummary(fetch)`, en die haalt via `loadArchive` het volledige indexbestand van
+> 1,1 MB op. SvelteKit draait een universele `load` opnieuw in de browser bij hydratatie en
+> rendert de pagina pas als die klaar is. De bezoeker ziet ondertussen de vooraf gerenderde
+> HTML — een zoekbalk die er werkt uitziet en niets doet. Twaalf vooraf gerenderde routes
+> doen dit.
+>
+> De echte oplossing is dus stap 2, en groter dan hierboven staat: de gegevens die in de
+> HTML moeten staan horen in een `+page.server.js` (die wordt geserialiseerd en niet
+> opnieuw gedraaid), niet in een universele `load`. `/straat/[slug]` doet dat al voor zijn
+> `entries()`, met `node:fs`. Let op de modulecache in `loadArchive`: die zorgt dat de index
+> precies één keer opgehaald wordt tijdens het hele vooraf renderen, en dat is de reden dat
+> `build/index.html` hem inline draagt en de andere 4.700 pagina's niet.
+>
+> Wat er verder van dit punt nagerekend is: `loadArchive` wacht inmiddels op **drie**
+> overlays, niet twee (`loadPlaceRecords` is erbij gekomen). `MAX_EDITS` stond op 5.000 en
+> de query had geen `orderBy`, dus Firestore sorteerde impliciet op `__name__` — voorbij de
+> grens verdwenen de alfabetisch laatste foto-id's, wat voorspelbaar is en nog steeds stil.
+> Dat is inmiddels gerepareerd; zie stap 4 hierboven.
+> En een `/foto/**`-regel die 404 teruggeeft is in `firebase.json` niet te schrijven:
+> rewrites hebben geen statuscode en redirects doen alleen 3xx.
 
 ---
 
-## 5. Haal het werk van de curatoren terug naar git
+## 5. ~~Haal het werk van de curatoren terug naar git~~ — GEDEELTELIJK GEDAAN
 
 **Wat er mis is.** Alles wat een curator sinds de lancering gedaan heeft, staat in Firestore en
 nergens anders. Er is geen export: geen `firestore:export`, geen `gcloud firestore`, geen
@@ -181,9 +305,23 @@ Dat is het eerlijke antwoord op "wat als de beheerder ermee stopt".
 
 **Moeite.** Anderhalve dag.
 
+**Wat er gebeurd is.** `npm run archive:pull` bestaat, met
+`.github/workflows/pull-curator-work.yml` die het elke nacht draait en een pull request
+opent als er iets verschilt. Het schrijft `place-coordinates.json` (de pins, in het bestand
+dat het zelf al beloofde), `photo-edits.json` en `place-records.json`. De loaders lezen die
+bestanden nu als de bodem onder de live-overlay: een koude functie betekent de laatst
+opgehaalde stand in plaats van stilletjes elke correctie terugdraaien, en zonder
+`VITE_BASE_URL_GF` zijn de gecommitte kopieën het hele antwoord — een verse clone bouwt het
+archief zoals de curatoren het gemaakt hebben, zonder Firebase-project.
+
+Twee dingen bewust níét: de wachtrijen (`photo-facts`, `submissions`, `removal-requests`)
+worden niet geëxporteerd, want die dragen namen, e-mailadressen en vrije tekst van mensen —
+en deze repository is openbaar. Die horen in een privé Firestore-export, niet in een commit.
+En de afbeeldingen in Storage staan er nog steeds los van; dat blijft open.
+
 ---
 
-## 6. 396 tests draaien nergens, en drie van de vier Firebase-producten worden met de hand uitgerold
+## 6. ~~396 tests draaien nergens, en drie van de vier Firebase-producten worden met de hand uitgerold~~ — GEDAAN
 
 **Wat er mis is.** Beide workflows doen hetzelfde: uitchecken, secrets zetten, `npm ci`,
 `npm run thumbs`, `npm run build`, uitrollen. **Er wordt niets geverifieerd.** Ondertussen
@@ -199,7 +337,7 @@ een 500, die de overlay stil inslikt tot een lege verzameling.
 
 `npm run lint` kan nog niet aangezet worden: `.eslintrc.cjs` gebruikt het gearchiveerde
 `eslint-plugin-svelte3` zonder TypeScript-parser, dus eslint struikelt al op de eerste import.
-Dat is configuratie, geen code. En `swagger-jsdoc` staat in de *dependencies* van de functions,
+Dat is configuratie, geen code. En `swagger-jsdoc` staat in de _dependencies_ van de functions,
 wordt bij elke uitrol meegestuurd, en wordt nergens gebruikt.
 
 **Wat te bouwen.** Eén `verify`-job waar beide workflows van afhangen: `actions/setup-node@v4`
@@ -212,9 +350,24 @@ laatste is het stuk dat u overleeft.
 
 **Moeite.** Een halve dag voor de poort, een halve voor de lintconfiguratie.
 
+> **Gedaan op 1 september 2026.** Beide workflows draaien nu eerst `npm test --prefix
+functions`, dan `svelte-kit sync && svelte-check` en dan `npm run build --prefix functions`;
+> de merge-workflow rolt daarna `functions,firestore,storage` uit en pas dáárna hosting, in
+> die volgorde omdat de omgekeerde volgorde een pagina live zet die een endpoint aanroept dat
+> niemand uitgerold heeft. Er is ook een `workflow_dispatch` met de keuze
+> `everything` / `backend` / `hosting`, zodat opnieuw uitrollen een knop in de GitHub-app is
+> in plaats van een laptop. Zie `docs/deploy.md` — dat beschrijft ook de IAM-rollen die de
+> sleutel nodig heeft.
+>
+> Wat er van dit punt níét gedaan is: de verouderingscontrole (`npm run archive:index && git
+diff --exit-code static/data`), de lintconfiguratie, `swagger-jsdoc` weggooien en
+> `dependabot.yml`. De verouderingscontrole is het waardevolste stuk dat nog ligt: CI
+> regenereert `static/data` en `sitemap.xml` niet, dus een gecommit indexbestand kan
+> achterlopen op de bron zonder dat iets dat merkt.
+
 ---
 
-## 7. De leesbaarheidsronde die dit publiek echt nodig heeft, en het ene dat de site niet kan
+## 7. ~~De leesbaarheidsronde die dit publiek echt nodig heeft, en het ene dat de site niet kan~~ — GEDAAN
 
 **Wat er mis is.** Kleine dingen die allemaal bij dezelfde zeventigjarige uitkomen.
 
@@ -233,7 +386,7 @@ de kop over te slaan, is niet over te slaan.
 En het ene dat de site helemaal niet kan: **afdrukken.** Er is precies één `@media print`-regel
 en die zet de papierkorrel uit. Een fotopagina afdrukken levert vandaag de plakkende kop met drie
 uitklapmenu's, de kruimelbalk, de knoppen Bewaren en Delen, het dateringsformulier, de
-cookiebanner als die nog staat, en de foto ingeperst op `h-[58vh]` — een *schermhoogte*, wat op
+cookiebanner als die nog staat, en de foto ingeperst op `h-[58vh]` — een _schermhoogte_, wat op
 papier een fractie van het blad is. Voor een heemkring waarvan de leden afdrukken meebrengen naar
 de vergadering en opsturen naar een zus in Canada, is dat een echt gemis.
 
@@ -246,6 +399,35 @@ naast Bewaren en Delen, want niemand vindt het printmenu op een telefoon. Zet er
 contrasttest bij, zodat een volgende kleurwijziging dit niet stil terugbreekt.
 
 **Moeite.** Een dag voor beide helften.
+
+> **Gedaan op 1 september 2026, met drie correcties op wat hierboven staat.**
+>
+> De contrastcijfers klopten, maar de lijst niet. Buiten `/beheer` staan 50 regels
+> `text-gray-500`, niet "24 componenten": 26 daarvan staan op de papierkleur en zijn
+> aangepast, 24 staan op een witte of grijze kaart en halen 4,63 tot 4,83 — die zijn met
+> opzet blijven staan, want ze blind meenemen haalt de hiërarchie tussen titel en bijschrift
+> weg. Het voorbeeld dat hierboven genoemd wordt, "de onderwerpsregel onder elke kaart", is
+> juist een van die 24: `PhotoCard` heeft `bg-white`.
+>
+> Wat hierboven ontbrak en het ergste was: de voettekst zette twee regels — "Met dank aan" en
+> de copyrightregel — in `text-gray-400 dark:text-gray-500`. Dat is **2,54:1 in de lichte
+> modus en 3,67:1 in de donkere**, het slechtste contrast op de hele site, en in beide
+> thema's tegelijk. "Donkere modus is in orde" gold dus niet.
+>
+> En er zijn twee regels van tien pixels op de tijdlijn, niet één: het decenniumlabel én de
+> teller erboven.
+>
+> Verder: `initial-scale=1`, een skip-link naar `<main id="inhoud" tabindex="-1">` (die
+> `tabindex` is nodig, anders verspringt de focus in Safari niet), lijstrijen op precies
+> 44 px, en een afdrukblad voor de fotopagina met een knop **Afdrukken** ernaast. Nagekeken in
+> een echte browser met `emulateMedia('print')`: kop, kruimelpad, knoppen, dateringsformulier,
+> voettekst, pijlen en de miniaturen ernaast verdwijnen allemaal, de foto komt uit zijn
+> `64vh`-kader, en de URL komt onder de titel te staan.
+>
+> `sharedModels/contrast.ts` rekent het uit en `functions/src/data/contrast.test.ts` houdt het
+> vast — inclusief één regel die over alle ondergronden van deze site waar is en dus over de
+> echte bestanden te controleren valt: geen `text-gray-400` in de lichte modus, want die faalt
+> op papier (2,31), op wit (2,54) en op paper-base (2,41).
 
 ---
 
@@ -269,11 +451,99 @@ decodeert elk bestand toch al — en per bestand een sha256 en een perceptuele h
 Rapport in de vorm van `docs/fotos-zonder-plaats.md`, met per groep de tegenstrijdige jaartallen
 en plaatsen. Daarna een `merge`-regel in `photo-corrections.json` die één id als de echte
 aanwijst en de andere als alias; de bouw laat de alias weg en `/foto/<alias>` stuurt door. En
-zodra dat er is: hash de bytes al bij het insturen en toon *"Het archief heeft deze foto al"*
+zodra dat er is: hash de bytes al bij het insturen en toon _"Het archief heeft deze foto al"_
 naast een wachtende inzending die matcht — precies wat een brede Facebook-oproep betrouwbaar
 oplevert.
 
 **Moeite.** Een halve dag voor het rapport, een dag voor het samenvoegen.
+
+> **Rapport gedaan op 1 september 2026. Eén helft van dit punt klopt, de andere niet.**
+>
+> `npm run duplicates` bestaat en schrijft `docs/dubbele-fotos.md`. De telling hierboven is
+> exact: **314 groepen over 656 bestanden, 342 records te veel**. Wat het rapport eraan
+> toevoegt is welk deel daarvan de moeite waard is. De grootste groepen zitten volledig in
+> _Wedstrijden GZVKA_ en zijn sponsorlogo's — hetzelfde bestand bij zes wedstrijden, geen
+> foto van Kapellen die twee keer bestaat. Dat is 54 groepen. Het echte werk zijn de **251
+> groepen die niets met die map te maken hebben**, waarvan er **119 het oneens zijn over de
+> plaats**: dezelfde opname op twee straatpagina's, twee keer geteld op de kaart.
+>
+> **Het mastenbos-verhaal hierboven klopt niet — er zijn geen 173 dubbele bestanden.** Het
+> zijn 173 verschillende foto's, waarvan er één record elk twee plaats-id's draagt.
+>
+> **En de eerste lezing hiervan was zelf fout, wat hier hoort te staan.** Ze werd getest op
+> `photo.p`, en dat pad bevat de mapnaam "Mastenbos en Loopgravenpad" — dus "beide woorden"
+> matchte altijd, en de conclusie was dat het dubbele label waarschijnlijk terecht was.
+> Opnieuw gemeten op alleen de bestandsnaam: **169 noemen alleen het Mastenbos, 1 alleen het
+> Loopgravenpad, 3 allebei, 0 geen van beide.** De map is een verzameling van twee plaatsen,
+> geen plaats die twee namen heeft.
+>
+> Hetzelfde gold voor _Dorpsstraat en Geuzenhoek_: 215 foto's, allemaal met beide id's.
+>
+> **Gerepareerd op 1 september 2026, en de heemkring heeft de keuze gemaakt: splitsen.** Een
+> map met "en" in de naam wier segmenten twee verschillende plaatsen aanwijzen geeft die
+> plaats niet meer aan al haar foto's; de bestandsnaam beslist per foto. Zie
+> `functions/src/gazetteer/match.ts` en `conjunction-folder.test.ts`.
+>
+> De regel gaat op **de mapnaam plus twee of meer verschillende plaatsen**, niet op "twee of
+> meer plaatsen" alleen, en dat is precies waarom hij de vijf terechte gevallen laat staan:
+> _Fort van Ertbrand_ → `ertbrand + fort-van-ertbrand`, _Kasteel San Salvador - Nelson
+> Mandelapark_, _Villa De Maretak - Kapellenbos_ — geen van die mapnamen bevat " en ". Van de
+> elf mappen met twee plaatsen zijn er precies twee die door de regel geraakt worden, en dat
+> zijn de twee hierboven.
+>
+> Wat er daarna nog aan hing: de tellers en het onderzoek moesten mee. `plaatsen.geojson`
+> weigerde de bouw met _"Geuzenhoek was researched against 216 photographs but the archive
+> holds 41"_ — terecht, want de twijfeltekst voor de Geuzenhoek redeneerde zelf vanuit die 216. Die tekst en die van het Loopgravenpad zijn herschreven naar wat er nu staat.
+
+---
+
+## 9. 259 klasfoto's, en niemand kan zijn eigen klas vinden
+
+**Wat er mis is.** `Klasfoto's` is na _Wedstrijden GZVKA_ de grootste map van het archief en de
+enige manier om erin te zoeken is de zoekbalk. De bestandsnamen dragen nochtans bijna alles wat
+een bezoeker wil: de school, het schooljaar, het leerjaar en vaak de meester of de juf.
+
+```
+Klasfoto - De Platanen 1999-2000 - 4de leerjaar A - juf Chris en meester De Sitter - ...
+Broedersschool 2de lj 1963-1964.jpg
+Klasfoto - Kleuterschool Hoevensebaan 1969-1970 - Sonja Linders - 22.12.2014.jpg
+```
+
+Nagemeten op 1 september 2026, over alle 259: **100 noemen een leerjaar**, 20 noemen een
+kleuterklas, 153 dragen een jaartal, en er zijn **105 verschillende namen vooraan**. Dat laatste
+getal is het echte werk, want het zijn geen 105 scholen.
+
+**Drie dingen die eerst beslist moeten worden — en het zijn beslissingen, geen bugs.**
+
+1. **Welke namen dezelfde school zijn.** "Broedersschool St. Jozef" (29), "Broederschool St.
+   Jozef" (1), "Broedersschool" en "Broedersschool 2de lj" (13) zijn er één. "Basisschool
+   Irishof" (16) en "Irishof" (5) ook. Bij het atheneum bewijst het archief het zelf:
+
+   ```
+   Klasfoto - KA 1965-1966 Mevr. Du Bosch - Rosa Blanckaerts - 22.01.2015.jpg
+   Klasfoto - Kon. Atheneum 1965-1966 - Mevr. Du Bosch - Rosa Blanckaerts - 22.01.2015.JPG
+   ```
+
+   Zelfde foto, zelfde schenker, zelfde datum, twee spellingen. Hetzelfde paar bestaat voor
+   `KTA 1976` en `Kon. Atheneum 1976` (Nancy Lamine, 28.02.2014). Maar KTA is wel degelijk een
+   ándere school dan het KA — `Klasfoto - KTA Technisch Atheneum.jpg` zegt het — en het archief
+   heeft ze door elkaar gehaald. Dat samenvoegen is lokale kennis, geen regex.
+
+2. **Wat er níét in die map thuishoort.** Vier van de "Kon. Atheneum"-bestanden zijn beelden van
+   Ernest Wynants (_Diana_, _Fortuna_, _Nadenken_, _de 3 gratieën_) en één is een Oscar Jespers.
+   Dat zijn beeldhouwwerken op de school, geen klasfoto's.
+
+3. **De dubbels.** De paren hierboven zijn niet alleen een spellingskwestie, het zijn twee
+   records van één foto — dus dit punt loopt via punt 8 en niet ernaast.
+
+**Wat te bouwen, zodra dat beslist is.** Een lezer in `sharedModels/` die school, schooljaar,
+leerjaar en leerkracht uit de naam haalt, met een aliastabel voor de schoolnamen naar het model
+van de gazetteer, en een `/school/<slug>` per school met de jaren eronder. Het jaartal is al in
+orde: een schooljaar wordt sinds vandaag als `1999-2000` bewaard en op het eerste jaar gesorteerd
+(zie `functions/src/utils/photo-year.ts`).
+
+**Moeite.** Een halve dag voor de lezer en de pagina's. De aliastabel is een gesprek van een half
+uur met iemand die de scholen kent, en zonder dat gesprek is de rest verkeerd.
 
 ---
 
@@ -283,8 +553,8 @@ Twee gaten waren te scherp om te laten liggen en zijn tijdens deze doorlichting 
 
 **De titeltrimmer at bijschriften op.** Hij liet een laatste segment vallen dat op een
 persoonsnaam lijkt — twee woorden met hoofdletters, geen van beide straatvormig — en dat is ook
-de vorm van *Garage Meyvis*, *Hotel-Cafe De Zwaan*, *St. Jozefkapel* en *Familie
-Bourlet-Luyckx*. 360 foto's werden getoond als een kale straatnaam, met het enige weggehaald wat
+de vorm van _Garage Meyvis_, _Hotel-Cafe De Zwaan_, _St. Jozefkapel_ en _Familie
+Bourlet-Luyckx_. 360 foto's werden getoond als een kale straatnaam, met het enige weggehaald wat
 de foto over zichzelf zei. En omdat de zoekindex uit de titel werd gebouwd en niet uit de
 bestandsnaam, waren die woorden ook onvindbaar: **894 foto's droegen een woord dat nergens meer
 te zoeken was**. Wie de garage zocht waar zijn vader werkte, kreeg te horen dat het archief zo'n
@@ -292,30 +562,30 @@ foto niet had, terwijl het er een had.
 
 De trimmer knipt nu alleen nog een naam weg die het corpus zelf als schenker kent — een naam
 waaronder niemand ooit een foto schonk is een bijschrift. Daaronder zat nog een oudere fout:
-als een bestandsnaam *z.n.* zegt (schenker onbekend) nam de parser het segment ervóór alsnog
+als een bestandsnaam _z.n._ zegt (schenker onbekend) nam de parser het segment ervóór alsnog
 als schenker en gooide het daarna weg, omdat diezelfde functie al had vastgesteld dat de
-schenker onbekend is — zo verloor *Nieuwe Wijk - St. Jozefkapel - zn - zd* de kapel uit zijn
+schenker onbekend is — zo verloor _Nieuwe Wijk - St. Jozefkapel - zn - zd_ de kapel uit zijn
 titel én uit alles wat daaruit volgt.
 
 Voor wat de trimmer terecht weglaat draagt elke foto nu een veld `k`: de woorden uit het pad
 die geen enkel ander veld draagt, mét de datum van schenking, de bestandsextensie en alle
 kale getallen eruit. Dat laatste is niet vrijblijvend — de eerste versie indexeerde gewoon
-het hele pad, en toen antwoordde *"2015"* met de 602 foto's die dát jaar geschonken waren in
+het hele pad, en toen antwoordde _"2015"_ met de 602 foto's die dát jaar geschonken waren in
 plaats van de 36 die erin genomen zijn. Nul foto's dragen nog een onbereikbaar woord, en twee
 tests houden allebei de helften vast.
 
 **Een goedgekeurde foto bereikte de website nooit.** `publishedPhotos` was geschreven, uitgerold
-en gedocumenteerd als *"what the website merges into the archive"* — en niets in `src/` riep het
+en gedocumenteerd als _"what the website merges into the archive"_ — en niets in `src/` riep het
 ooit aan. Een inwoner stuurde een foto in, een curator besteedde er vijf minuten aan, het bestand
 verhuisde naar de publieke map, en de foto verscheen nergens: niet in de zoekfunctie, niet op de
-straatpagina, niet op de kaart, niet op de schenkerspagina; zijn eigen URL toonde *"Deze foto
-kennen we niet"*. De uploadpagina beloofde een paar dagen en de README beloofde onmiddellijke
+straatpagina, niet op de kaart, niet op de schenkerspagina; zijn eigen URL toonde _"Deze foto
+kennen we niet"_. De uploadpagina beloofde een paar dagen en de README beloofde onmiddellijke
 publicatie, en allebei beschreven ze een eindpunt dat niemand aanriep. `loadArchive` haalt het nu
 op naast de correcties en plakt het eraan.
 
 **En de eindstand van de fietszoektocht van 2014 staat niet meer op de site.** `docs/PLAN.md`
-schreef de regel zelf: *"The .xlsx standings files are lists of 146-154 named private
-individuals. Do not import them."* Dezelfde lijst kwam alsnog binnen via de opgeslagen webpagina
+schreef de regel zelf: _"The .xlsx standings files are lists of 146-154 named private
+individuals. Do not import them."_ Dezelfde lijst kwam alsnog binnen via de opgeslagen webpagina
 en werd gepubliceerd — 140 namen met hun score, in de sitemap, op naam vindbaar. 407 regels zijn
 er nu uit; de tekst over het evenement is gebleven, want die is goed.
 
@@ -326,7 +596,7 @@ er nu uit; de tekst over het evenement is gebleven, want die is goed.
 Dingen die aantrekkelijk lijken en die hier niet thuishoren, met de reden erbij.
 
 **Een volledige rechten- en licentietaxonomie.** De tegenstrijdigheid is echt: de voettekst zegt
-*"© gzvKA · Alle rechten voorbehouden"* terwijl `LICENSE` een MIT-licentie op naam van één
+_"© gzvKA · Alle rechten voorbehouden"_ terwijl `LICENSE` een MIT-licentie op naam van één
 persoon is en alle 4.504 foto's in diezelfde repository staan; 69 bestanden crediteren Hoelen, 58
 Onroerend Erfgoed. Maar een gesloten rechtenvocabulaire per foto is een catalogiseerproject
 waarover de heemkring moet beslissen, en het zou op 4.504 records leeg blijven staan. **Doe de
@@ -348,8 +618,8 @@ goedgekeurde foto's tot vandaag nergens uitkwamen. Bouw dit wanneer de wachtrij 
 **E-mail in beide richtingen.** Werkelijk afwezig, en de diagnose klopt: een inzender hoort
 nooit iets terug en een curator hoort nooit dat er iets binnen is. Maar het vraagt een extensie,
 een besluit over wie er mailt en een schema. **Eén plak is bijna gratis:** de functie geeft de
-id's van de inzending al terug en de uploadpagina gooit ze weg. Bewaar ze, toon *"bewaar deze
-link"* per foto, en zet er een publieke `submissionStatus` naast die alleen `{status, url?}`
+id's van de inzending al terug en de uploadpagina gooit ze weg. Bewaar ze, toon _"bewaar deze
+link"_ per foto, en zet er een publieke `submissionStatus` naast die alleen `{status, url?}`
 teruggeeft.
 
 **Hervatbare uploads met een voortgangsbalk.** De faalgevallen zijn echt (een heel album in één
@@ -360,7 +630,7 @@ regel, de begrenzer bestaat al — en kom hierop terug als een echt album ooit m
 **De 1400 px detailafbeeldingen meesturen.** Beide workflows bouwen alleen `thumb` en `social`,
 dus de detailweergave valt terug op de thumbnail. Dat is **geen vergissing**: het commentaar in
 de workflow noemt de afweging (78 + 280 MB tegen 693 MB, en hosting bewaart elke versie) en de
-terugval is bewust. Wat wél de moeite is, is de *prijs* van die terugval: `firebase.json` stuurt
+terugval is bewust. Wat wél de moeite is, is de _prijs_ van die terugval: `firebase.json` stuurt
 `**` naar `/200.html`, dus een ontbrekende variant geeft **200 OK met 2.895 bytes HTML** die de
 browser downloadt, niet kan decoderen, en dan pas opnieuw probeert — twee verzoeken per bekeken
 foto, onzichtbaar in elk logboek omdat het een 200 is. Geef `/foto/**` een eigen regel die 404

@@ -1,0 +1,5 @@
+{
+	"version": 1,
+	"_comment": "Places a curator created or corrected, pulled out of Firestore by `npm run archive:pull`. The next `npm run archive:index` can fold these into the gazetteer, after which they are a no-op here. Do not edit by hand.",
+	"places": {}
+}

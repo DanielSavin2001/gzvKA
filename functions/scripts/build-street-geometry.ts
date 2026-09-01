@@ -33,7 +33,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import type { Gazetteer } from '../../sharedModels/gazetteer';
-import { normalizeText } from '../../sharedModels/text';
+import { normalizeText, slugify } from '../../sharedModels/text';
 
 function findRepoRoot(startDirectory: string): string {
 	let current = startDirectory;
@@ -56,6 +56,7 @@ const GAZETTEER_FILE = path.join(REPO_ROOT, 'functions', 'src', 'data', 'kapelle
 const ARCHIVE_INDEX = path.join(REPO_ROOT, 'static', 'data', 'archive-index.json');
 const OUTPUT_FILE = path.join(REPO_ROOT, 'static', 'data', 'street-geometry.json');
 const REPORT_FILE = path.join(REPO_ROOT, 'docs', 'streets-not-in-register.md');
+const REGISTER_OUTPUT = path.join(REPO_ROOT, 'static', 'data', 'street-register.json');
 
 const REGISTER_FILES = ['11023_Kapellen_streets.geojson', '11044_Stabroek_streets.geojson'];
 
@@ -223,6 +224,75 @@ interface StreetGeometry {
 	length?: number;
 }
 
+/**
+ * Every street the register knows, so the site can answer for the ones it has no photograph
+ * of.
+ *
+ * The archive holds photographs of 45 streets. Kapellen has 313. The most common visit is
+ * somebody typing the street they grew up in, and for 277 of them that failed completely -
+ * no page, no map, no suggestion, and a search box replying "Probeer een straatnaam". The
+ * site even contradicted itself: `/straten` advertises its index as running "van de
+ * Antwerpsesteenweg tot de Zilverenhoeklaan", and the Zilverenhoeklaan had no page.
+ *
+ * Name, slug, point and length only - about 20 KB for the lot. No centreline: this file is
+ * for a page that says "this street exists, here it is, we have no photograph of it yet",
+ * and a shape would be forty times the size for a sentence that does not need one.
+ *
+ * A street the gazetteer already knows is skipped, because that street has a real page with
+ * a map, house numbers and stories on it.
+ */
+function writeStreetRegister(
+	register: Map<string, RegisterFeature[]>,
+	placed: Set<string>,
+	counts: Map<string, number>
+): void {
+	const streets: { slug: string; name: string; lat: number; lng: number; length?: number }[] = [];
+
+	for (const features of register.values()) {
+		const kapellen = preferKapellen(features);
+		if (!kapellen || kapellen[0].properties.municipality !== 'Kapellen') continue;
+
+		const name = kapellen[0].properties.name;
+		const slug = slugify(name);
+		if (!slug) continue;
+
+		// The archive's own page is the better page wherever it exists - it carries the
+		// photographs, the map, the house numbers and the stories.
+		if (placed.has(slug) || counts.has(slug)) continue;
+
+		const [lng, lat] = midpoint(kapellen.flatMap(linesOf).filter((line) => line.length > 0));
+		if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+		const length = kapellen.reduce((sum, feature) => sum + (feature.properties.length_m ?? 0), 0);
+
+		streets.push({
+			slug,
+			name,
+			lat: round(lat),
+			lng: round(lng),
+			...(length > 0 ? { length: Math.round(length) } : {})
+		});
+	}
+
+	streets.sort((one, two) => one.name.localeCompare(two.name, 'nl'));
+
+	fs.writeFileSync(
+		REGISTER_OUTPUT,
+		JSON.stringify({
+			version: 1,
+			_comment:
+				'Every street in Kapellen that the official register knows and this archive has no ' +
+				'photograph of, from `npm run streets`. It exists so that somebody who types their own ' +
+				'street gets an answer instead of a shrug. Streets the archive does have are not here: ' +
+				'they have a real page.',
+			streets
+		}),
+		'utf8'
+	);
+
+	console.log(`Register       ${streets.length} streets with no photographs yet`);
+}
+
 function main(): void {
 	const gazetteer = JSON.parse(fs.readFileSync(GAZETTEER_FILE, 'utf8')) as Gazetteer;
 	const register = readRegister();
@@ -294,6 +364,7 @@ function main(): void {
 		'utf8'
 	);
 
+	writeStreetRegister(register, new Set(Object.keys(streets)), counts);
 	writeReport(unmatched, register.size);
 
 	const placed = Object.keys(streets).length;

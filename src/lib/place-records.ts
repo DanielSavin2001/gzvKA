@@ -78,15 +78,55 @@ function readable(record: PlaceRecord): PlaceRecord {
 	return kept;
 }
 
-/** The records, or null when they could not be fetched - null is "unknown", not "none". */
+/**
+ * The last copy `npm run archive:pull` wrote.
+ *
+ * The floor under the live overlay: a place a curator created is a place photographs point
+ * at, and losing it because a function was cold means those photographs briefly belong
+ * nowhere. It is also what lets a fresh clone reproduce the archive with no Firebase project
+ * at all.
+ *
+ * Missing is not an error - the file only exists once somebody has run the pull - and the
+ * same two readers run over it as over the live answer, because a committed record is just
+ * as capable of predating the reader that is running now.
+ */
+export async function loadCommittedPlaceRecords(
+	fetcher: typeof fetch = fetch
+): Promise<Record<string, PlaceRecord>> {
+	try {
+		const response = await fetcher('/data/place-records.json');
+		if (!response.ok) return {};
+
+		const parsed = (await response.json()) as Partial<PlaceRecordFile>;
+		const kept: Record<string, PlaceRecord> = {};
+		for (const [id, record] of Object.entries(parsed.places ?? {})) {
+			if (usable(record)) kept[id] = readable(record);
+		}
+		return kept;
+	} catch {
+		return {};
+	}
+}
+
+/**
+ * The records, or null when they could not be fetched - null is "unknown", not "none".
+ *
+ * Null rather than the committed copy on purpose: the callers use it to decide whether the
+ * answer is worth caching, and a fallback frozen for the session is exactly what should not
+ * happen. They reach for `loadCommittedPlaceRecords` themselves when this says null, so the
+ * fallback is visible where it is used rather than hidden behind a loader that claims to
+ * have fetched something.
+ */
 export async function loadPlaceRecords(
 	fetcher: typeof fetch = fetch,
 	options: { fresh?: boolean } = {}
 ): Promise<Record<string, PlaceRecord> | null> {
 	if (cache && !options.fresh) return cache;
 
-	// No backend configured: the normal state for a fresh clone; the site works without it.
-	if (!FUNCTIONS_BASE) return {};
+	// No backend configured: the normal state for a fresh clone. The committed copy is then
+	// the whole answer, which is the point of pulling it - `npm install && npm run build`
+	// reproduces the archive the curators made, with no Firebase project at all.
+	if (!FUNCTIONS_BASE) return loadCommittedPlaceRecords(fetcher);
 
 	try {
 		const response = await fetcher(`${FUNCTIONS_BASE}placeRecords`, {

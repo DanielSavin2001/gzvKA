@@ -1,0 +1,123 @@
+name: Pull the curators' work into git
+
+# Everything anybody has curated since the site went live lives in Firestore and nowhere
+# else. There is no export and no backup, and `static/data/place-coordinates.json` - the file
+# that calls itself the durable record of every coordinate a person placed by hand - is
+# empty. Worse, the site fails soft on purpose: an emptied project renders as a perfectly
+# healthy archive running on the generated index, so nobody would notice for weeks.
+#
+# This runs `npm run archive:pull` every night and opens a pull request when the files
+# differ. A pull request rather than a push, deliberately: the diff is then the readable
+# account of what the curators changed - which places moved, which titles were fixed - and
+# nobody finds out that the archive changed by reading `main`.
+#
+# It only ever touches three files under `static/data/`, and it opens a pull request; it
+# cannot deploy anything.
+#
+# The pull request will have no checks on it. GitHub does not trigger workflows for a pull
+# request opened with `GITHUB_TOKEN`, which is a loop guard rather than a mistake - and this
+# request carries data, not code. Push an empty commit to it if you want the preview build.
+
+on:
+  schedule:
+    # 03:17 UTC, off the hour on purpose: everything scheduled at :00 competes for runners.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+# One at a time. Two pulls racing would open two pull requests against the same branch.
+concurrency:
+  group: pull-curator-work
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH: curator-work
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Check the key is configured
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GZVKA_12A9F }}
+        run: |
+          if [ -z "$SERVICE_ACCOUNT" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT_GZVKA_12A9F is not set. See docs/deploy.md."
+            exit 1
+          fi
+
+      - run: npm ci --prefix functions
+
+      - name: Read the live overlays
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GZVKA_12A9F }}
+        run: |
+          # Written from an environment variable rather than interpolated into this script,
+          # so the key never appears in a command line or a shell trace.
+          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/service-account.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/service-account.json"
+
+          npm run archive:pull --prefix functions
+
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/service-account.json"
+
+      - name: Open a pull request if anything changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Only the three files the pull writes. Anything else in the tree is the runner's
+          # own doing and has no business in a data commit.
+          if git diff --quiet -- static/data; then
+            echo "Nothing changed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # One long-lived branch, force-pushed. A pull request per night would be a queue
+          # of near-identical requests nobody reads; this one always shows the whole gap
+          # between `main` and what the curators have done.
+          git checkout -B "$BRANCH"
+          git add static/data
+          git commit \
+            -m "Pull the curators' work out of Firestore" \
+            -m "Written by \`npm run archive:pull\`. The diff is what curators changed on the live site since the last time this landed."
+          git push --force origin "$BRANCH"
+
+          # A file rather than an inline --body, so the text is readable here and arrives
+          # unmangled. YAML strips this block's common indentation before the shell ever
+          # sees it, so the heredoc and its terminator both land at column 0.
+          cat > "$RUNNER_TEMP/pr-body.md" <<'BODY'
+          Opened by the nightly `archive:pull`. It reads the three public overlays - photo
+          edits, place pins and place records - and writes them to `static/data/`.
+
+          Read the diff as the account of what changed on the live site. Merging it means a
+          fresh clone reproduces the archive without a Firebase project at all.
+
+          The queues (`photo-facts`, `submissions`, `removal-requests`) are deliberately not
+          exported: they carry names, email addresses and free text from members of the
+          public, and this repository is public.
+          BODY
+
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')" ]; then
+            gh pr create \
+              --head "$BRANCH" \
+              --base main \
+              --title "Curator work from the live site" \
+              --body-file "$RUNNER_TEMP/pr-body.md"
+          fi

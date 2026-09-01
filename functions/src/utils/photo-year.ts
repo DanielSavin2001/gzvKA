@@ -49,7 +49,7 @@ const BELGIAN_INDEPENDENCE = 1830;
  */
 const BELGIAN_ANNIVERSARY = /\b(\d{1,3})\s*jaar\s+belgi[e\u00eb]/i;
 
-/** A period: two years joined by a dash, with or without spaces around it. */
+/** Two years joined by a dash, with or without spaces around it. */
 const RANGE = new RegExp(`\\b(${YEAR})\\s*-\\s*(${YEAR})\\b`);
 
 const SINGLE = new RegExp(`\\b(${YEAR})\\b`);
@@ -57,8 +57,33 @@ const SINGLE = new RegExp(`\\b(${YEAR})\\b`);
 /**
  * The year to file a photograph under, or undefined when the name gives none.
  *
- * An anniversary of Belgium yields the anniversary itself. A range yields its later year.
- * Everything else yields the first year in the name.
+ * An anniversary of Belgium yields the anniversary itself. A span of two consecutive years
+ * is a season and is kept whole. Any wider range yields its later year. Everything else
+ * yields the first year in the name.
+ *
+ * ## Why consecutive years are different
+ *
+ * Taking the later year of a range was written for periods, and it is right for those: a
+ * mill that stood from 1801 to 1908 was not photographed in 1801. It was wrong for the 118
+ * filenames in this archive whose two years are consecutive, because those are not periods
+ * at all - they are seasons, and Belgium names a season by the year it starts in.
+ *
+ * The corpus is unambiguous about it. Of those 118, 107 are class photographs
+ * ("Klasfoto - De Platanen 1999-2000 - 4de leerjaar") and the other 11 are football teams
+ * ("SP - Noorse VV - 1962-1963", "FC Cappellen 1933-1934"). A school year and a football
+ * season both run from autumn to spring, both are spoken of by their first year, and the
+ * photograph in both cases is taken near the start. There is not one counter-example: no
+ * consecutive pair in this archive means anything but a season.
+ *
+ * So "Klasfoto - De Platanen 1999-2000" was filed under 2000, which put a class from the
+ * nineties in the 2000s. Fifteen photographs sat in the wrong decade on the timeline for
+ * exactly this reason, all of them at the turn of one: 1969-1970, 1979-1980, 1989-1990,
+ * 1999-2000, 2009-2010.
+ *
+ * The span is kept whole rather than reduced to its first year, because "1969-1970" is what
+ * the photograph is actually of and everything downstream already reads a span: `startYear`
+ * sorts and bands by the first year, `decadeBandOf` puts it in the sixties, and a caption
+ * that says "1969-1970" is the truth a caption saying "1969" only approximates.
  */
 export function yearFromFilename(fileName: string): string | undefined {
 	// First, because the other two rules would read the year the photograph is *about*.
@@ -73,9 +98,17 @@ export function yearFromFilename(fileName: string): string | undefined {
 
 	const range = RANGE.exec(fileName);
 	if (range) {
-		const [, from, to] = range;
+		const from = Number(range[1]);
+		const to = Number(range[2]);
+
 		// Defensive: "1975-1970" is somebody's typo, not a period running backwards.
-		return Number(to) >= Number(from) ? to : from;
+		if (to < from) return String(from);
+
+		// A season - a school year or a football season - kept whole. See above.
+		if (to === from + 1) return `${from}-${to}`;
+
+		// A period. The first year is the one year the photograph certainly is not from.
+		return String(to);
 	}
 
 	return SINGLE.exec(fileName)?.[1];

@@ -80,6 +80,34 @@
 		en wilt u dat een foto weggaat, zeg het dan &mdash; dat is geen discussie.
 	</p>
 
+	<!--
+		This paragraph is the whole reason the removal queue exists.
+		 
+		The sentence above has stood since the site went up and there was no way to act on it:
+		this page names no address (see the note further up, and that is still the right call),
+		and the only route it offered was the comment box on Foto insturen, which cannot be sent
+		without attaching a photograph. Somebody who wanted out of the archive had to put
+		something into it first.
+
+		What it now says is what the mechanism actually does, no more. Hiding runs through the
+		curator overlay, so it reaches the whole site at once; the saved copy of the page and
+		the sitemap entry are build artefacts and go at the next publication. "Overal weg,
+		meteen" would be the easier sentence and it would not be true.
+	-->
+	<p class="mt-3 text-gray-700 dark:text-gray-300">
+		Dat vraagt u op de foto zelf: onder elke foto staat <strong
+			>&ldquo;Staat u op deze foto en wilt u dat ze weggaat?&rdquo;</strong
+		>. U hoeft niets uit te leggen en geen naam achter te laten. Iemand van het archief leest het en
+		haalt de foto weg; ze verdwijnt dan meteen uit het archief, de zoekfunctie en de kaart. Het kan
+		nog een paar dagen duren voor ook de opgeslagen versie van die pagina en de zoekmachines bij
+		zijn.
+	</p>
+
+	<p class="mt-3 text-gray-700 dark:text-gray-300">
+		Eén ding kunnen we niet beloven: het bestand zelf zit in de geschiedenis van dit archief en
+		blijft daar staan. Wat weggaat, is de foto op de site &mdash; en dat is wat mensen terugvinden.
+	</p>
+
 	<p class="mt-6 text-sm text-gray-600 dark:text-gray-400">
 		Meer over waar dit archief vandaan komt, staat op <a
 			class="text-blue-800 underline hover:no-underline dark:text-blue-300"
