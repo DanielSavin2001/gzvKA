@@ -150,6 +150,93 @@ Error: Request to https://firebaseextensions.googleapis.com/v1beta/projects/.../
 had HTTP Error: 403, The caller does not have permission
 ```
 
+**Geef hier geen rollen voor. Dat kan niet werken.** De permissie die de melding noemt,
+`firebaseextensions.instances.list`, zit in géén enkele toekenbare rol in heel GCP - niet in
+`roles/editor` (alle 11.981 permissies nagelopen), niet in `owner`, niet in `firebase.admin`
+(769), niet in `firebase.developAdmin`. Wat die rollen wél dragen is `firebaseextensions.configs.*`,
+en `configs.list` heeft dit deploy-account allang via `firebase.developAdmin`. Een avond
+rollen toekennen levert hier niets op.
+
+Het is een fout in het gereedschap, en het raakt élk project dat functies deployt:
+
+- `firebase-functions` zet sinds 5.1.0 altijd een `extensions`-sleutel in het discovery-manifest
+  (`lib/runtime/loader.js`), ook als er niets is. In 5.0.1 en eerder ontbreekt die sleutel.
+- `firebase-tools` toetst die sleutel op waarheid - `if (manifest.extensions)` in
+  `discovery/v1alpha1.js` en `some((b) => b.extensions)` in `deploy/functions/prepare.js` - en
+  een leeg object is waar in JavaScript. Dus draait `prepareDynamicExtensions` bij elke
+  functie-deploy, en die vraagt de Extensions-API naar de instances van dit project.
+
+Drie uitwegen, alle drie nagemeten door de gepubliceerde tarballs uit te pakken:
+
+| uitweg                           | wat er gebeurt                                                                                                    | vanaf                       |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| **firebase-tools ≥ 15.9.0**      | upstream heeft de aanroep in een `try/catch` gezet: de 403 wordt een gelogde waarschuwing en de deploy loopt door | 15.9.0 (afwezig t/m 15.8.0) |
+| firebase-tools 13.16.0 - 13.18.0 | in precies die drie releases roept niets in `lib/` `prepareDynamicExtensions` nog aan                             | -                           |
+| firebase-functions 5.0.1         | laatste versie waarvan het manifest de sleutel weglaat, dus de toets is onwaar                                    | -                           |
+
+**Deze workflow neemt de eerste**, want dat is de enige die vooruit wijst in plaats van iets te
+bevriezen: `FIREBASE_TOOLS: firebase-tools@15`. Ziet u in het log de regel _"Failed to fetch the
+list of extensions. Assuming for now that there are no existing extensions"_, dan is dat precies
+dit mechanisme dat zijn werk doet - dat is geen probleem, dat is de oplossing.
+
+En de deploy is gesplitst: eerst `--only firestore,storage`, dan `--only functions`. Reden staat
+bij de stap zelf - het gereedschap plant álle genoemde doelen voordat het er één uitrolt, dus een
+struikeling bij het plannen van de functies gooide regels en indexen weg die al gecompileerd
+waren en er niets mee te maken hadden.
+
+Waarom deze:
+
+- **firebase.developAdmin**, **firebasehosting.admin**, **firebaserules.admin** - de website en
+  de regels van Firestore en Storage.
+- **datastore.indexAdmin** - de indexen uit `firestore.indexes.json`.
+- **cloudfunctions.admin** - de twintig functies aanmaken, bijwerken en verwijderen.
+- **iam.serviceAccountUser** - een functie draait _als_ `gzvka-12a9f@appspot.gserviceaccount.com`,
+  en iets namens een ander account laten draaien is een recht apart.
+- **artifactregistry.writer** en **cloudbuild.builds.editor** - een functie deployen is een
+  build; die zet een image in Artifact Registry.
+- **serviceUsageConsumer** - de API's aanroepen die daarbij horen.
+
+Dit hoeft één keer. Daarna is deployen een merge, of een knop in de app.
+
+### De foutmelding die je krijgt als dit nog niet gebeurd is
+
+Op 1 september 2026 liep de eerste volledige deploy hier vast, en de melding is nuttiger dan
+bovenstaande lijst:
+
+```
+Error: Missing permissions required for functions deploy. You must have permission
+iam.serviceAccounts.ActAs on service account gzvka-12a9f@appspot.gserviceaccount.com.
+```
+
+Dat is `iam.serviceAccountUser`, en de melding wijst het precies aan: de functies dráaien als
+`gzvka-12a9f@appspot.gserviceaccount.com`, en het deploy-account moet dat account mogen
+gebruiken. De lus hierboven geeft die rol op projectniveau, wat volstaat. Wil je hem krabben
+tot alleen dat ene account, dan kan dat ook:
+
+```sh
+gcloud iam service-accounts add-iam-policy-binding \
+  gzvka-12a9f@appspot.gserviceaccount.com \
+  --member="serviceAccount:$SA" \
+  --role=roles/iam.serviceAccountUser \
+  --project gzvka-12a9f
+```
+
+**En let op wat er dan wél en niet gebeurd is:** de backend gaat eerst, dus als die faalt worden
+_"Build the website"_ en _"Deploy the website"_ overgeslagen en staat de oude site er gewoon nog.
+Dat is de bedoeling - zie de kop van de workflow - maar het betekent ook dat er na het geven van
+de rollen niets vanzelf gebeurt. Draai de deploy opnieuw met de knop: **Actions → Deploy to
+Firebase on merge → Run workflow**, met `everything`.
+
+### En dan nog één, over Extensions die dit project niet heeft
+
+De tweede poging kwam veel verder - `storage.rules` en `firestore.rules` gecompileerd, de
+indexen gelezen, de functiebroncode geanalyseerd - en viel toen om op:
+
+```
+Error: Request to https://firebaseextensions.googleapis.com/v1beta/projects/.../instances
+had HTTP Error: 403, The caller does not have permission
+```
+
 Dit project gebruikt géén Firebase Extensions: geen `extensions`-blok in `firebase.json`, geen
 `extensions/`-map. De aanroep komt uit het gereedschap zelf, en het is een samenloop van twee
 dingen die elk op zich redelijk zijn:
