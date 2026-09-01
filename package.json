@@ -11,6 +11,7 @@
 		"plaatsen": "npm --prefix functions run plaatsen",
 		"sitemap": "npm --prefix functions run sitemap",
 		"thumbs": "node scripts/build-thumbnails.mjs",
+		"duplicates": "node scripts/find-duplicates.mjs",
 		"deploy": "vite build && firebase deploy --only hosting",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",

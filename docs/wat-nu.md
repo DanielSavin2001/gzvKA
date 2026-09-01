@@ -353,6 +353,39 @@ oplevert.
 
 **Moeite.** Een halve dag voor het rapport, een dag voor het samenvoegen.
 
+> **Rapport gedaan op 1 september 2026. Eén helft van dit punt klopt, de andere niet.**
+>
+> `npm run duplicates` bestaat en schrijft `docs/dubbele-fotos.md`. De telling hierboven is
+> exact: **314 groepen over 656 bestanden, 342 records te veel**. Wat het rapport eraan
+> toevoegt is welk deel daarvan de moeite waard is. De grootste groepen zitten volledig in
+> _Wedstrijden GZVKA_ en zijn sponsorlogo's — hetzelfde bestand bij zes wedstrijden, geen
+> foto van Kapellen die twee keer bestaat. Dat is 54 groepen. Het echte werk zijn de **251
+> groepen die niets met die map te maken hebben**, waarvan er **119 het oneens zijn over de
+> plaats**: dezelfde opname op twee straatpagina's, twee keer geteld op de kaart.
+>
+> **Maar het mastenbos-verhaal hierboven klopt niet, en het is goed dat er niets aan
+> veranderd is.** Er zijn geen 173 dubbele bestanden: het zijn 173 verschillende foto's,
+> waarvan er één record elk twee plaats-id's draagt. En dat is waarschijnlijk terecht.
+> Alle 173 bestandsnamen bevatten _allebei_ de woorden, en het onderzoek in dit archief zegt
+> het zelf, bij `loopgravenpad`: _"Bestaat wél, als wandelpad (highway=path) door het
+> Mastenbos."_ Een pad dat door een bos loopt ligt in dat bos. De twee spelden staan 870 m
+> uit elkaar omdat de ene het zwaartepunt van het bos is en de andere een punt op het pad —
+> niet omdat het twee plaatsen zijn waar een foto tussen moet kiezen.
+>
+> Hetzelfde geldt voor _Dorpsstraat en Geuzenhoek_: 215 foto's, allemaal met beide id's, en
+> de twee punten liggen **231 m** uit elkaar — binnen de twijfelcirkel van 250 m die het
+> onderzoek zelf om de Geuzenhoek legt.
+>
+> Wat er dan wél aan de hand is, is smaller en is een vraag voor de heemkring, geen bug:
+> beide plaatspagina's tonen alle 215 respectievelijk 173 foto's, dus de teller zegt "215
+> foto's van de Dorpsstraat" waar een deel ervan van het Geuzenhoek-eind is. Of dat erg is,
+> weet alleen iemand die Kapellen kent.
+>
+> Zeven mappen geven meer dan één plaats aan al hun foto's. Vijf ervan zijn onbetwist juist
+> — _Fort van Ertbrand_ → `ertbrand + fort-van-ertbrand`, _Kasteel San Salvador - Nelson
+> Mandelapark_, _Villa De Maretak - Kapellenbos_. Een regel die op "twee of meer plaatsen"
+> zou afgaan, haalt die dus ook onderuit.
+
 ---
 
 # Al gedaan
