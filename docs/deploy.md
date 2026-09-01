@@ -111,6 +111,35 @@ Waarom deze:
 
 Dit hoeft één keer. Daarna is deployen een merge, of een knop in de app.
 
+### De foutmelding die je krijgt als dit nog niet gebeurd is
+
+Op 1 september 2026 liep de eerste volledige deploy hier vast, en de melding is nuttiger dan
+bovenstaande lijst:
+
+```
+Error: Missing permissions required for functions deploy. You must have permission
+iam.serviceAccounts.ActAs on service account gzvka-12a9f@appspot.gserviceaccount.com.
+```
+
+Dat is `iam.serviceAccountUser`, en de melding wijst het precies aan: de functies dráaien als
+`gzvka-12a9f@appspot.gserviceaccount.com`, en het deploy-account moet dat account mogen
+gebruiken. De lus hierboven geeft die rol op projectniveau, wat volstaat. Wil je hem krabben
+tot alleen dat ene account, dan kan dat ook:
+
+```sh
+gcloud iam service-accounts add-iam-policy-binding \
+  gzvka-12a9f@appspot.gserviceaccount.com \
+  --member="serviceAccount:$SA" \
+  --role=roles/iam.serviceAccountUser \
+  --project gzvka-12a9f
+```
+
+**En let op wat er dan wél en niet gebeurd is:** de backend gaat eerst, dus als die faalt worden
+_"Build the website"_ en _"Deploy the website"_ overgeslagen en staat de oude site er gewoon nog.
+Dat is de bedoeling - zie de kop van de workflow - maar het betekent ook dat er na het geven van
+de rollen niets vanzelf gebeurt. Draai de deploy opnieuw met de knop: **Actions → Deploy to
+Firebase on merge → Run workflow**, met `everything`.
+
 ## Wat er nog steeds met de hand moet
 
 Niets aan het deployen. Wel dit, en het is goed om te weten dat het bestaat:
