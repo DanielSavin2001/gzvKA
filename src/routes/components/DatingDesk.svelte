@@ -19,13 +19,22 @@
 	import { sortForDisplay, thumbUrl } from '$lib/archive';
 	import { judgePhotoFact, photoFacts, savePhotoEdit } from '$lib/admin';
 	import type { PhotoEdit } from '$lib/photo-edits';
-	import { forgetPhotoEdits } from '$lib/photo-edits';
 	import type { PhotoFact } from '../../../sharedModels/photo-fact';
 	import { PhotoFactError, readYear } from '../../../sharedModels/photo-fact';
 
 	export let archive: Archive;
 	/** The corrections already made, so a saved year merges rather than replacing them. */
 	export let edits: Record<string, PhotoEdit> = {};
+	/**
+	 * Re-reads the correction overlay, past every cache.
+	 *
+	 * This used to be `forgetPhotoEdits()` called here, which cleared the module's cache and
+	 * nothing else - the refetch it enabled then came back out of the browser's, because the
+	 * overlay is served with a cache lifetime on purpose. So the desk's own comment about a
+	 * curator seeing their own decision was not true. The page owns the refetch now, and it
+	 * asks past both caches.
+	 */
+	export let refresh: () => Promise<void> = async () => {};
 
 	const latestYear = new Date().getFullYear();
 
@@ -66,7 +75,7 @@
 
 			// The overlay changed, so anything reading it has to fetch again or the curator
 			// sees their own decision fail to appear.
-			if (status === 'accepted') forgetPhotoEdits();
+			if (status === 'accepted') await refresh();
 		} catch (problem) {
 			error = problem instanceof Error ? problem.message : String(problem);
 		} finally {
@@ -168,7 +177,11 @@
 				year: readYear(year, latestYear)
 			});
 
-			forgetPhotoEdits();
+			// Not awaited: this is the fast loop - type a year, press Enter, next photograph -
+			// and a curator should not wait on a read to get to the next one. It still has to
+			// happen, because `keep` builds the whole patch out of `edits` and a stale copy
+			// would write a year over a title somebody corrected a minute ago.
+			void refresh();
 			saved += 1;
 			at += 1;
 			focusField();

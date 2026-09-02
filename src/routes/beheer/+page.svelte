@@ -326,23 +326,33 @@
 	 * After a rename, the archive in memory still carries the old names: `donors()` reads
 	 * `photo.d`, and the overlay that has just changed is applied when the archive is built.
 	 * So it is thrown away and rebuilt rather than patched.
+	 *
+	 * `fresh` is the half that was missing, and its absence was invisible. Forgetting the
+	 * module caches and refetching sent the request, and the browser answered it out of the
+	 * response it already held - the overlay is served with a five-minute cache lifetime on
+	 * purpose - so the rebuilt archive was the pre-rename one. A donor merge said "364
+	 * foto's staan nu op Swatti Alix" and left both spellings on the page, through a reload,
+	 * for five minutes, with nothing anywhere to explain it.
 	 */
 	async function reloadArchive(): Promise<void> {
 		forgetPhotoEdits();
 		forgetArchive();
+		forgetPublished();
 		try {
-			archive = await loadArchive();
+			archive = await loadArchive(fetch, { fresh: true });
+			await refreshEdits();
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		}
 	}
 
 	async function refreshEdits(): Promise<void> {
-		// Fetched fresh rather than from the cache the site holds, so a curator sees their
-		// own last edit rather than whatever was loaded when the page opened.
+		// Past the browser's cache as well as this module's, for the reason `reloadArchive`
+		// gives: a curator reading back their own write is the one reader the overlay's
+		// cache lifetime must not apply to.
 		forgetPhotoEdits();
 		try {
-			photoEdits = await loadPhotoEdits();
+			photoEdits = await loadPhotoEdits(fetch, { fresh: true });
 		} catch {
 			photoEdits = {};
 		}
@@ -496,11 +506,13 @@
 
 			await review(decision);
 			// The site merges the approved photographs into the archive, and the archive is
-			// built once and kept. Both caches have to go, or a curator who walks from here to
-			// the street page in the same tab sees it without the photograph they just
-			// approved.
-			forgetPublished();
-			forgetArchive();
+			// built once and kept, so a curator who walks from here to the street page in the
+			// same tab would see it without the photograph they just approved. Rebuilt rather
+			// than only forgotten, and rebuilt past the browser's cache: forgetting alone left
+			// the next load to re-read the same pre-approval response off the endpoint's
+			// cache lifetime and rebuild exactly what was thrown away. Not awaited - the queue
+			// should stay quick, and `reloadArchive` reports its own failure.
+			void reloadArchive();
 			delete edits[item.id];
 			edits = edits;
 			items = items.filter((other) => other.id !== item.id);
@@ -632,7 +644,7 @@
 				same job from two directions, so they share a desk.
 			-->
 			{#if archive}
-				<DatingDesk {archive} edits={photoEdits} />
+				<DatingDesk {archive} edits={photoEdits} refresh={refreshEdits} />
 			{:else}
 				<p class="py-10 text-center text-gray-500 dark:text-gray-400">
 					Bezig met het laden van het archief ...
@@ -731,7 +743,7 @@
 			</div>
 		{:else if desk === 'schenkers'}
 			<div class="mt-6">
-				<DonorDesk {archive} on:changed={reloadArchive} />
+				<DonorDesk {archive} refresh={reloadArchive} />
 			</div>
 		{:else if desk === 'correcties'}
 			<h2 class="mt-6 text-xl font-bold text-gray-900 dark:text-gray-100">

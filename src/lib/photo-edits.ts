@@ -79,11 +79,19 @@ async function committed(fetcher: typeof fetch): Promise<Record<string, PhotoEdi
  *
  * A fallback answer is never cached, for the reason the pins give: the next call should
  * reach for the overlay again rather than freeze a bad minute into the whole session.
+ *
+ * `fresh: true` bypasses the endpoint's five-minute HTTP cache as well as this module's,
+ * and a curator writing corrections needs it. Forgetting the module cache alone was not
+ * enough and the difference was invisible: the refetch went out, the browser answered it
+ * from the response it already had, and the curator's own rename came back undone. On the
+ * donor desk that read as a merge reporting "364 foto's staan nu op ..." and then leaving
+ * both spellings on the page - through a reload, for five minutes, with nothing to say why.
  */
 export async function loadPhotoEdits(
-	fetcher: typeof fetch = fetch
+	fetcher: typeof fetch = fetch,
+	options: { fresh?: boolean } = {}
 ): Promise<Record<string, PhotoEdit>> {
-	if (cache) return cache;
+	if (cache && !options.fresh) return cache;
 
 	// No backend configured: the normal state for a fresh clone, where the committed copy is
 	// the whole answer and the archive is complete without Firebase at all.
@@ -91,7 +99,8 @@ export async function loadPhotoEdits(
 
 	try {
 		const response = await fetcher(`${FUNCTIONS_BASE}photoEdits`, {
-			signal: AbortSignal.timeout(TIMEOUT_MS)
+			signal: AbortSignal.timeout(TIMEOUT_MS),
+			...(options.fresh ? { cache: 'reload' as RequestCache } : {})
 		});
 		if (!response.ok) return committed(fetcher);
 

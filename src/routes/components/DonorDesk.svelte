@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { tick } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
 	import { donors as allDonors } from '$lib/archive';
@@ -26,8 +26,17 @@
 	 */
 
 	export let archive: Archive | null = null;
-
-	const dispatch = createEventDispatcher<{ changed: void }>();
+	/**
+	 * Rebuilds the archive the page is holding, awaited before this desk says anything.
+	 *
+	 * A callback rather than an event, because the order matters and an event cannot be
+	 * waited on. The desk used to fire `changed` and announce the rename in the same tick,
+	 * so the success line appeared beside a list that had not been rebuilt yet - and when
+	 * the rebuild came back with the old names anyway, as it did while the overlay was being
+	 * read out of the browser's cache, there was nothing to tell a curator which of the two
+	 * they were looking at. Now the message can only appear after the list agrees with it.
+	 */
+	export let refresh: () => Promise<void> = async () => {};
 
 	let query = '';
 	let busy: string | null = null;
@@ -82,9 +91,32 @@
 			const ids = [...new Set([...donor.photoIds, ...extra])];
 			const result = await renameDonor(ids, name);
 
-			done = `${result.changed} ${result.changed === 1 ? 'foto' : "foto's"} staan nu op "${name}".`;
 			editing = null;
-			dispatch('changed');
+
+			// Awaited, and then checked. `result.changed` is how many photographs the write
+			// touched, which is not the same claim as "the page now shows this" - and when
+			// the two came apart, as they did while the overlay was being read out of the
+			// browser's cache, the desk went on reporting the first one. So the archive is
+			// rebuilt, the rebuild is allowed to reach these bindings, and the answer is read
+			// back off the list the curator is actually looking at.
+			await refresh();
+			await tick();
+
+			const missing = ids.filter((id) => archive?.photoById.get(id)?.d?.trim() !== name);
+
+			done =
+				missing.length === 0
+					? `${result.changed} ${result.changed === 1 ? 'foto' : "foto's"} staan nu op "${name}".`
+					: null;
+
+			if (missing.length > 0) {
+				error =
+					`De naam is opgeslagen op ${result.changed} ${
+						result.changed === 1 ? 'foto' : "foto's"
+					}, maar ${missing.length} ${missing.length === 1 ? 'ervan staat' : 'ervan staan'} ` +
+					'hier nog op de oude naam. Ververs de pagina; blijft het zo, meld het dan - ' +
+					'de wijziging is wel bewaard.';
+			}
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {

@@ -118,10 +118,22 @@ let inFlight: Promise<Archive> | null = null;
  *
  * Pass SvelteKit's `fetch` from a load function so the request participates in its
  * caching; the plain global works too.
+ *
+ * `fresh: true` rebuilds from overlays fetched past every cache, this module's and the
+ * browser's both. A curator has to have it and a visitor must not: the overlays are served
+ * with a cache lifetime precisely so that 4,504 photographs' worth of page loads do not
+ * each ask Firestore, and the one person who needs an answer newer than that is the person
+ * who just wrote it. Without this, `forgetArchive()` rebuilt the archive out of the same
+ * cached overlay responses and the curator's own change was simply absent - which is what a
+ * donor merge did: it reported the rename and left both spellings on the page.
  */
-export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archive> {
-	if (cached) return cached;
-	if (inFlight) return inFlight;
+export async function loadArchive(
+	fetcher: typeof fetch = fetch,
+	options: { fresh?: boolean } = {}
+): Promise<Archive> {
+	if (cached && !options.fresh) return cached;
+	// A fresh load must not join a request that is already in flight against the caches.
+	if (inFlight && !options.fresh) return inFlight;
 
 	inFlight = (async () => {
 		const response = await fetcher('/data/archive-index.json');
@@ -148,9 +160,9 @@ export async function loadArchive(fetcher: typeof fetch = fetch): Promise<Archiv
 		// photograph filed under it belongs nowhere - which is what happened before, because
 		// nothing validated the id a curator typed.
 		const [edits, published, live] = await Promise.all([
-			loadPhotoEdits(fetcher),
-			loadPublished(fetcher),
-			loadPlaceRecords(fetcher)
+			loadPhotoEdits(fetcher, options),
+			loadPublished(fetcher, options),
+			loadPlaceRecords(fetcher, options)
 		]);
 
 		// The committed copy is the floor under the overlay, not a layer over it: a curator

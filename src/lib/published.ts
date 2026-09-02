@@ -66,15 +66,27 @@ function asArchivePhoto(published: PublishedPhoto): ArchivePhoto | null {
 	return photo;
 }
 
-export async function loadPublished(fetcher: typeof fetch = fetch): Promise<ArchivePhoto[]> {
-	if (cache) return cache;
+/**
+ * The approved uploads.
+ *
+ * `fresh: true` bypasses the endpoint's HTTP cache as well as this module's, which is what
+ * a curator needs immediately after approving a photograph: the browser would otherwise
+ * answer the refetch from the response it fetched before the approval, and the archive
+ * would rebuild without the photograph that was just published.
+ */
+export async function loadPublished(
+	fetcher: typeof fetch = fetch,
+	options: { fresh?: boolean } = {}
+): Promise<ArchivePhoto[]> {
+	if (cache && !options.fresh) return cache;
 
 	// No backend configured: the normal state for a fresh clone.
 	if (!FUNCTIONS_BASE) return [];
 
 	try {
 		const response = await fetcher(`${FUNCTIONS_BASE}publishedPhotos`, {
-			signal: AbortSignal.timeout(TIMEOUT_MS)
+			signal: AbortSignal.timeout(TIMEOUT_MS),
+			...(options.fresh ? { cache: 'reload' as RequestCache } : {})
 		});
 		if (!response.ok) return [];
 
