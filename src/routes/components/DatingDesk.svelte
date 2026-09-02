@@ -21,6 +21,7 @@
 	import type { PhotoEdit } from '$lib/photo-edits';
 	import type { PhotoFact } from '../../../sharedModels/photo-fact';
 	import { PhotoFactError, readYear } from '../../../sharedModels/photo-fact';
+	import ReasonDialog from './ReasonDialog.svelte';
 
 	export let archive: Archive;
 	/** The corrections already made, so a saved year merges rather than replacing them. */
@@ -59,14 +60,14 @@
 		}
 	}
 
-	async function judge(fact: PhotoFact, status: 'accepted' | 'rejected'): Promise<void> {
-		const reason =
-			status === 'rejected' ? window.prompt('Waarom niet? (wordt bewaard)') ?? '' : undefined;
+	/** The suggestion whose reason box is open, if any. */
+	let declining: PhotoFact | null = null;
 
-		// A rejection with no reason is refused by the server, so stop here rather than
-		// making the round trip to be told.
-		if (status === 'rejected' && !reason?.trim()) return;
-
+	async function judge(
+		fact: PhotoFact,
+		status: 'accepted' | 'rejected',
+		reason?: string
+	): Promise<void> {
 		busyId = fact.id;
 		error = null;
 		try {
@@ -292,7 +293,7 @@
 									type="button"
 									class="rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 disabled:opacity-60 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
 									disabled={busyId === fact.id}
-									on:click={() => judge(fact, 'rejected')}
+									on:click={() => (declining = fact)}
 								>
 									Afwijzen
 								</button>
@@ -427,4 +428,18 @@
 			{/if}
 		{/if}
 	</section>
+{/if}
+
+{#if declining}
+	<ReasonDialog
+		title="Voorstel afwijzen"
+		intro="Het voorstel blijft bewaard. Een reden helpt de inzender, maar hoeft niet."
+		busy={busyId === declining.id}
+		on:cancel={() => (declining = null)}
+		on:confirm={(event) => {
+			const fact = declining;
+			declining = null;
+			if (fact) judge(fact, 'rejected', event.detail.reason);
+		}}
+	/>
 {/if}

@@ -113,10 +113,6 @@ export async function decide(
 		throw new CorrectionError(`Deze melding is al ${status}.`);
 	}
 
-	if (status === 'rejected' && !rejectionReason?.trim()) {
-		throw new CorrectionError('Geef een reden op bij het afwijzen.');
-	}
-
 	const decided: PlaceCorrection = {
 		...correction,
 		status,
@@ -124,6 +120,11 @@ export async function decide(
 		reviewedBy: curator.email
 	};
 
+	// A rejection needs no reason. It used to, and the rule was quietly load-bearing: the
+	// only way to give one was a `window.prompt`, and cancelling it or leaving it empty
+	// abandoned the whole decision - so a curator who did not want to write a sentence could
+	// not decline at all. The reason is a message back to whoever sent this in, and there is
+	// nothing to say when a photograph is simply already in the archive.
 	if (status === 'rejected' && rejectionReason) {
 		decided.rejectionReason = rejectionReason.trim();
 	} else {

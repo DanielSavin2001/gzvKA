@@ -48,6 +48,7 @@
 	import PinPicker from '../components/PinPicker.svelte';
 	import PlaceDesk from '../components/PlaceDesk.svelte';
 	import RemovalDesk from '../components/RemovalDesk.svelte';
+	import ReasonDialog from '../components/ReasonDialog.svelte';
 
 	/**
 	 * The curator's desk.
@@ -431,23 +432,26 @@
 		}
 	}
 
+	/**
+	 * What a decline is waiting on, while the reason box is open.
+	 *
+	 * Held rather than passed through a callback, because the dialog is rendered once at the
+	 * end of the page: a modal nested inside a list row inherits that row's stacking context
+	 * and its overflow, and an overlay that is clipped by the card it came out of is worse
+	 * than no overlay.
+	 */
+	let declining:
+		| { kind: 'melding'; report: PlaceCorrection }
+		| { kind: 'foto'; item: QueuedSubmission }
+		| null = null;
+
 	async function judge(
 		report: PlaceCorrection,
-		status: 'accepted' | 'rejected' | 'pending'
+		status: 'accepted' | 'rejected' | 'pending',
+		reason?: string
 	): Promise<void> {
 		reportBusy = report.id;
 		try {
-			let reason: string | undefined;
-
-			if (status === 'rejected') {
-				const typed = window.prompt('Waarom wordt deze melding afgewezen?') ?? '';
-				if (!typed.trim()) {
-					reportBusy = null;
-					return;
-				}
-				reason = typed.trim();
-			}
-
 			await judgeCorrection({ id: report.id, status, rejectionReason: reason });
 			reports = reports.filter((other) => other.id !== report.id);
 			error = null;
@@ -456,6 +460,16 @@
 		} finally {
 			reportBusy = null;
 		}
+	}
+
+	/** Carries out whichever decline the reason box was opened for. */
+	async function confirmDecline(reason?: string): Promise<void> {
+		const pending = declining;
+		declining = null;
+		if (!pending) return;
+
+		if (pending.kind === 'melding') await judge(pending.report, 'rejected', reason);
+		else await decide(pending.item, 'rejected', reason);
 	}
 
 	/** What the person is actually claiming, in one line a curator can act on. */
@@ -490,19 +504,15 @@
 		return edits[item.id];
 	}
 
-	async function decide(item: QueuedSubmission, status: Decision['status']): Promise<void> {
+	async function decide(
+		item: QueuedSubmission,
+		status: Decision['status'],
+		reason?: string
+	): Promise<void> {
 		busy = item.id;
 		try {
 			const decision: Decision = { ...editsFor(item), status };
-
-			if (status === 'rejected') {
-				const reason = window.prompt('Waarom wordt deze foto afgewezen?') ?? '';
-				if (!reason.trim()) {
-					busy = null;
-					return;
-				}
-				decision.rejectionReason = reason.trim();
-			}
+			if (reason) decision.rejectionReason = reason;
 
 			await review(decision);
 			// The site merges the approved photographs into the archive, and the archive is
@@ -845,7 +855,7 @@
 										type="button"
 										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 disabled:opacity-50"
 										disabled={reportBusy === report.id}
-										on:click={() => judge(report, 'rejected')}
+										on:click={() => (declining = { kind: 'melding', report })}
 									>
 										Klopt niet
 									</button>
@@ -1140,7 +1150,7 @@
 										type="button"
 										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 disabled:opacity-50"
 										disabled={busy === item.id}
-										on:click={() => decide(item, 'rejected')}
+										on:click={() => (declining = { kind: 'foto', item })}
 									>
 										Afwijzen
 									</button>
@@ -1164,3 +1174,19 @@
 		{/if}
 	{/if}
 </div>
+
+{#if declining}
+	<!--
+		Rendered here, outside every list and card, so the overlay covers the page rather
+		than being clipped by the row the button was in.
+	-->
+	<ReasonDialog
+		title={declining.kind === 'melding' ? 'Melding afwijzen' : 'Foto afwijzen'}
+		intro={declining.kind === 'melding'
+			? 'De melding blijft bewaard, met uw reden erbij.'
+			: 'De foto wordt niet gepubliceerd. De inzending blijft bewaard.'}
+		busy={declining.kind === 'melding' ? reportBusy === declining.report.id : busy === declining.item.id}
+		on:cancel={() => (declining = null)}
+		on:confirm={(event) => confirmDecline(event.detail.reason)}
+	/>
+{/if}
