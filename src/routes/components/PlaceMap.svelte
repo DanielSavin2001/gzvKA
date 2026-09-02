@@ -36,11 +36,19 @@
 	import type { Archive, ArchivePlace } from '$lib/archive';
 	import { loadArchive, sortForDisplay, thumbUrl } from '$lib/archive';
 	import type { PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
-	import { loadCoordinates, loadStreetGeometry } from '$lib/coordinates';
+	import {
+		isWithinKapellen,
+		loadCoordinates,
+		loadStreetGeometry,
+		roundCoordinate
+	} from '$lib/coordinates';
 	import type { Approximation } from '$lib/approximations';
 	import { loadApproximations } from '$lib/approximations';
 	import { researchFor, splitPlaces } from '$lib/map-places';
+	import type { CorrectionDraft } from '$lib/corrections';
+	import { sendPlaceCorrection } from '$lib/corrections';
 	import ArchiveMap from './ArchiveMap.svelte';
+	import PlaceUncertainty from './PlaceUncertainty.svelte';
 
 	/**
 	 * The places this map is about.
@@ -154,7 +162,70 @@
 		(place) => researchFor(approximations, placed, place.id)?.display === 'benadering'
 	);
 
+	/**
+	 * A reader correcting a place, from any of the six pages this map serves.
+	 *
+	 * The front page had this and these did not, so the panel on /straten could tell a
+	 * reader "een rode stippellijn betekent dat we de plek maar bij benadering kennen -
+	 * weet u het beter, laat het weten" and then give them nothing to say it with. Somebody
+	 * who clicked the marker the sentence was about got its name, its count and six
+	 * thumbnails.
+	 */
+	let picking = false;
+	let picked: { lat: number; lng: number } | null = null;
+	let sending = false;
+	let sent = false;
+	let correctionError: string | null = null;
+
+	/** The research behind the open place, when it was researched rather than looked up. */
+	$: selectedResearch = selected ? researchFor(approximations, placed, selected.id) : undefined;
+
+	function resetCorrection(): void {
+		picking = false;
+		picked = null;
+		sending = false;
+		sent = false;
+		correctionError = null;
+	}
+
+	/**
+	 * A click on the map itself, which only means anything while a reader is pointing at
+	 * where a place really is.
+	 */
+	function onMapClick(event: CustomEvent<{ lat: number; lng: number }>): void {
+		if (!picking) return;
+
+		const { lat, lng } = event.detail;
+		if (!isWithinKapellen(lat, lng)) {
+			correctionError = 'Dat punt ligt buiten Kapellen.';
+			return;
+		}
+
+		picked = { lat: roundCoordinate(lat), lng: roundCoordinate(lng) };
+		picking = false;
+		correctionError = null;
+	}
+
+	async function sendCorrection(event: CustomEvent<CorrectionDraft>): Promise<void> {
+		if (!selected || sending) return;
+
+		sending = true;
+		correctionError = null;
+		try {
+			await sendPlaceCorrection(selected.id, event.detail);
+			sent = true;
+			picked = null;
+		} catch (problem) {
+			correctionError = problem instanceof Error ? problem.message : String(problem);
+		} finally {
+			sending = false;
+		}
+	}
+
 	async function choose(place: ArchivePlace): Promise<void> {
+		// Every place gets its own conversation. Without this a reader who had just reported
+		// one place saw "bedankt, uw melding is doorgegeven" sitting under the next one.
+		resetCorrection();
 		selectedId = place.id;
 
 		// The index is only ever needed for the default panel's thumbnails. A page that
@@ -206,6 +277,7 @@
 				{height}
 				{zoom}
 				on:select={(event) => choose(event.detail)}
+				on:mapclick={onMapClick}
 			/>
 		{:else}
 			<!--
@@ -266,14 +338,43 @@
 					</p>
 				{/if}
 			</slot>
+
+			<!--
+				Outside the slot, deliberately. /verhalen and the donor pages write their own
+				panel, and putting this inside would mean the two pages whose readers know
+				these places best are the two that cannot correct them.
+
+				Keyed on the place, so moving from one marker to the next builds a fresh
+				panel rather than reusing the instance with the previous place's answer still
+				selected in it.
+			-->
+			{#key place.id}
+				<PlaceUncertainty
+					approximation={selectedResearch ?? null}
+					placeName={place.name}
+					bind:picked
+					{picking}
+					{sending}
+					{sent}
+					error={correctionError}
+					on:pick={() => {
+						picking = true;
+						correctionError = null;
+					}}
+					on:cancel={resetCorrection}
+					on:submit={sendCorrection}
+				/>
+			{/key}
 		{:else}
 			<p class="text-sm text-gray-600 dark:text-gray-400">
 				Klik een bol aan om te zien wat er is. Hoe groter de bol, hoe meer {counting}.
 				{#if anyApproximate}
 					<span class="text-red-700 dark:text-red-300"
 						>Een rode stippellijn betekent dat we de plek maar bij benadering kennen</span
-					> &mdash; weet u het beter, laat het weten.
+					>.
 				{/if}
+				Klopt er iets niet &mdash; ook bij een bol zonder stippellijn &mdash; dan kunt u het in het venster
+				hieronder meteen zeggen.
 			</p>
 		{/if}
 	</div>

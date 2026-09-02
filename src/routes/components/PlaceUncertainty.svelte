@@ -7,6 +7,14 @@
 	/**
 	 * What the archive is unsure about, and the way to tell it otherwise.
 	 *
+	 * Also, now, the way to tell it otherwise when it was not unsure at all. `approximation`
+	 * is optional, because most places were never researched - they come straight from the
+	 * street register, or a curator made them - and those drew a marker on six maps with
+	 * nothing behind it. Being certain is not the same as being right, and the reader who
+	 * can see the pin is on the wrong side of the street is exactly the reader worth
+	 * hearing. The panel is quieter in that case: no warning triangle, no red, because
+	 * there is nothing to warn about until somebody says there is.
+	 *
 	 * The reasoning is shown in full rather than hidden behind a tooltip, because it is the
 	 * only part a reader can actually judge. Somebody who reads "the point comes from the
 	 * street name Bunderbeeklaan, because 'Bunder' appears in both" knows in one second
@@ -17,7 +25,9 @@
 	 * words only have to say why and offer the fix.
 	 */
 
-	export let approximation: Approximation;
+	export let approximation: Approximation | null = null;
+	/** The place's name, for the panel that has no research record to take it from. */
+	export let placeName = '';
 	/** A place the person can point at on the map. Set by the parent while picking. */
 	export let picked: { lat: number; lng: number } | null = null;
 	export let picking = false;
@@ -46,23 +56,36 @@
 	let name = '';
 	let email = '';
 
-	$: isApproximate = approximation.display === 'benadering';
-	$: isCandidates = approximation.display === 'kandidaten';
-	$: isMissing = approximation.display === 'niet_geplaatst';
-	$: isPerson = approximation.kind === 'persoon';
+	$: isApproximate = approximation?.display === 'benadering';
+	$: isCandidates = approximation?.display === 'kandidaten';
+	$: isMissing = approximation?.display === 'niet_geplaatst';
+	$: isPerson = approximation?.kind === 'persoon';
+	/**
+	 * The archive is not claiming to be unsure about this one.
+	 *
+	 * Two cases, and they deserve the same quiet panel. Either there is no research record
+	 * at all - most places come straight from the street register, or a curator made them -
+	 * or there is one and it says `punt`, which is a geocoded address the research was
+	 * confident about. All 64 of those are exactly the records that were marked not
+	 * correctable, and framing them in red under "Ligging niet zeker" would invent a doubt
+	 * to go with the invitation. Being certain is still not the same as being right, so the
+	 * invitation stays; only the alarm goes.
+	 */
+	$: settled = approximation === null || approximation.display === 'punt';
 
 	/** A coordinate correction is the only kind that needs a point before it can be sent. */
 	$: ready =
 		(kind === 'coordinate' && picked !== null) ||
 		(kind === 'candidate' && candidateLabel !== '') ||
-		((kind === 'not-a-place' || kind === 'still-unknown') && message.trim() !== '');
+		((kind === 'not-a-place' || kind === 'still-unknown' || kind === 'other') &&
+			message.trim() !== '');
 
 	function start(next: CorrectionKind, label = ''): void {
 		kind = next;
 		candidateLabel = label;
 		open = true;
 		if (next === 'candidate') {
-			const chosen = (approximation.candidates ?? []).find(
+			const chosen = (approximation?.candidates ?? []).find(
 				(candidate: Candidate) => candidate.label === label
 			);
 			if (chosen) picked = { lat: chosen.lat, lng: chosen.lng };
@@ -77,7 +100,7 @@
 	/** The coordinate to send: a chosen candidate's own, else whatever was pointed at. */
 	function coordinates(): { lat: number; lng: number } | null {
 		if (kind === 'candidate') {
-			const chosen = (approximation.candidates ?? []).find(
+			const chosen = (approximation?.candidates ?? []).find(
 				(candidate: Candidate) => candidate.label === candidateLabel
 			);
 			if (chosen) return { lat: chosen.lat, lng: chosen.lng };
@@ -106,8 +129,15 @@
 	}
 </script>
 
+<!--
+	Red says "the archive is unsure about this". A place nobody researched is not unsure,
+	it is simply unexamined, and painting its panel red would invent a doubt to go with the
+	invitation - so that one is grey and says what it is.
+-->
 <section
-	class="mt-4 rounded-lg border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950 p-4"
+	class="mt-4 rounded-lg border p-4 {settled
+		? 'border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
+		: 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950'}"
 >
 	{#if sent}
 		<p class="font-semibold text-green-900 dark:text-green-200">
@@ -117,9 +147,15 @@
 			Iemand van het archief kijkt ernaar. Tot dan blijft de plek staan zoals ze nu staat.
 		</p>
 	{:else}
-		<h3 class="flex items-center gap-2 font-bold text-red-900 dark:text-red-200">
-			<span aria-hidden="true">&#9888;</span>
-			{#if isPerson}
+		<h3
+			class="flex items-center gap-2 font-bold {settled
+				? 'text-gray-900 dark:text-gray-100'
+				: 'text-red-900 dark:text-red-200'}"
+		>
+			{#if !settled}<span aria-hidden="true">&#9888;</span>{/if}
+			{#if settled}
+				Klopt dit?
+			{:else if isPerson}
 				Dit is geen plaats
 			{:else if isMissing}
 				Nog niet gevonden
@@ -132,8 +168,28 @@
 			{/if}
 		</h3>
 
-		<div class="mt-2 space-y-2 text-sm text-red-900 dark:text-red-200">
-			{#if isPerson}
+		<div
+			class="mt-2 space-y-2 text-sm {settled
+				? 'text-gray-700 dark:text-gray-300'
+				: 'text-red-900 dark:text-red-200'}"
+		>
+			{#if settled}
+				<p>
+					{placeName || 'Deze plek'} staat op een opgezocht adres, of waar het straatregister of een
+					beheerder ze zette. Dat is meestal juist en soms niet &mdash; en wie er woont of gewoond heeft,
+					ziet dat in &eacute;&eacute;n oogopslag. Klopt er iets niet, zeg het dan hier.
+				</p>
+				{#if approximation?.note}
+					<!--
+						The research's own account of the place: what it was, when it came down,
+						the sentence the point rests on. Blokjesweg's says it is the local name
+						for the Kalmthoutsesteenweg and that the point is the level crossing in
+						the photograph. That is the most useful thing on this panel for somebody
+						deciding whether the pin is right.
+					-->
+					<p class="rounded bg-white p-2 dark:bg-gray-900/70">{approximation.note}</p>
+				{/if}
+			{:else if isPerson}
 				<!--
 					This branch has to come first, and what it is guarding against has changed.
 					It used to be the circle: the page told a visitor the real location was
@@ -163,16 +219,16 @@
 			{:else if isApproximate}
 				<p>
 					Deze plek is afgeleid uit een tekstbeschrijving, niet uit een adres. De echte locatie ligt
-					ergens binnen de rode cirkel (&plusmn; {readableRadius(approximation.radius)}).
+					ergens binnen de rode cirkel (&plusmn; {readableRadius(approximation?.radius)}).
 				</p>
 			{:else}
 				<p>
 					De straat klopt, maar het punt erop is een schatting &mdash; er hangen
-					{approximation.priority} foto's aan.
+					{approximation?.priority ?? 0} foto's aan.
 				</p>
 			{/if}
 
-			{#if approximation.doubt}
+			{#if approximation?.doubt}
 				<p class="rounded bg-white dark:bg-gray-900/70 p-2">
 					<span class="font-semibold">Waarom we twijfelen:</span>
 					{approximation.doubt}
@@ -182,8 +238,16 @@
 
 		{#if !open}
 			<div class="mt-3 flex flex-wrap gap-2">
-				{#if isCandidates}
-					{#each approximation.candidates ?? [] as candidate (candidate.label)}
+				{#if settled}
+					<button
+						type="button"
+						class="rounded-lg bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900"
+						on:click={() => start('coordinate')}
+					>
+						De speld staat verkeerd
+					</button>
+				{:else if isCandidates}
+					{#each approximation?.candidates ?? [] as candidate (candidate.label)}
 						<button
 							type="button"
 							class="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800"
@@ -228,6 +292,24 @@
 						Dit is geen plaats
 					</button>
 				{/if}
+
+				<!--
+					Offered on every place, whatever the archive thinks it knows. The four other
+					kinds each need the archive to have asked the right question first, and
+					somebody who can see that a name is misspelled, or that two entries are the
+					same place, or that these are photographs of the house next door, had
+					nowhere to put it and no reason to come back a second time. The sentence is
+					the whole correction.
+				-->
+				<button
+					type="button"
+					class="rounded-lg border px-3 py-2 text-sm font-semibold {settled
+						? 'border-gray-400 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+						: 'border-red-700 text-red-800 hover:bg-red-100'}"
+					on:click={() => start('other')}
+				>
+					Er klopt iets anders niet
+				</button>
 			</div>
 		{:else}
 			<div class="mt-3 space-y-3">
@@ -258,7 +340,11 @@
 
 				<label class="block">
 					<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-						{kind === 'coordinate' ? 'Hoe weet u dat? (mag u leeg laten)' : 'Wat weet u erover?'}
+						{kind === 'coordinate'
+							? 'Hoe weet u dat? (mag u leeg laten)'
+							: kind === 'other'
+							? 'Wat klopt er niet?'
+							: 'Wat weet u erover?'}
 					</span>
 					<textarea
 						bind:value={message}
@@ -302,7 +388,9 @@
 				<div class="flex gap-2">
 					<button
 						type="button"
-						class="rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+						class="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-400 {settled
+							? 'bg-blue-800 hover:bg-blue-900'
+							: 'bg-red-700 hover:bg-red-800'}"
 						disabled={!ready || sending}
 						on:click={send}
 					>

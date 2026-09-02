@@ -29,6 +29,7 @@
 	import { belongsOnMap, researchFor as research } from '$lib/map-places';
 	import type { CorrectionKind } from '../../../sharedModels/correction';
 	import PlaceUncertainty from './PlaceUncertainty.svelte';
+	import { sendPlaceCorrection } from '$lib/corrections';
 
 	let archive: Archive | null = null;
 	let placed: Record<string, PlacedCoordinate> = {};
@@ -44,8 +45,6 @@
 	let sendingCorrection = false;
 	let correctionSent = false;
 	let correctionError: string | null = null;
-
-	const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
 
 	/** The place whose photographs are shown in the panel. */
 	let selected: ArchivePlace | null = null;
@@ -340,15 +339,11 @@
 		correctionError = null;
 
 		try {
-			const response = await fetch(`${FUNCTIONS_BASE}submitCorrection`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ ...event.detail, placeId: selected.id })
-			});
-
-			if (!response.ok) {
-				throw new Error((await response.text()) || 'Versturen is niet gelukt.');
-			}
+			// Shared with the six maps built on `PlaceMap`. One request, one set of field
+			// names, one way of reading an error - a second copy of this is a second place
+			// for them to drift, and the way anybody would find out is a report that
+			// silently never arrived.
+			await sendPlaceCorrection(selected.id, event.detail);
 
 			correctionSent = true;
 			picked = null;
@@ -625,30 +620,36 @@
 					{/each}
 				</div>
 
-				{#if selectedResearch?.correctable}
-					<!--
-						Keyed on the place, so switching from one uncertain place to another builds a
-						fresh panel. Without it Svelte reuses the instance and only swaps the prop:
-						the form stayed open with the previous place's answer still selected, and
-						"Tajje is not a place" could be sent about Kasteel Bunderhof.
-					-->
-					{#key selected.id}
-						<PlaceUncertainty
-							approximation={selectedResearch}
-							bind:picked
-							{picking}
-							sending={sendingCorrection}
-							sent={correctionSent}
-							error={correctionError}
-							on:pick={() => {
-								picking = true;
-								correctionError = null;
-							}}
-							on:cancel={resetCorrection}
-							on:submit={sendCorrection}
-						/>
-					{/key}
-				{/if}
+				<!--
+					Shown for every place now, not only the 27 the research flagged as open to
+					correction. `correctable` marks where the archive was inviting an answer;
+					the reader's side of that is different, and a pin they can see is wrong is
+					worth hearing about whether or not anybody thought to ask. The panel says
+					which of the two it is - red where the archive is unsure, grey where it
+					only believes it is right.
+
+					Keyed on the place, so switching from one to another builds a fresh panel.
+					Without it Svelte reuses the instance and only swaps the prop: the form
+					stayed open with the previous place's answer still selected, and "Tajje is
+					not a place" could be sent about Kasteel Bunderhof.
+				-->
+				{#key selected.id}
+					<PlaceUncertainty
+						approximation={selectedResearch ?? null}
+						placeName={selected.name}
+						bind:picked
+						{picking}
+						sending={sendingCorrection}
+						sent={correctionSent}
+						error={correctionError}
+						on:pick={() => {
+							picking = true;
+							correctionError = null;
+						}}
+						on:cancel={resetCorrection}
+						on:submit={sendCorrection}
+					/>
+				{/key}
 
 				<a
 					class="mt-3 inline-block font-medium text-blue-800 dark:text-blue-300 underline hover:no-underline"

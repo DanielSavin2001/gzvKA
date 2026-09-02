@@ -4,6 +4,7 @@
 		FillLayer,
 		GeoJSON,
 		LineLayer,
+		MapEvents,
 		MapLibre,
 		Marker,
 		NavigationControl,
@@ -52,6 +53,14 @@
 	const dispatch = createEventDispatcher<{
 		select: ArchivePlace;
 		correct: { place: ArchivePlace; approximation: Approximation };
+		/**
+		 * Somebody clicked the map itself rather than a marker.
+		 *
+		 * Forwarded so a page can ask a reader to point at where a place really is. The
+		 * front page's map had this and the other six did not, which is why their panels
+		 * could describe a doubt and offer nothing to do about it.
+		 */
+		mapclick: { lat: number; lng: number };
 	}>();
 
 	/**
@@ -262,6 +271,14 @@
 					/>
 				</GeoJSON>
 			{/if}
+
+			<MapEvents
+				on:click={(event) =>
+					dispatch('mapclick', {
+						lat: event.detail.lngLat.lat,
+						lng: event.detail.lngLat.lng
+					})}
+			/>
 
 			{#if interactive}
 				<NavigationControl position="top-right" />

@@ -476,6 +476,9 @@
 	function claim(report: PlaceCorrection): string {
 		if (report.kind === 'not-a-place') return 'Dit is geen plaats';
 		if (report.kind === 'still-unknown') return 'Geen van de mogelijkheden';
+		// The catch-all: whatever they wrote is the whole report, and it is printed in full
+		// under this line, so this only has to say not to look for a coordinate.
+		if (report.kind === 'other') return 'Er klopt iets anders niet';
 		if (report.kind === 'candidate') return `Het is: ${report.candidateLabel}`;
 		return `Hier: ${report.lat?.toFixed(5)}, ${report.lng?.toFixed(5)}`;
 	}
@@ -801,7 +804,16 @@
 									class="shrink-0 rounded bg-gray-50 dark:bg-gray-800 p-3 text-sm text-gray-700 dark:text-gray-300"
 								>
 									<dt class="font-semibold">Stond als</dt>
-									<dd>{report.previous.display} &middot; klasse {report.previous.grade}</dd>
+									{#if report.previous.display === 'geen_onderzoek'}
+										<!-- Most places were never researched: they come from the street
+										     register, or a curator made them. Printing "geen_onderzoek
+										     - klasse -" would read as a broken record rather than as
+										     what it is, which is the archive not having claimed
+										     anything to begin with. -->
+										<dd>Niet onderzocht &mdash; uit het register of door een beheerder gezet</dd>
+									{:else}
+										<dd>{report.previous.display} &middot; klasse {report.previous.grade}</dd>
+									{/if}
 									{#if report.previous.lat != null}
 										<dd>{report.previous.lat.toFixed(5)}, {report.previous.lng?.toFixed(5)}</dd>
 									{/if}
@@ -1185,7 +1197,9 @@
 		intro={declining.kind === 'melding'
 			? 'De melding blijft bewaard, met uw reden erbij.'
 			: 'De foto wordt niet gepubliceerd. De inzending blijft bewaard.'}
-		busy={declining.kind === 'melding' ? reportBusy === declining.report.id : busy === declining.item.id}
+		busy={declining.kind === 'melding'
+			? reportBusy === declining.report.id
+			: busy === declining.item.id}
 		on:cancel={() => (declining = null)}
 		on:confirm={(event) => confirmDecline(event.detail.reason)}
 	/>
