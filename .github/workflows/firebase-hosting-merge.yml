@@ -46,7 +46,18 @@ jobs:
       # Pinned to a major version. An unpinned `npx firebase-tools` would silently pick up
       # a new major on some future Tuesday, and the first anyone would know of it is a
       # failed deploy of an unrelated change.
-      FIREBASE_TOOLS: firebase-tools@13
+      #
+      # 15 rather than 13, and not for its features. Every functions deploy asks the
+      # Extensions API to list this project's extension instances - even though the project
+      # has none - because firebase-functions always puts an `extensions` key in the
+      # discovery manifest and firebase-tools tests that key for truthiness, and `{}` is
+      # truthy. On 13 the resulting 403 is fatal. 15.9.0 is the release where upstream
+      # wrapped that lookup in a try/catch: the 403 becomes a logged "Failed to fetch the
+      # list of extensions. Assuming for now that there are no existing extensions", and
+      # the deploy carries on - which for a project with no extensions is exactly right.
+      # Bisected across published tarballs: absent up to and including 15.8.0, present from
+      # 15.9.0. See docs/deploy.md for why no IAM grant can fix it instead.
+      FIREBASE_TOOLS: firebase-tools@15
 
     steps:
       - uses: actions/checkout@v4
@@ -113,7 +124,7 @@ jobs:
       # answer. It can only delete what a commit deleted: the source is typechecked and
       # tested above, and a function disappears from it only when somebody removes the
       # export.
-      - name: Deploy functions, database rules, indexes and storage rules
+      - name: Write the deploy key
         if: env.TARGETS != 'hosting'
         env:
           SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GZVKA_12A9F }}
@@ -121,19 +132,41 @@ jobs:
           # Written from an environment variable rather than interpolated into this script,
           # so the key never appears in a command line or a shell trace.
           printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/service-account.json"
+
+      # The rules and indexes go on their own, ahead of the functions, and that split is
+      # the point rather than tidiness. firebase-tools chains every named target's PREPARE
+      # phase before any target's DEPLOY phase (lib/deploy/index.js), so one invocation
+      # naming functions alongside firestore and storage lets a failure while planning the
+      # functions throw away rules and indexes that were already compiled and have nothing
+      # to do with it. That is exactly what happened on 1 September 2026: an Extensions 403
+      # during the functions prepare, and firestore.rules and firestore.indexes.json - both
+      # of which had compiled cleanly seconds earlier - never shipped.
+      - name: Deploy the database rules, indexes and storage rules
+        if: env.TARGETS != 'hosting'
+        run: |
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/service-account.json"
 
-          # `--package ... -- firebase` rather than `npx firebase-tools`: the package is
-          # firebase-tools and the command it installs is `firebase`, and leaving npx to
-          # infer that is a guess that costs a failed deploy when it stops holding.
-          #
           # `firestore` is rules and indexes together, and `storage` is its rules. Spelled
           # as the plain target names rather than `storage:rules`, which reads as a NAMED
           # deploy target called "rules" - there is no such target in firebase.json, so the
           # CLI refuses the whole deploy with "Could not find rules for the following
           # storage targets: rules".
           npx --yes --package "$FIREBASE_TOOLS" -- firebase deploy \
-            --only functions,firestore,storage \
+            --only firestore,storage \
+            --project "$PROJECT_ID" \
+            --force \
+            --non-interactive
+
+      - name: Deploy the functions
+        if: env.TARGETS != 'hosting'
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/service-account.json"
+
+          # `--package ... -- firebase` rather than `npx firebase-tools`: the package is
+          # firebase-tools and the command it installs is `firebase`, and leaving npx to
+          # infer that is a guess that costs a failed deploy when it stops holding.
+          npx --yes --package "$FIREBASE_TOOLS" -- firebase deploy \
+            --only functions \
             --project "$PROJECT_ID" \
             --force \
             --non-interactive
