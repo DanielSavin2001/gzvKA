@@ -184,108 +184,22 @@ bij de stap zelf - het gereedschap plant álle genoemde doelen voordat het er é
 struikeling bij het plannen van de functies gooide regels en indexen weg die al gecompileerd
 waren en er niets mee te maken hadden.
 
-Waarom deze:
+### Als er ooit een eigen rol `firebaseExtensionsLister` is gemaakt
 
-- **firebase.developAdmin**, **firebasehosting.admin**, **firebaserules.admin** - de website en
-  de regels van Firestore en Storage.
-- **datastore.indexAdmin** - de indexen uit `firestore.indexes.json`.
-- **cloudfunctions.admin** - de twintig functies aanmaken, bijwerken en verwijderen.
-- **iam.serviceAccountUser** - een functie draait _als_ `gzvka-12a9f@appspot.gserviceaccount.com`,
-  en iets namens een ander account laten draaien is een recht apart.
-- **artifactregistry.writer** en **cloudbuild.builds.editor** - een functie deployen is een
-  build; die zet een image in Artifact Registry.
-- **serviceUsageConsumer** - de API's aanroepen die daarbij horen.
-
-Dit hoeft één keer. Daarna is deployen een merge, of een knop in de app.
-
-### De foutmelding die je krijgt als dit nog niet gebeurd is
-
-Op 1 september 2026 liep de eerste volledige deploy hier vast, en de melding is nuttiger dan
-bovenstaande lijst:
-
-```
-Error: Missing permissions required for functions deploy. You must have permission
-iam.serviceAccounts.ActAs on service account gzvka-12a9f@appspot.gserviceaccount.com.
-```
-
-Dat is `iam.serviceAccountUser`, en de melding wijst het precies aan: de functies dráaien als
-`gzvka-12a9f@appspot.gserviceaccount.com`, en het deploy-account moet dat account mogen
-gebruiken. De lus hierboven geeft die rol op projectniveau, wat volstaat. Wil je hem krabben
-tot alleen dat ene account, dan kan dat ook:
+Die mag weg. Dit bestand stond hier tot 2 september 2026 twee keer in, en de tweede,
+oudere helft zei het omgekeerde van de eerste: dat er niets aan te doen was behalve het
+recht geven, met `gcloud iam roles create` erbij. Dat klopte niet. De permissie zit in
+geen enkele toekenbare rol - dat is precies wat hierboven staat - en de deploy is
+opgelost door `firebase-tools@15`, niet door een rol. Wie de onderste helft las en de
+commando's uitvoerde, deed werk dat nergens toe leidde, en dat is de schuld van dit
+bestand.
 
 ```sh
-gcloud iam service-accounts add-iam-policy-binding \
-  gzvka-12a9f@appspot.gserviceaccount.com \
-  --member="serviceAccount:$SA" \
-  --role=roles/iam.serviceAccountUser \
-  --project gzvka-12a9f
+gcloud iam roles delete firebaseExtensionsLister --project=gzvka-12a9f
 ```
 
-**En let op wat er dan wél en niet gebeurd is:** de backend gaat eerst, dus als die faalt worden
-_"Build the website"_ en _"Deploy the website"_ overgeslagen en staat de oude site er gewoon nog.
-Dat is de bedoeling - zie de kop van de workflow - maar het betekent ook dat er na het geven van
-de rollen niets vanzelf gebeurt. Draai de deploy opnieuw met de knop: **Actions → Deploy to
-Firebase on merge → Run workflow**, met `everything`.
-
-### En dan nog één, over Extensions die dit project niet heeft
-
-De tweede poging kwam veel verder - `storage.rules` en `firestore.rules` gecompileerd, de
-indexen gelezen, de functiebroncode geanalyseerd - en viel toen om op:
-
-```
-Error: Request to https://firebaseextensions.googleapis.com/v1beta/projects/.../instances
-had HTTP Error: 403, The caller does not have permission
-```
-
-Dit project gebruikt géén Firebase Extensions: geen `extensions`-blok in `firebase.json`, geen
-`extensions/`-map. De aanroep komt uit het gereedschap zelf, en het is een samenloop van twee
-dingen die elk op zich redelijk zijn:
-
-- `firebase-functions@5.1.1` bouwt in `lib/runtime/loader.js` altijd een `const extensions = {}`
-  en zet die in het manifest, ook als er niets is.
-- `firebase-tools` leest dat manifest en doet `if (manifest.extensions)`, en later
-  `some((b) => b.extensions)` - en een leeg object is waar in JavaScript. Dus loopt bij élke
-  functie-deploy `prepareDynamicExtensions`, en die vraagt `firebaseextensions.instances.list`.
-
-Er valt in deze repository niets aan te doen behalve het recht geven.
-
-En verwacht geen nette melding van het gereedschap: `requirePermissions` in firebase-tools
-gooit zijn eigen fout binnen zijn eigen `try`, en de `catch` eronder slikt hem op en doet
-`return`. Die functie kán dus nooit zeggen welke permissie ontbreekt - je krijgt de rauwe 403
-van de API en verder niets.
-
-Welke voorgedefinieerde rol de permissie draagt, is niet te raden: op 1 september 2026 droeg
-geen van `firebasemods.viewer`, `firebasemods.admin`, `firebaseextensions.viewer` of
-`firebaseextensions.admin` hem. Zoek dus, en zoek breed:
-
-```sh
-echo "== rollen met firebaseextensions.instances.list =="
-for R in $(gcloud iam roles list --filter="name:firebase" --format='value(name)'); do
-  gcloud iam roles describe "$R" --format='value(includedPermissions)' 2>/dev/null \
-    | tr ';' '\n' | grep -qx 'firebaseextensions.instances.list' && echo "  $R"
-done
-
-echo "== mag die permissie in een eigen rol? =="
-gcloud iam list-testable-permissions \
-  //cloudresourcemanager.googleapis.com/projects/gzvka-12a9f \
-  --filter="name:firebaseextensions.instances.list" \
-  --format='table(name,customRolesSupportLevel)'
-```
-
-Noemt het eerste blok een rol, geef die. Blijft het leeg en zegt het tweede `SUPPORTED`, maak
-dan een rol van precies die ene permissie - dat is sowieso strakker dan welke kant-en-klare rol
-ook:
-
-```sh
-gcloud iam roles create firebaseExtensionsLister --project=gzvka-12a9f \
-  --title="Firebase Extensions lister" \
-  --permissions=firebaseextensions.instances.list
-
-gcloud projects add-iam-policy-binding gzvka-12a9f \
-  --member="serviceAccount:$SA" \
-  --role="projects/gzvka-12a9f/roles/firebaseExtensionsLister" \
-  --condition=None --quiet
-```
+Blijft ze staan, dan doet ze geen kwaad: ze draagt één leesrecht dat nergens meer voor
+gevraagd wordt. Ze is alleen misleidend voor wie later de rollen naloopt.
 
 ## Wat er nog steeds met de hand moet
 

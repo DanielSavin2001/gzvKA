@@ -21,8 +21,22 @@
 import type { Approximation } from './approximation';
 import type { Contributor } from './submission';
 
-/** What kind of thing the person is telling us. */
-export type CorrectionKind = 'coordinate' | 'candidate' | 'not-a-place' | 'still-unknown';
+/**
+ * What kind of thing the person is telling us.
+ *
+ * `other` is the catch-all, and it earns its place: the first four each need the archive to
+ * have asked the right question, and a reader who can see something is wrong but not which
+ * of four boxes it belongs in used to have nowhere to put it. Somebody who knows the street
+ * is spelled differently, or that two entries are the same place, or that the photograph on
+ * the panel is of the house next door, is worth hearing from - and the sentence they write
+ * is the whole correction.
+ */
+export type CorrectionKind =
+	| 'coordinate'
+	| 'candidate'
+	| 'not-a-place'
+	| 'still-unknown'
+	| 'other';
 
 export type CorrectionStatus = 'pending' | 'accepted' | 'rejected';
 
@@ -74,8 +88,12 @@ export const CORRECTION_KINDS: CorrectionKind[] = [
 	'coordinate',
 	'candidate',
 	'not-a-place',
-	'still-unknown'
+	'still-unknown',
+	'other'
 ];
+
+/** The kinds whose whole content is the sentence, so an empty one is nothing at all. */
+const NEEDS_A_SENTENCE: CorrectionKind[] = ['not-a-place', 'still-unknown', 'other'];
 
 /**
  * Reads a correction off the wire.
@@ -102,9 +120,10 @@ export function readCorrection(
 
 	const message = clean(input.message, LIMITS.message);
 
-	// Someone saying "this is not a place" or "I do not know where it is" is telling us
-	// something we cannot get anywhere else, and the sentence IS the correction.
-	if (!message && (kind === 'not-a-place' || kind === 'still-unknown')) {
+	// Someone saying "this is not a place", "I do not know where it is" or "something else
+	// is wrong" is telling us something we cannot get anywhere else, and the sentence IS the
+	// correction.
+	if (!message && NEEDS_A_SENTENCE.includes(kind)) {
 		throw new CorrectionError('Schrijf er even bij wat u weet.');
 	}
 
@@ -148,8 +167,18 @@ export function readCorrection(
 	return result;
 }
 
-/** What the record looked like before, captured at submission rather than at review. */
-export function snapshot(approximation: Approximation): PreviousState {
+/**
+ * What the record looked like before, captured at submission rather than at review.
+ *
+ * Undefined is a real answer now, and a common one: most of the 131 places come straight
+ * from the street register and were never researched, so there is no grade, no radius and
+ * no doubt text to capture. Saying so plainly is better than inventing a record - a
+ * reviewer reading "geen onderzoek" knows the archive was not claiming anything to begin
+ * with, which is different from a claim it has forgotten.
+ */
+export function snapshot(approximation?: Approximation): PreviousState {
+	if (!approximation) return { grade: '-', display: 'geen_onderzoek' };
+
 	const previous: PreviousState = {
 		grade: approximation.grade,
 		display: approximation.display
@@ -197,6 +226,18 @@ export function applyCorrection(
 			correctable: false,
 			doubt: undefined,
 			note: `Gemeld door ${by} op ${on}: dit is geen plaats. ${correction.message}`.trim()
+		};
+	}
+
+	if (correction.kind === 'other') {
+		// Nothing to move. The point, the grade and the radius are all left exactly as they
+		// were, and what the person said is added to the doubt text where the next reader
+		// sees it - which is the only honest thing to do with a sentence whose content this
+		// function cannot know.
+		return {
+			...approximation,
+			doubt: `${approximation.doubt ?? ''}\n\n${by} (${on}): ${correction.message}`.trim(),
+			note: approximation.note
 		};
 	}
 

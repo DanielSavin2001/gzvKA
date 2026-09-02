@@ -33,6 +33,7 @@
 		locate
 	} from '$lib/coordinates';
 	import { isPersonKind } from '../../../sharedModels/place-family';
+	import { overlappingPlaces, sameplaceOverlaps } from '../../../sharedModels/place-overlap';
 	import type { Approximation } from '$lib/approximations';
 	import { forgetApproximations, loadApproximations } from '$lib/approximations';
 	import type { PlaceRecord } from '$lib/place-records';
@@ -48,6 +49,7 @@
 	import PinPicker from '../components/PinPicker.svelte';
 	import PlaceDesk from '../components/PlaceDesk.svelte';
 	import RemovalDesk from '../components/RemovalDesk.svelte';
+	import ReasonDialog from '../components/ReasonDialog.svelte';
 
 	/**
 	 * The curator's desk.
@@ -137,6 +139,24 @@
 	}
 
 	/** Unlocated first, then the busiest: the same order the old placing queue used. */
+	/**
+	 * Places holding the same photographs, computed off the archive this page already has.
+	 *
+	 * `npm run duplicates` hashes files and has never found any of these, because there are
+	 * no duplicate files to find: Ertbrand and Fort van Ertbrand are two gazetteer entries
+	 * over the same 55 photographs, drawn as two bubbles a few hundred metres apart showing
+	 * the same pictures. Nobody was going to notice by scrolling a list of 131 places, which
+	 * is exactly why it sat there.
+	 *
+	 * Only the `zelfde` half is shown. A castle standing in a district is also nested inside
+	 * it, correctly, and there are 23 of those - a warning that cries wolf 23 times is a
+	 * warning nobody reads. The full picture, both halves, is in `docs/dubbele-plaatsen.md`
+	 * via `npm run plaatsen:dubbel`.
+	 */
+	$: duplicatePlaces = archive
+		? sameplaceOverlaps(overlappingPlaces(archive.photos, archive.places))
+		: [];
+
 	$: placeRows = ((): PlaceRow[] => {
 		if (!archive || !placesReady) return [];
 		const query = normalizeText(placeQuery);
@@ -326,23 +346,33 @@
 	 * After a rename, the archive in memory still carries the old names: `donors()` reads
 	 * `photo.d`, and the overlay that has just changed is applied when the archive is built.
 	 * So it is thrown away and rebuilt rather than patched.
+	 *
+	 * `fresh` is the half that was missing, and its absence was invisible. Forgetting the
+	 * module caches and refetching sent the request, and the browser answered it out of the
+	 * response it already held - the overlay is served with a five-minute cache lifetime on
+	 * purpose - so the rebuilt archive was the pre-rename one. A donor merge said "364
+	 * foto's staan nu op Swatti Alix" and left both spellings on the page, through a reload,
+	 * for five minutes, with nothing anywhere to explain it.
 	 */
 	async function reloadArchive(): Promise<void> {
 		forgetPhotoEdits();
 		forgetArchive();
+		forgetPublished();
 		try {
-			archive = await loadArchive();
+			archive = await loadArchive(fetch, { fresh: true });
+			await refreshEdits();
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		}
 	}
 
 	async function refreshEdits(): Promise<void> {
-		// Fetched fresh rather than from the cache the site holds, so a curator sees their
-		// own last edit rather than whatever was loaded when the page opened.
+		// Past the browser's cache as well as this module's, for the reason `reloadArchive`
+		// gives: a curator reading back their own write is the one reader the overlay's
+		// cache lifetime must not apply to.
 		forgetPhotoEdits();
 		try {
-			photoEdits = await loadPhotoEdits();
+			photoEdits = await loadPhotoEdits(fetch, { fresh: true });
 		} catch {
 			photoEdits = {};
 		}
@@ -421,23 +451,26 @@
 		}
 	}
 
+	/**
+	 * What a decline is waiting on, while the reason box is open.
+	 *
+	 * Held rather than passed through a callback, because the dialog is rendered once at the
+	 * end of the page: a modal nested inside a list row inherits that row's stacking context
+	 * and its overflow, and an overlay that is clipped by the card it came out of is worse
+	 * than no overlay.
+	 */
+	let declining:
+		| { kind: 'melding'; report: PlaceCorrection }
+		| { kind: 'foto'; item: QueuedSubmission }
+		| null = null;
+
 	async function judge(
 		report: PlaceCorrection,
-		status: 'accepted' | 'rejected' | 'pending'
+		status: 'accepted' | 'rejected' | 'pending',
+		reason?: string
 	): Promise<void> {
 		reportBusy = report.id;
 		try {
-			let reason: string | undefined;
-
-			if (status === 'rejected') {
-				const typed = window.prompt('Waarom wordt deze melding afgewezen?') ?? '';
-				if (!typed.trim()) {
-					reportBusy = null;
-					return;
-				}
-				reason = typed.trim();
-			}
-
 			await judgeCorrection({ id: report.id, status, rejectionReason: reason });
 			reports = reports.filter((other) => other.id !== report.id);
 			error = null;
@@ -448,10 +481,23 @@
 		}
 	}
 
+	/** Carries out whichever decline the reason box was opened for. */
+	async function confirmDecline(reason?: string): Promise<void> {
+		const pending = declining;
+		declining = null;
+		if (!pending) return;
+
+		if (pending.kind === 'melding') await judge(pending.report, 'rejected', reason);
+		else await decide(pending.item, 'rejected', reason);
+	}
+
 	/** What the person is actually claiming, in one line a curator can act on. */
 	function claim(report: PlaceCorrection): string {
 		if (report.kind === 'not-a-place') return 'Dit is geen plaats';
 		if (report.kind === 'still-unknown') return 'Geen van de mogelijkheden';
+		// The catch-all: whatever they wrote is the whole report, and it is printed in full
+		// under this line, so this only has to say not to look for a coordinate.
+		if (report.kind === 'other') return 'Er klopt iets anders niet';
 		if (report.kind === 'candidate') return `Het is: ${report.candidateLabel}`;
 		return `Hier: ${report.lat?.toFixed(5)}, ${report.lng?.toFixed(5)}`;
 	}
@@ -480,27 +526,25 @@
 		return edits[item.id];
 	}
 
-	async function decide(item: QueuedSubmission, status: Decision['status']): Promise<void> {
+	async function decide(
+		item: QueuedSubmission,
+		status: Decision['status'],
+		reason?: string
+	): Promise<void> {
 		busy = item.id;
 		try {
 			const decision: Decision = { ...editsFor(item), status };
-
-			if (status === 'rejected') {
-				const reason = window.prompt('Waarom wordt deze foto afgewezen?') ?? '';
-				if (!reason.trim()) {
-					busy = null;
-					return;
-				}
-				decision.rejectionReason = reason.trim();
-			}
+			if (reason) decision.rejectionReason = reason;
 
 			await review(decision);
 			// The site merges the approved photographs into the archive, and the archive is
-			// built once and kept. Both caches have to go, or a curator who walks from here to
-			// the street page in the same tab sees it without the photograph they just
-			// approved.
-			forgetPublished();
-			forgetArchive();
+			// built once and kept, so a curator who walks from here to the street page in the
+			// same tab would see it without the photograph they just approved. Rebuilt rather
+			// than only forgotten, and rebuilt past the browser's cache: forgetting alone left
+			// the next load to re-read the same pre-approval response off the endpoint's
+			// cache lifetime and rebuild exactly what was thrown away. Not awaited - the queue
+			// should stay quick, and `reloadArchive` reports its own failure.
+			void reloadArchive();
 			delete edits[item.id];
 			edits = edits;
 			items = items.filter((other) => other.id !== item.id);
@@ -632,7 +676,7 @@
 				same job from two directions, so they share a desk.
 			-->
 			{#if archive}
-				<DatingDesk {archive} edits={photoEdits} />
+				<DatingDesk {archive} edits={photoEdits} refresh={refreshEdits} />
 			{:else}
 				<p class="py-10 text-center text-gray-500 dark:text-gray-400">
 					Bezig met het laden van het archief ...
@@ -731,7 +775,7 @@
 			</div>
 		{:else if desk === 'schenkers'}
 			<div class="mt-6">
-				<DonorDesk {archive} on:changed={reloadArchive} />
+				<DonorDesk {archive} refresh={reloadArchive} />
 			</div>
 		{:else if desk === 'correcties'}
 			<h2 class="mt-6 text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -779,7 +823,16 @@
 									class="shrink-0 rounded bg-gray-50 dark:bg-gray-800 p-3 text-sm text-gray-700 dark:text-gray-300"
 								>
 									<dt class="font-semibold">Stond als</dt>
-									<dd>{report.previous.display} &middot; klasse {report.previous.grade}</dd>
+									{#if report.previous.display === 'geen_onderzoek'}
+										<!-- Most places were never researched: they come from the street
+										     register, or a curator made them. Printing "geen_onderzoek
+										     - klasse -" would read as a broken record rather than as
+										     what it is, which is the archive not having claimed
+										     anything to begin with. -->
+										<dd>Niet onderzocht &mdash; uit het register of door een beheerder gezet</dd>
+									{:else}
+										<dd>{report.previous.display} &middot; klasse {report.previous.grade}</dd>
+									{/if}
 									{#if report.previous.lat != null}
 										<dd>{report.previous.lat.toFixed(5)}, {report.previous.lng?.toFixed(5)}</dd>
 									{/if}
@@ -833,7 +886,7 @@
 										type="button"
 										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 disabled:opacity-50"
 										disabled={reportBusy === report.id}
-										on:click={() => judge(report, 'rejected')}
+										on:click={() => (declining = { kind: 'melding', report })}
 									>
 										Klopt niet
 									</button>
@@ -868,6 +921,50 @@
 					Nieuwe plaats
 				</button>
 			</div>
+
+			{#if duplicatePlaces.length > 0}
+				<div
+					class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950"
+				>
+					<h3 class="font-bold text-amber-900 dark:text-amber-200">
+						Waarschijnlijk dezelfde plaats ({duplicatePlaces.length})
+					</h3>
+					<p class="mt-1 text-sm text-amber-900 dark:text-amber-200">
+						Onder deze paren hangen grotendeels dezelfde foto&apos;s, dus staan er twee bollen op de
+						kaart die hetzelfde laten zien. Voorstellen, geen zekerheden &mdash; een kasteel in een
+						wijk hoort er wél zo te staan, en die staan hier niet tussen. Kies er &eacute;&eacute;n,
+						of hang de ene onder de andere.
+					</p>
+
+					<ul class="mt-3 space-y-2">
+						{#each duplicatePlaces as pair (pair.a.id + pair.b.id)}
+							<li class="rounded-lg bg-white p-3 text-sm dark:bg-gray-900">
+								<span class="text-gray-900 dark:text-gray-100">
+									<strong>{pair.a.name}</strong>
+									({pair.a.count}) &harr;
+									<strong>{pair.b.name}</strong>
+									({pair.b.count})
+								</span>
+								<span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+									{pair.shared} dezelfde foto&apos;s &middot; {Math.round(pair.overlap * 100)}%
+									overlap
+								</span>
+								<span class="mt-1 flex flex-wrap gap-2">
+									{#each [pair.a, pair.b] as side (side.id)}
+										<button
+											type="button"
+											class="rounded border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-800 hover:bg-blue-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-blue-950"
+											on:click={() => (placeQuery = side.name)}
+										>
+											Zoek {side.name}
+										</button>
+									{/each}
+								</span>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
 
 			<input
 				bind:value={placeQuery}
@@ -1128,7 +1225,7 @@
 										type="button"
 										class="rounded-lg border-2 border-red-600 px-5 py-2.5 font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 disabled:opacity-50"
 										disabled={busy === item.id}
-										on:click={() => decide(item, 'rejected')}
+										on:click={() => (declining = { kind: 'foto', item })}
 									>
 										Afwijzen
 									</button>
@@ -1152,3 +1249,21 @@
 		{/if}
 	{/if}
 </div>
+
+{#if declining}
+	<!--
+		Rendered here, outside every list and card, so the overlay covers the page rather
+		than being clipped by the row the button was in.
+	-->
+	<ReasonDialog
+		title={declining.kind === 'melding' ? 'Melding afwijzen' : 'Foto afwijzen'}
+		intro={declining.kind === 'melding'
+			? 'De melding blijft bewaard, met uw reden erbij.'
+			: 'De foto wordt niet gepubliceerd. De inzending blijft bewaard.'}
+		busy={declining.kind === 'melding'
+			? reportBusy === declining.report.id
+			: busy === declining.item.id}
+		on:cancel={() => (declining = null)}
+		on:confirm={(event) => confirmDecline(event.detail.reason)}
+	/>
+{/if}

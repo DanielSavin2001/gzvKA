@@ -124,6 +124,49 @@ describe('snapshot', () => {
 	});
 });
 
+describe('the catch-all kind', () => {
+	it('is accepted, and its sentence is the whole report', () => {
+		const read = readCorrection({ kind: 'other', message: 'Dit is dezelfde plek als Ertbrand.' });
+
+		expect(read.kind).toBe('other');
+		expect(read.message).toBe('Dit is dezelfde plek als Ertbrand.');
+		// No point is asked for and none is invented: nothing here says where anything is.
+		expect(read.lat).toBeUndefined();
+		expect(read.lng).toBeUndefined();
+	});
+
+	it('is refused with nothing written, because then it says nothing at all', () => {
+		expect(() => readCorrection({ kind: 'other', message: '   ' })).toThrow(CorrectionError);
+	});
+
+	it('leaves the point, the grade and the radius exactly where they were', () => {
+		const before = approximation();
+		const after = applyCorrection(
+			before,
+			correction({ kind: 'other', lat: undefined, lng: undefined, message: 'De naam klopt niet.' }),
+			'2026-09-02'
+		);
+
+		expect(after.lat).toBe(before.lat);
+		expect(after.lng).toBe(before.lng);
+		expect(after.grade).toBe(before.grade);
+		expect(after.radius).toBe(before.radius);
+		expect(after.display).toBe(before.display);
+		// The research's own account survives; what was said is added where a reader sees it.
+		expect(after.note).toBe(before.note);
+		expect(after.doubt).toContain('De naam klopt niet.');
+	});
+});
+
+describe('a place nobody researched', () => {
+	it('is snapshotted as not researched rather than as a record with holes in it', () => {
+		// Most of the 131 places come straight from the street register, or a curator made
+		// them. A report about one of those has no grade, radius or doubt text to capture,
+		// and saying so is different from claiming a record the archive has forgotten.
+		expect(snapshot(undefined)).toEqual({ grade: '-', display: 'geen_onderzoek' });
+	});
+});
+
 describe('applyCorrection', () => {
 	it('moves the grade, the radius and the doubt along with the point', () => {
 		const after = applyCorrection(approximation(), correction(), '2026-08-29');

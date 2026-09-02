@@ -7,10 +7,13 @@ import { CorrectionError } from '../../../sharedModels/correction';
 import { readContributor } from '../../../sharedModels/submission';
 import { NotAuthorised, requireAdmin } from '../services/admin-auth';
 import * as corrections from '../services/correctionService';
+import type { KnownPlace } from '../services/correctionService';
+import * as placeRecords from '../services/placeRecordService';
 import { callerKey, countRequest, TooMany } from '../services/throttle';
 import { validateCors } from '../utils/cors-helper';
 import { isMissingIndex, missingIndexMessage } from '../utils/firestore-errors';
 import * as researched from '../data/place-approximations.json';
+import * as gazetteer from '../data/kapellen-gazetteer.json';
 
 /**
  * The endpoints behind "this pin is in the wrong place".
@@ -22,6 +25,51 @@ import * as researched from '../data/place-approximations.json';
  */
 
 const PLACES = (researched as { places: Record<string, Approximation> }).places;
+
+/**
+ * Every place in the gazetteer, by id, so a report can be about any of them.
+ *
+ * Built once at module load. It is 131 entries out of a file that is already bundled with
+ * the functions, and a lookup per submission is the whole cost.
+ */
+const GAZETTEER: Record<string, string> = Object.fromEntries(
+	(gazetteer as { entries: { id: string; name: string }[] }).entries.map((entry) => [
+		entry.id,
+		entry.name
+	])
+);
+
+/**
+ * The place a report is about, or null when the archive has never heard of it.
+ *
+ * Three sources, because the archive has three kinds of place and a reader on a map cannot
+ * tell them apart: the researched ones, the gazetteer the site is built from, and the ones
+ * curators have made since. Only the first of those used to be reportable - and only the 27
+ * of them flagged `correctable`, which is 27 places out of every marker on every map.
+ *
+ * That gate is gone. It was defensible when the front page's panel was the only way in and
+ * the panel appeared exactly where a report was invited; it was never defensible from the
+ * reader's side, where a red circle around a pin is an invitation whatever the record says.
+ * Somebody who knows a geocoded address is on the wrong side of the street is the person
+ * this queue exists for. Every report still lands as `pending` and moves nothing on its own.
+ */
+async function knownPlace(placeId: string): Promise<KnownPlace | null> {
+	if (!placeId) return null;
+
+	const approximation = PLACES[placeId];
+	if (approximation) return { id: placeId, name: approximation.name, approximation };
+
+	const fromGazetteer = GAZETTEER[placeId];
+	if (fromGazetteer) return { id: placeId, name: fromGazetteer };
+
+	// Last, because it is the only one that costs a read. A curator-made place is a place
+	// like any other and has to be reportable, or the newest half of the gazetteer is the
+	// half nobody can correct.
+	const record = (await placeRecords.all())[placeId];
+	if (record) return { id: placeId, name: record.name };
+
+	return null;
+}
 
 function fail(response: Response, error: unknown): Response {
 	if (error instanceof NotAuthorised) {
@@ -53,7 +101,8 @@ function fail(response: Response, error: unknown): Response {
  *
  * The place is looked up here rather than taken from the request, so that what gets stored
  * as "what the map was claiming" is what the map actually claims - a curator reading the
- * report needs that to be the archive's own account, not the browser's.
+ * report needs that to be the archive's own account, not the browser's. That is also the
+ * only check left: any place the archive knows can be reported, researched or not.
  */
 export const submitCorrection: HttpsFunction = https.onRequest(
 	async (request: Request, response: Response): Promise<any> => {
@@ -70,16 +119,9 @@ export const submitCorrection: HttpsFunction = https.onRequest(
 
 			const body = (request.body ?? {}) as Record<string, unknown>;
 			const placeId = typeof body.placeId === 'string' ? body.placeId : '';
-			const place = PLACES[placeId];
+			const place = await knownPlace(placeId);
 
 			if (!place) return response.status(404).send('Die plaats kennen we niet.');
-
-			// Only places the map itself flags as uncertain can be corrected. Without this,
-			// the panel's absence would be the only thing stopping a report about a geocoded
-			// address, and an absent button stops nobody.
-			if (!place.correctable) {
-				return response.status(400).send('Voor deze plaats staat geen correctie open.');
-			}
 
 			const correction = await corrections.submit(body, readContributor(body), place);
 

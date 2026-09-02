@@ -19,13 +19,23 @@
 	import { sortForDisplay, thumbUrl } from '$lib/archive';
 	import { judgePhotoFact, photoFacts, savePhotoEdit } from '$lib/admin';
 	import type { PhotoEdit } from '$lib/photo-edits';
-	import { forgetPhotoEdits } from '$lib/photo-edits';
 	import type { PhotoFact } from '../../../sharedModels/photo-fact';
 	import { PhotoFactError, readYear } from '../../../sharedModels/photo-fact';
+	import ReasonDialog from './ReasonDialog.svelte';
 
 	export let archive: Archive;
 	/** The corrections already made, so a saved year merges rather than replacing them. */
 	export let edits: Record<string, PhotoEdit> = {};
+	/**
+	 * Re-reads the correction overlay, past every cache.
+	 *
+	 * This used to be `forgetPhotoEdits()` called here, which cleared the module's cache and
+	 * nothing else - the refetch it enabled then came back out of the browser's, because the
+	 * overlay is served with a cache lifetime on purpose. So the desk's own comment about a
+	 * curator seeing their own decision was not true. The page owns the refetch now, and it
+	 * asks past both caches.
+	 */
+	export let refresh: () => Promise<void> = async () => {};
 
 	const latestYear = new Date().getFullYear();
 
@@ -50,14 +60,14 @@
 		}
 	}
 
-	async function judge(fact: PhotoFact, status: 'accepted' | 'rejected'): Promise<void> {
-		const reason =
-			status === 'rejected' ? window.prompt('Waarom niet? (wordt bewaard)') ?? '' : undefined;
+	/** The suggestion whose reason box is open, if any. */
+	let declining: PhotoFact | null = null;
 
-		// A rejection with no reason is refused by the server, so stop here rather than
-		// making the round trip to be told.
-		if (status === 'rejected' && !reason?.trim()) return;
-
+	async function judge(
+		fact: PhotoFact,
+		status: 'accepted' | 'rejected',
+		reason?: string
+	): Promise<void> {
 		busyId = fact.id;
 		error = null;
 		try {
@@ -66,7 +76,7 @@
 
 			// The overlay changed, so anything reading it has to fetch again or the curator
 			// sees their own decision fail to appear.
-			if (status === 'accepted') forgetPhotoEdits();
+			if (status === 'accepted') await refresh();
 		} catch (problem) {
 			error = problem instanceof Error ? problem.message : String(problem);
 		} finally {
@@ -168,7 +178,11 @@
 				year: readYear(year, latestYear)
 			});
 
-			forgetPhotoEdits();
+			// Not awaited: this is the fast loop - type a year, press Enter, next photograph -
+			// and a curator should not wait on a read to get to the next one. It still has to
+			// happen, because `keep` builds the whole patch out of `edits` and a stale copy
+			// would write a year over a title somebody corrected a minute ago.
+			void refresh();
 			saved += 1;
 			at += 1;
 			focusField();
@@ -279,7 +293,7 @@
 									type="button"
 									class="rounded-lg border border-gray-400 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100 disabled:opacity-60 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
 									disabled={busyId === fact.id}
-									on:click={() => judge(fact, 'rejected')}
+									on:click={() => (declining = fact)}
 								>
 									Afwijzen
 								</button>
@@ -414,4 +428,18 @@
 			{/if}
 		{/if}
 	</section>
+{/if}
+
+{#if declining}
+	<ReasonDialog
+		title="Voorstel afwijzen"
+		intro="Het voorstel blijft bewaard. Een reden helpt de inzender, maar hoeft niet."
+		busy={busyId === declining.id}
+		on:cancel={() => (declining = null)}
+		on:confirm={(event) => {
+			const fact = declining;
+			declining = null;
+			if (fact) judge(fact, 'rejected', event.detail.reason);
+		}}
+	/>
 {/if}

@@ -34,6 +34,23 @@ function now(): string {
 }
 
 /**
+ * A place a correction can be about.
+ *
+ * The research record is optional, and that is the change: this used to be an
+ * `Approximation`, so the only places anybody could report were the 27 the archive had
+ * already researched and flagged as open to correction. The other hundred - every street
+ * straight out of the register, every place a curator made - drew a marker somebody could
+ * click and then had nothing behind it. A reader who can see the pin is wrong is exactly
+ * the reader worth listening to, whether or not the archive had thought to ask.
+ */
+export interface KnownPlace {
+	id: string;
+	name: string;
+	/** What the research said, when there was any. */
+	approximation?: Approximation;
+}
+
+/**
  * Stores what somebody told us.
  *
  * `previous` is captured here rather than at review time, so the record shows what the map
@@ -43,22 +60,22 @@ function now(): string {
 export async function submit(
 	input: Record<string, unknown>,
 	contributor: Contributor,
-	approximation: Approximation
+	place: KnownPlace
 ): Promise<PlaceCorrection> {
 	const read = readCorrection(
 		input,
-		approximation.candidates?.map((candidate) => candidate.label)
+		place.approximation?.candidates?.map((candidate) => candidate.label)
 	);
 
 	const correction: PlaceCorrection = {
 		id: randomUUID(),
-		placeId: approximation.id,
-		placeName: approximation.name,
+		placeId: place.id,
+		placeName: place.name,
 		kind: read.kind,
 		status: 'pending',
 		message: read.message,
 		contributor,
-		previous: snapshot(approximation),
+		previous: snapshot(place.approximation),
 		submittedAt: now()
 	};
 
@@ -113,10 +130,6 @@ export async function decide(
 		throw new CorrectionError(`Deze melding is al ${status}.`);
 	}
 
-	if (status === 'rejected' && !rejectionReason?.trim()) {
-		throw new CorrectionError('Geef een reden op bij het afwijzen.');
-	}
-
 	const decided: PlaceCorrection = {
 		...correction,
 		status,
@@ -124,6 +137,11 @@ export async function decide(
 		reviewedBy: curator.email
 	};
 
+	// A rejection needs no reason. It used to, and the rule was quietly load-bearing: the
+	// only way to give one was a `window.prompt`, and cancelling it or leaving it empty
+	// abandoned the whole decision - so a curator who did not want to write a sentence could
+	// not decline at all. The reason is a message back to whoever sent this in, and there is
+	// nothing to say when a photograph is simply already in the archive.
 	if (status === 'rejected' && rejectionReason) {
 		decided.rejectionReason = rejectionReason.trim();
 	} else {
