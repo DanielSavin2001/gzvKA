@@ -10,6 +10,7 @@
 		"stories": "npm --prefix functions run stories",
 		"streets": "npm --prefix functions run streets",
 		"plaatsen": "npm --prefix functions run plaatsen",
+		"plaatsen:dubbel": "npm --prefix functions run plaatsen:dubbel",
 		"sitemap": "npm --prefix functions run sitemap",
 		"thumbs": "node scripts/build-thumbnails.mjs",
 		"duplicates": "node scripts/find-duplicates.mjs",

@@ -215,6 +215,52 @@ een gebeurtenis komt.
 
 ---
 
+## Twee bollen, dezelfde foto's
+
+Toegevoegd op 2 september 2026, gevonden door `npm run plaatsen:dubbel` — een nieuwe
+controle die zoekt naar *plaatsen* waar grotendeels dezelfde foto's onder hangen. De
+bestaande `npm run duplicates` kon dit nooit vinden: die hasht bestanden, en er is hier geen
+enkel dubbel bestand. Wat dubbel is, is de ingang.
+
+Het onderscheid dat de controle maakt: een kasteel dat in een wijk staat, zit ook in die
+wijk, en dat hoort zo — daar zijn er 23 van en die staan niet hieronder. Deze vijf zijn
+anders. Haal bij elk de kleinste eruit en er blijft van de grootste bijna niets over, dus
+zijn het geen twee plaatsen maar twee namen. Op de kaart staan ze als twee bollen naast
+elkaar die hetzelfde laten zien.
+
+De volledige lijst, beide helften, staat in `docs/dubbele-plaatsen.md`. De vijf hieronder
+staan ook op `/beheer` → **Plaatsen op de kaart**, bovenaan.
+
+| Grootste | Kleinste | Samen | Overlap |
+| --- | --- | ---: | ---: |
+| Ertbrand (62) | Fort van Ertbrand (55) | 55 | 89% |
+| Nelson Mandelapark (18) | Kasteel San Salvador (17) | 17 | 94% |
+| Kalmthoutsesteenweg (62) | Duitse Wijk (49) | 49 | 79% |
+| Heidestraat (63) | Chr. Pallemansstraat (49) | 48 | 75% |
+| Nieuwe Wijk (27) | Akkerstraat (21) | 19 | 66% |
+
+> **Vraag per paar.** Zijn dit twee namen voor hetzelfde, of hoort de ene ónder de andere?
+>
+> - **Ertbrand / Fort van Ertbrand.** Van de 62 foto's van het gehucht zijn er 55 van het
+>   fort. Het fort ligt in het gehucht, dus nesten (`parentId`) ligt voor de hand — maar dan
+>   houdt Ertbrand zeven foto's over, en is de vraag of het gehucht als aparte ingang nog
+>   iets toevoegt. Hangt samen met de vraag hierboven over waar het hart van de Ertbrand ligt.
+> - **Nelson Mandelapark / Kasteel San Salvador.** Het park is vermoedelijk het domein van
+>   het kasteel, hernoemd. Eén plaats met twee namen door de tijd, of twee dingen?
+> - **Kalmthoutsesteenweg / Duitse Wijk.** Al beschreven hierboven: de map
+>   `Kalmhousesteenweg - Duitse Wijk` geeft elke foto beide tags, terwijl maar een handvol
+>   de wijk toont. Deze is een tagfout, geen naamvraag.
+> - **Heidestraat / Chr. Pallemansstraat.** Ziet eruit als een straat vóór en ná een
+>   hernoeming. Als dat klopt, hoort dit als `aliasOf` in de gazetteer en niet als twee
+>   ingangen. Wanneer is de naam veranderd, en gold dat voor de hele straat of voor een stuk?
+> - **Nieuwe Wijk / Akkerstraat.** Is de Nieuwe Wijk méér dan de Akkerstraat, of is het de
+>   volksnaam ervoor?
+
+Niets hiervan is met een telling te beslissen — daarom staat het hier en is er niets
+veranderd. Wie het antwoord weet, kan het rechtstreeks op `/beheer` zetten.
+
+---
+
 ## Wat het onderzoek niet kon bereiken
 
 Zodat niemand hetzelfde pad twee keer loopt. Vanuit de omgeving waarin dit gemaakt is, waren

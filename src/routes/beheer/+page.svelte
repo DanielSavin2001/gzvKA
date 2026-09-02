@@ -33,6 +33,7 @@
 		locate
 	} from '$lib/coordinates';
 	import { isPersonKind } from '../../../sharedModels/place-family';
+	import { overlappingPlaces, sameplaceOverlaps } from '../../../sharedModels/place-overlap';
 	import type { Approximation } from '$lib/approximations';
 	import { forgetApproximations, loadApproximations } from '$lib/approximations';
 	import type { PlaceRecord } from '$lib/place-records';
@@ -138,6 +139,24 @@
 	}
 
 	/** Unlocated first, then the busiest: the same order the old placing queue used. */
+	/**
+	 * Places holding the same photographs, computed off the archive this page already has.
+	 *
+	 * `npm run duplicates` hashes files and has never found any of these, because there are
+	 * no duplicate files to find: Ertbrand and Fort van Ertbrand are two gazetteer entries
+	 * over the same 55 photographs, drawn as two bubbles a few hundred metres apart showing
+	 * the same pictures. Nobody was going to notice by scrolling a list of 131 places, which
+	 * is exactly why it sat there.
+	 *
+	 * Only the `zelfde` half is shown. A castle standing in a district is also nested inside
+	 * it, correctly, and there are 23 of those - a warning that cries wolf 23 times is a
+	 * warning nobody reads. The full picture, both halves, is in `docs/dubbele-plaatsen.md`
+	 * via `npm run plaatsen:dubbel`.
+	 */
+	$: duplicatePlaces = archive
+		? sameplaceOverlaps(overlappingPlaces(archive.photos, archive.places))
+		: [];
+
 	$: placeRows = ((): PlaceRow[] => {
 		if (!archive || !placesReady) return [];
 		const query = normalizeText(placeQuery);
@@ -902,6 +921,50 @@
 					Nieuwe plaats
 				</button>
 			</div>
+
+			{#if duplicatePlaces.length > 0}
+				<div
+					class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950"
+				>
+					<h3 class="font-bold text-amber-900 dark:text-amber-200">
+						Waarschijnlijk dezelfde plaats ({duplicatePlaces.length})
+					</h3>
+					<p class="mt-1 text-sm text-amber-900 dark:text-amber-200">
+						Onder deze paren hangen grotendeels dezelfde foto&apos;s, dus staan er twee bollen op de
+						kaart die hetzelfde laten zien. Voorstellen, geen zekerheden &mdash; een kasteel in een
+						wijk hoort er wél zo te staan, en die staan hier niet tussen. Kies er &eacute;&eacute;n,
+						of hang de ene onder de andere.
+					</p>
+
+					<ul class="mt-3 space-y-2">
+						{#each duplicatePlaces as pair (pair.a.id + pair.b.id)}
+							<li class="rounded-lg bg-white p-3 text-sm dark:bg-gray-900">
+								<span class="text-gray-900 dark:text-gray-100">
+									<strong>{pair.a.name}</strong>
+									({pair.a.count}) &harr;
+									<strong>{pair.b.name}</strong>
+									({pair.b.count})
+								</span>
+								<span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+									{pair.shared} dezelfde foto&apos;s &middot; {Math.round(pair.overlap * 100)}%
+									overlap
+								</span>
+								<span class="mt-1 flex flex-wrap gap-2">
+									{#each [pair.a, pair.b] as side (side.id)}
+										<button
+											type="button"
+											class="rounded border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-800 hover:bg-blue-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-blue-950"
+											on:click={() => (placeQuery = side.name)}
+										>
+											Zoek {side.name}
+										</button>
+									{/each}
+								</span>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
 
 			<input
 				bind:value={placeQuery}
