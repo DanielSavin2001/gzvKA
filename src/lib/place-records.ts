@@ -21,7 +21,7 @@ const KNOWN_KINDS: PlaceKind[] = [...CURATOR_KINDS, 'person'];
 export type { PlaceRecord } from '../../sharedModels/place-record';
 export { withApproximationRecords, withGeometryRecords } from '../../sharedModels/place-overlay';
 
-const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
+import { functionsBase, overlayInit, overlayUrl } from './overlay';
 
 /** Bounded, because a visitor is waiting on it - the same three seconds the pins use. */
 const TIMEOUT_MS = 3_000;
@@ -126,13 +126,13 @@ export async function loadPlaceRecords(
 	// No backend configured: the normal state for a fresh clone. The committed copy is then
 	// the whole answer, which is the point of pulling it - `npm install && npm run build`
 	// reproduces the archive the curators made, with no Firebase project at all.
-	if (!FUNCTIONS_BASE) return loadCommittedPlaceRecords(fetcher);
+	if (!functionsBase()) return loadCommittedPlaceRecords(fetcher);
 
 	try {
-		const response = await fetcher(`${FUNCTIONS_BASE}placeRecords`, {
-			signal: AbortSignal.timeout(TIMEOUT_MS),
-			...(options.fresh ? { cache: 'reload' as RequestCache } : {})
-		});
+		const response = await fetcher(
+			overlayUrl('placeRecords', options.fresh),
+			overlayInit(Boolean(options.fresh), TIMEOUT_MS)
+		);
 		if (!response.ok) return null;
 
 		const parsed = (await response.json()) as Partial<PlaceRecordFile>;

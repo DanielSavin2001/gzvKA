@@ -22,7 +22,7 @@
 	import type { ArchivePhoto, ArchivePlace } from '$lib/archive';
 	import { searchPhotos, thumbUrl } from '$lib/archive';
 	import type { PhotoEdit } from '$lib/photo-edits';
-	import { forgetPhotoEdits, loadPhotoEdits } from '$lib/photo-edits';
+	import { forgetPhotoEdits, loadPhotoEdits, photoEditsWereLive } from '$lib/photo-edits';
 	import { forgetPublished } from '$lib/published';
 	import type { CoordinateSource, PlacedCoordinate, StreetGeometry } from '$lib/coordinates';
 	import {
@@ -64,6 +64,15 @@
 	 */
 
 	let archive: Archive | null = null;
+	/**
+	 * Whether the corrections shown were actually read from the live overlay.
+	 *
+	 * False means the page is drawing the committed copy, which is empty until somebody runs
+	 * `npm run archive:pull` - so "no corrections" and "could not read the corrections" look
+	 * identical. On the public site that is the right trade; here it is not, because a
+	 * curator would be deciding about a donor list that silently lost every rename ever made.
+	 */
+	let overlayLive = true;
 	let curator: Curator | null = null;
 	let signedInAs: string | null = null;
 	let checking = true;
@@ -339,7 +348,11 @@
 		desk = 'schenkers';
 		openPhoto = null;
 		error = null;
-		await refreshEdits();
+		// The whole archive, not just `photoEdits`. The donor list and the duplicate pairs
+		// are derived from `archive.photos`, and `refreshEdits` only assigns `photoEdits` -
+		// a variable this desk is never handed. So re-entering the desk used to redraw the
+		// pairs from whatever archive the page happened to be holding.
+		await reloadArchive();
 	}
 
 	/**
@@ -360,6 +373,7 @@
 		forgetPublished();
 		try {
 			archive = await loadArchive(fetch, { fresh: true });
+			overlayLive = photoEditsWereLive();
 			await refreshEdits();
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
@@ -373,8 +387,10 @@
 		forgetPhotoEdits();
 		try {
 			photoEdits = await loadPhotoEdits(fetch, { fresh: true });
+			overlayLive = photoEditsWereLive();
 		} catch {
 			photoEdits = {};
+			overlayLive = false;
 		}
 	}
 
@@ -427,7 +443,13 @@
 		}
 
 		try {
-			archive = await loadArchive();
+			// Fresh, like every other read on this page. This was the hole: the write-back
+			// path asked past the caches and the page-load path did not, so a curator who
+			// made a change and then reloaded to check it was shown the answer from before
+			// their change - which is exactly what "I merged them all and nothing happened"
+			// looks like from the other side.
+			archive = await loadArchive(fetch, { fresh: true });
+			overlayLive = photoEditsWereLive();
 		} catch {
 			// The queue works without it; only the street picker needs the archive.
 		}
@@ -589,6 +611,27 @@
 		</div>
 	{/if}
 
+	{#if !overlayLive}
+		<!--
+			The one thing this page must never do quietly. Without the live overlay every
+			correction ever made is absent from what is drawn here, and it is absent in the
+			shape of a perfectly ordinary page: donors back on their old spellings, titles
+			back to the filename, years gone. Deciding anything from that view would undo
+			real work.
+		-->
+		<div
+			class="mt-6 rounded-xl border border-amber-400 bg-amber-50 p-5 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+		>
+			<p class="font-semibold">De correcties konden niet opgehaald worden.</p>
+			<p class="mt-1 text-sm">
+				Wat hieronder staat is het archief <em>zonder</em> de correcties: schenkers staan op hun oude
+				schrijfwijze, verbeterde titels en jaartallen ontbreken. Er is niets kwijt &mdash; ze staan nog
+				in de database. Ververs de pagina; blijft dit staan, doe dan even niets meer op deze pagina en
+				meld het.
+			</p>
+		</div>
+	{/if}
+
 	{#if checking}
 		<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met aanmelden ...</p>
 	{:else if !curator}
@@ -676,7 +719,12 @@
 				same job from two directions, so they share a desk.
 			-->
 			{#if archive}
-				<DatingDesk {archive} edits={photoEdits} refresh={refreshEdits} />
+				<DatingDesk
+					{archive}
+					edits={photoEdits}
+					refresh={refreshEdits}
+					editsAreLive={overlayLive}
+				/>
 			{:else}
 				<p class="py-10 text-center text-gray-500 dark:text-gray-400">
 					Bezig met het laden van het archief ...

@@ -38,8 +38,15 @@ function fail(response: Response, error: unknown): Response {
 /**
  * Public. Every correction, so the site can lay them over the generated index.
  *
- * Cached for a few minutes at the edge: a visitor seeing a five-minute-old title is fine,
- * and 4,504 photographs' worth of page loads asking Firestore directly is not.
+ * Cached for a few minutes: a visitor seeing a five-minute-old title is fine, and 4,504
+ * photographs' worth of page loads asking Firestore directly is not.
+ *
+ * `s-maxage` is deliberately gone. It invited a shared cache to hold this body, and a
+ * shared cache is the one thing a curator cannot flush: `cache: 'reload'` in the browser
+ * only sets request headers, which intermediaries are free to ignore. The curator's page
+ * now asks with a cache-busting URL instead, which no cache can answer from a stored
+ * entry - but there is no reason for an intermediary to be holding this at all, so it is
+ * not asked to.
  */
 export const photoEdits: HttpsFunction = https.onRequest(
 	async (request: Request, response: Response): Promise<any> => {
@@ -47,7 +54,7 @@ export const photoEdits: HttpsFunction = https.onRequest(
 		if (response.headersSent) return response;
 
 		try {
-			response.set('Cache-Control', 'public, max-age=300, s-maxage=300');
+			response.set('Cache-Control', 'public, max-age=300');
 			return response.status(200).json({ version: 1, edits: await edits.all() });
 		} catch (error) {
 			return fail(response, error);

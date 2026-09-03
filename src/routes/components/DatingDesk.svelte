@@ -36,6 +36,17 @@
 	 * asks past both caches.
 	 */
 	export let refresh: () => Promise<void> = async () => {};
+	/**
+	 * Whether `edits` was actually read from the live overlay.
+	 *
+	 * Load-bearing, because `keep` below rebuilds the *whole* patch out of `edits`: the save
+	 * endpoint replaces rather than merges, so a field missing from `edits` is a field
+	 * erased. When the overlay read fails it yields `{}` - indistinguishable from "this
+	 * photograph has no corrections" - and the next year saved would quietly wipe that
+	 * photograph's corrected title, place and donor. Donor names included, which is to say
+	 * this could undo a merge somebody had just made.
+	 */
+	export let editsAreLive = true;
 
 	const latestYear = new Date().getFullYear();
 
@@ -161,6 +172,18 @@
 
 	async function keep(): Promise<void> {
 		if (!current || yearProblem || !year.trim()) return;
+
+		// Refused rather than risked. Saving a year means rewriting the whole patch, and the
+		// only copy of the rest of that patch is `edits`. If that could not be read there is
+		// no way to tell an uncorrected photograph from an unread one, and guessing wrong
+		// deletes somebody's work.
+		if (!editsAreLive) {
+			error =
+				'De bestaande correcties konden niet opgehaald worden, dus wordt er nu niets ' +
+				'opgeslagen - een jaartal bewaren zou een verbeterde titel of schenker kunnen ' +
+				'wissen. Ververs de pagina en probeer opnieuw.';
+			return;
+		}
 
 		saving = true;
 		error = null;

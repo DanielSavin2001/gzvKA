@@ -16,7 +16,7 @@ import type { PhotoEdit, PhotoEditFile } from '../../sharedModels/photo-edit';
 export type { PhotoEdit, PhotoFields } from '../../sharedModels/photo-edit';
 export { applyPhotoEdit } from '../../sharedModels/photo-edit';
 
-const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
+import { functionsBase, overlayInit, overlayUrl } from './overlay';
 
 /**
  * How long to wait for the overlay before going without it.
@@ -48,6 +48,18 @@ const TIMEOUT_MS = 3_000;
 let cache: Record<string, PhotoEdit> | null = null;
 
 /**
+ * Whether the last answer came from the live overlay.
+ *
+ * This exists because the fallback below is indistinguishable from a real answer, and that
+ * cost three rounds of debugging. `static/data/photo-edits.json` is committed with an empty
+ * `edits` object until somebody runs `npm run archive:pull`, so a timeout or a 500 produces
+ * an archive with *no corrections at all* - which renders as a perfectly healthy site where
+ * every curator's work has quietly reverted. Failing soft is right for a visitor and wrong
+ * for the curator's page, which now has something to check.
+ */
+let cameFromOverlay = false;
+
+/**
  * The last copy `npm run archive:pull` wrote, which is the answer whenever the live overlay
  * is not one.
  *
@@ -59,6 +71,8 @@ let cache: Record<string, PhotoEdit> | null = null;
  * Missing is not an error. The file only exists once somebody has run the pull.
  */
 async function committed(fetcher: typeof fetch): Promise<Record<string, PhotoEdit>> {
+	cameFromOverlay = false;
+
 	try {
 		const response = await fetcher('/data/photo-edits.json');
 		if (!response.ok) return {};
@@ -95,21 +109,34 @@ export async function loadPhotoEdits(
 
 	// No backend configured: the normal state for a fresh clone, where the committed copy is
 	// the whole answer and the archive is complete without Firebase at all.
-	if (!FUNCTIONS_BASE) return committed(fetcher);
+	if (!functionsBase()) return committed(fetcher);
 
 	try {
-		const response = await fetcher(`${FUNCTIONS_BASE}photoEdits`, {
-			signal: AbortSignal.timeout(TIMEOUT_MS),
-			...(options.fresh ? { cache: 'reload' as RequestCache } : {})
-		});
+		const response = await fetcher(
+			overlayUrl('photoEdits', options.fresh),
+			overlayInit(Boolean(options.fresh), TIMEOUT_MS)
+		);
 		if (!response.ok) return committed(fetcher);
 
 		const parsed = (await response.json()) as Partial<PhotoEditFile>;
 		cache = parsed.edits ?? {};
+		cameFromOverlay = true;
 		return cache;
 	} catch {
 		return committed(fetcher);
 	}
+}
+
+/**
+ * Whether the last `loadPhotoEdits` reached the live overlay.
+ *
+ * False means the answer is the committed copy, which is empty until somebody runs the
+ * pull - so a page showing "no corrections" may be showing "could not read the
+ * corrections". /beheer uses this to say so instead of drawing a donor list that looks
+ * fine and is a day out of date.
+ */
+export function photoEditsWereLive(): boolean {
+	return cameFromOverlay;
 }
 
 /** Forgets what was fetched, so a curator sees their own change without a reload. */

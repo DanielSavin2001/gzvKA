@@ -16,7 +16,7 @@
 import type { PublishedPhoto } from '../../sharedModels/submission';
 import type { ArchivePhoto } from './archive';
 
-const FUNCTIONS_BASE = import.meta.env.VITE_BASE_URL_GF ?? '';
+import { functionsBase, overlayInit, overlayUrl } from './overlay';
 
 /** Bounded for the same reason the edits overlay is: a visitor is waiting on it. */
 const TIMEOUT_MS = 3_000;
@@ -81,13 +81,13 @@ export async function loadPublished(
 	if (cache && !options.fresh) return cache;
 
 	// No backend configured: the normal state for a fresh clone.
-	if (!FUNCTIONS_BASE) return [];
+	if (!functionsBase()) return [];
 
 	try {
-		const response = await fetcher(`${FUNCTIONS_BASE}publishedPhotos`, {
-			signal: AbortSignal.timeout(TIMEOUT_MS),
-			...(options.fresh ? { cache: 'reload' as RequestCache } : {})
-		});
+		const response = await fetcher(
+			overlayUrl('publishedPhotos', options.fresh),
+			overlayInit(Boolean(options.fresh), TIMEOUT_MS)
+		);
 		if (!response.ok) return [];
 
 		const parsed = (await response.json()) as { photos?: PublishedPhoto[] };
