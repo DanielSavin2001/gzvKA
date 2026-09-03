@@ -17,6 +17,24 @@ name: Pull the curators' work into git
 # The pull request will have no checks on it. GitHub does not trigger workflows for a pull
 # request opened with `GITHUB_TOKEN`, which is a loop guard rather than a mistake - and this
 # request carries data, not code. Push an empty commit to it if you want the preview build.
+#
+# ## The push is the backup; the pull request is only the notice
+#
+# On its second night this ran, read 6,314 lines of corrections out of Firestore, committed
+# them, pushed the branch - and then failed, because `gh pr create` returned "GitHub Actions
+# is not permitted to create or approve pull requests". That is a repository setting
+# (Settings -> Actions -> General -> Workflow permissions), not something a token scope can
+# fix from in here.
+#
+# So the run went red over a backup that had entirely succeeded. That is the worst way for
+# this particular job to be wrong: the one thing it exists to tell somebody is whether the
+# curators' work is safe, and it said no while the answer was yes. Whoever saw the red cross
+# would reasonably conclude nothing had been saved.
+#
+# The two steps are therefore separated by what they mean. Pushing the branch is the backup
+# and a failure there fails the run. Opening the pull request is a convenience on top, and
+# when it is refused the run stays green and says loudly where the branch is and which
+# setting would let it open the request by itself.
 
 on:
   schedule:
@@ -114,10 +132,37 @@ jobs:
           public, and this repository is public.
           BODY
 
-          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')" ]; then
-            gh pr create \
-              --head "$BRANCH" \
-              --base main \
-              --title "Curator work from the live site" \
-              --body-file "$RUNNER_TEMP/pr-body.md"
+          # Everything above this line is the backup, and it has now succeeded: the branch is
+          # pushed and the curators' work is in git whatever happens next.
+          COMPARE="https://github.com/$GITHUB_REPOSITORY/compare/main...$BRANCH?expand=1"
+
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')" ]; then
+            echo "A pull request for $BRANCH is already open."
+            exit 0
           fi
+
+          # Not `set -e`'s business. A refusal here is not a failed backup, and the run must
+          # not claim otherwise - so the exit status is caught and judged rather than thrown.
+          if gh pr create \
+            --head "$BRANCH" \
+            --base main \
+            --title "Curator work from the live site" \
+            --body-file "$RUNNER_TEMP/pr-body.md"
+          then
+            exit 0
+          fi
+
+          echo "::warning::The backup succeeded and was pushed to '$BRANCH', but the pull request could not be opened. Open it by hand: $COMPARE"
+
+          {
+            echo "### De back-up is gelukt"
+            echo
+            echo "De correcties staan in git, op de tak \`$BRANCH\`. Alleen het openen van"
+            echo "de pull request lukte niet."
+            echo
+            echo "[Open de pull request zelf]($COMPARE)"
+            echo
+            echo "Wilt u dat dit vanzelf gaat: **Settings -> Actions -> General ->**"
+            echo "**Workflow permissions**, en vink *Allow GitHub Actions to create and"
+            echo "approve pull requests* aan. Daarna doet deze taak het weer zelf."
+          } >> "$GITHUB_STEP_SUMMARY"
