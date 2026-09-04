@@ -3,6 +3,7 @@
 
 	import type { Decade } from '$lib/page-data';
 	import { SITE } from '$lib/seo';
+	import { sparseLabels } from '../../../sharedModels/sparse-labels';
 	import Seo from '../components/Seo.svelte';
 
 	export let data: { decades: Decade[]; dated: number; total: number; card: string | null };
@@ -18,6 +19,22 @@
 
 	/** Enough of a bar to be visible and clickable when a decade holds one photograph. */
 	const FLOOR = 4;
+
+	/**
+	 * Which decades get a written year under the bar on a phone.
+	 *
+	 * All thirteen used to, through `truncate`, and on a 360-pixel screen that produced
+	 * thirteen columns of "19...". A clipped label is worse than no label - it crops the
+	 * digits that distinguish 1910 from 1990, which are the only digits that matter here -
+	 * so the row is thinned to the ends and the middle instead, at full size.
+	 *
+	 * A reader counts from those the way they count from the 0, 5 and 10 on a ruler, and
+	 * the heading directly under the strip names the decade they are in already, in 4xl
+	 * type. The labels only ever had to serve aiming at the others.
+	 *
+	 * From `sm` up there is room for all of them and they all come back.
+	 */
+	$: anchors = new Set(sparseLabels(data.decades.length));
 
 	function height(count: number): number {
 		return Math.max(FLOOR, Math.round((count / tallest) * 100));
@@ -99,7 +116,7 @@
 		class="sticky top-16 z-30 -mx-4 mt-8 border-y border-gray-200 bg-paper/95 px-4 py-4 backdrop-blur dark:border-gray-700 dark:bg-gray-900/95"
 	>
 		<ul class="flex items-end gap-1 sm:gap-2">
-			{#each data.decades as decade (decade.key)}
+			{#each data.decades as decade, index (decade.key)}
 				<li class="flex min-w-0 flex-1 flex-col items-center gap-1">
 					<span
 						class="text-xs tabular-nums text-gray-600 transition-opacity dark:text-gray-400"
@@ -129,8 +146,18 @@
 						/>
 					</div>
 
+					<!--
+						`whitespace-nowrap` with no `truncate`, and no clipping anywhere above it:
+						a sparse label is allowed to be wider than its own column, because the
+						columns either side of it are deliberately empty. That is the whole trick -
+						the label stops competing for twenty-one pixels it was never going to win.
+					-->
 					<span
-						class="w-full truncate text-center text-xs tabular-nums text-gray-600 dark:text-gray-400"
+						class="text-center text-xs tabular-nums whitespace-nowrap text-gray-600 dark:text-gray-400 {anchors.has(
+							index
+						)
+							? ''
+							: 'invisible sm:visible'}"
 						class:font-bold={here === decade.key}
 					>
 						{decade.key === 'voor-1900' ? '<1900' : decade.key}
