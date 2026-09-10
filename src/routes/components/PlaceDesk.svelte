@@ -4,6 +4,7 @@
 	import type { Archive, ArchivePlace } from '$lib/archive';
 	import { revertPlaceRecord, savePlaceRecord } from '$lib/admin';
 	import type { Approximation } from '$lib/approximations';
+	import { curatorLabel } from '../../../sharedModels/curator';
 	import type { StreetGeometry } from '$lib/coordinates';
 	import type { CuratorApproximation, Line } from '../../../sharedModels/place-overlay';
 	import { DISPLAYS, GRADES } from '../../../sharedModels/place-overlay';
@@ -280,7 +281,7 @@
 						{place.count}
 						{place.count === 1 ? 'foto' : "foto's"}
 						{#if record}
-							&middot; aangepast door {record.by} op
+							&middot; aangepast door {curatorLabel(record.by)} op
 							{new Date(record.on).toLocaleDateString('nl-BE')}
 						{/if}
 					{:else if newId}

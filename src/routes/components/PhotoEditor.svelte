@@ -2,6 +2,7 @@
 	import type { Archive, ArchivePhoto } from '$lib/archive';
 	import { thumbUrl } from '$lib/archive';
 	import type { PhotoEdit, PhotoFields } from '$lib/photo-edits';
+	import { curatorLabel } from '../../../sharedModels/curator';
 	import DonorPicker from './DonorPicker.svelte';
 	import PlaceChooser from './PlaceChooser.svelte';
 	import { revertPhotoEdit, savePhotoEdit } from '$lib/admin';
@@ -111,7 +112,7 @@
 			<p
 				class="mt-2 rounded bg-amber-50 p-2 text-xs text-gray-800 dark:bg-amber-950 dark:text-gray-200"
 			>
-				Aangepast door {existing.editedBy} op
+				Aangepast door {curatorLabel(existing.editedBy)} op
 				{new Date(existing.editedAt).toLocaleDateString('nl-BE')}
 			</p>
 		{/if}

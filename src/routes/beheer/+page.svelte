@@ -40,6 +40,7 @@
 	import { forgetPlaceRecords, loadPlaceRecords } from '$lib/place-records';
 	import type { PlacePin } from '$lib/place-pins';
 	import { forgetPlacePins, loadPlacePins } from '$lib/place-pins';
+	import { curatorLabel } from '../../../sharedModels/curator';
 	import { normalizeText } from '../../../sharedModels/text';
 	import DonorPicker from '../components/DonorPicker.svelte';
 	import DonorDesk from '../components/DonorDesk.svelte';
@@ -402,6 +403,24 @@
 	let items: QueuedSubmission[] = [];
 	let loading = false;
 
+	/**
+	 * Show only the decisions this curator made.
+	 *
+	 * There are two of us now, and "what did I decide about this?" and "what did the other
+	 * one decide?" are different questions that were previously the same undifferentiated
+	 * list. The stamp on a decision is a name, so this compares names - which is exact for as
+	 * long as no two curators are given the same one in `admins`.
+	 *
+	 * Only meaningful on the handled tabs: nothing in the queue has been decided yet.
+	 */
+	let onlyMine = false;
+	$: mine = onlyMine && showing !== 'pending' && Boolean(curator?.name);
+
+	$: shownItems = mine ? items.filter((item) => item.reviewedBy === curator?.name) : items;
+	$: shownReports = mine
+		? reports.filter((report) => report.reviewedBy === curator?.name)
+		: reports;
+
 	/** Edits in progress, keyed by submission id, so a half-filled form is not lost. */
 	let edits: Record<string, Decision> = {};
 	let busy: string | null = null;
@@ -591,7 +610,16 @@
 
 		{#if signedInAs}
 			<div class="flex items-center gap-3 text-sm">
-				<span class="text-gray-600 dark:text-gray-400">{signedInAs}</span>
+				<!--
+					The name, once the server has said which curator this is. Until then the
+					address, because that is all the browser knows and saying nothing at all
+					would read as not being signed in. `|| signedInAs` also covers the few
+					minutes of a deploy where this page is new and the functions are not, and
+					`whoAmI` answers without a name at all.
+				-->
+				<span class="text-gray-600 dark:text-gray-400" title={signedInAs}
+					>{curator?.name || signedInAs}</span
+				>
 				<button
 					type="button"
 					class="rounded border border-gray-300 dark:border-gray-700 px-3 py-1.5 font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -690,7 +718,7 @@
 		</nav>
 
 		<nav
-			class="mt-6 flex gap-2"
+			class="mt-6 flex flex-wrap items-center gap-2"
 			class:hidden={desk === 'archief' ||
 				desk === 'jaartallen' ||
 				desk === 'schenkers' ||
@@ -710,6 +738,20 @@
 					{label}
 				</button>
 			{/each}
+
+			<!--
+				Only on the handled tabs, and only once the server has said who this is: in the
+				queue nothing has been decided, so "alleen die van mij" would empty the page for
+				no reason a reader could see.
+			-->
+			{#if showing !== 'pending' && curator?.name}
+				<label
+					class="ml-auto flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 dark:border-gray-700 dark:text-gray-200"
+				>
+					<input type="checkbox" bind:checked={onlyMine} class="h-4 w-4" />
+					Alleen die van {curator.name}
+				</label>
+			{/if}
 		</nav>
 
 		{#if desk === 'jaartallen'}
@@ -831,9 +873,14 @@
 			</h2>
 			{#if loading}
 				<p class="py-8 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
-			{:else if reports.length === 0}
+			{:else if shownReports.length === 0}
 				<p class="py-8 text-center text-gray-600 dark:text-gray-400">
-					Geen meldingen.
+					{#if mine && reports.length > 0}
+						Geen meldingen die {curator?.name} behandeld heeft. Er staan er wel {reports.length}
+						van iemand anders.
+					{:else}
+						Geen meldingen.
+					{/if}
 					{#if correctableCount > 0}
 						{correctableCount} plaatsen staan bij benadering op de kaart en wachten op iemand die het
 						beter weet &mdash; die kunt u hieronder zelf zetten.
@@ -841,7 +888,7 @@
 				</p>
 			{:else}
 				<ul class="mt-4 space-y-4">
-					{#each reports as report (report.id)}
+					{#each shownReports as report (report.id)}
 						<li
 							class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
 						>
@@ -863,6 +910,16 @@
 										{#if report.contributor.name}door {report.contributor.name}{/if}
 										{#if report.contributor.email}&middot; {report.contributor.email}{/if}
 									</p>
+									{#if report.reviewedBy}
+										<!-- Which of us decided this, so the other one does not decide it again. -->
+										<p class="text-sm text-gray-500 dark:text-gray-400">
+											{report.status === 'accepted' ? 'Goedgekeurd' : 'Afgewezen'} door
+											{curatorLabel(report.reviewedBy)}
+											{#if report.reviewedAt}
+												op {new Date(report.reviewedAt).toLocaleDateString('nl-BE')}
+											{/if}
+										</p>
+									{/if}
 								</div>
 
 								<!-- What the map was claiming when they objected. Captured at the time,
@@ -1113,13 +1170,19 @@
 			{/if}
 		{:else if loading}
 			<p class="py-16 text-center text-gray-500 dark:text-gray-400">Bezig met laden ...</p>
-		{:else if items.length === 0}
+		{:else if shownItems.length === 0}
 			<p class="py-16 text-center text-gray-600 dark:text-gray-400">
-				{showing === 'pending' ? 'Niets te bekijken. Alles is afgehandeld.' : 'Niets hier.'}
+				{#if mine && items.length > 0}
+					Niets van {curator?.name} hier. Er staan er wel {items.length} van iemand anders.
+				{:else if showing === 'pending'}
+					Niets te bekijken. Alles is afgehandeld.
+				{:else}
+					Niets hier.
+				{/if}
 			</p>
 		{:else}
 			<ul class="mt-6 space-y-6">
-				{#each items as item (item.id)}
+				{#each shownItems as item (item.id)}
 					{@const ready = editsFor(item)}
 					<li
 						class="rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 lg:flex lg:gap-6"
@@ -1166,6 +1229,15 @@
 								Ingestuurd {new Date(item.submittedAt).toLocaleDateString('nl-BE')}
 								{#if item.contributor.name}door {item.contributor.name}{/if}
 							</p>
+							{#if item.reviewedBy}
+								<p class="text-sm text-gray-500 dark:text-gray-400">
+									{item.status === 'approved' ? 'Goedgekeurd' : 'Afgewezen'} door
+									{curatorLabel(item.reviewedBy)}
+									{#if item.reviewedAt}
+										op {new Date(item.reviewedAt).toLocaleDateString('nl-BE')}
+									{/if}
+								</p>
+							{/if}
 							{#if item.contributor.email}
 								<p class="text-sm text-gray-500 dark:text-gray-400">{item.contributor.email}</p>
 							{/if}

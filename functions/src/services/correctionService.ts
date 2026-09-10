@@ -23,6 +23,7 @@ import { CorrectionError } from '../../../sharedModels/correction';
 import type { Contributor } from '../../../sharedModels/submission';
 import type { AdminIdentity } from './admin-auth';
 import { firestore } from './externalServices';
+import { named } from './curator-names';
 
 export const CORRECTION_COLLECTION = 'corrections';
 
@@ -102,7 +103,12 @@ export async function list(status: CorrectionStatus): Promise<PlaceCorrection[]>
 		.limit(PAGE)
 		.get();
 
-	return snapshotResult.docs.map((document) => document.data() as PlaceCorrection);
+	// Resolved rather than raw: a decision made before this archive recorded names is stamped
+	// with the curator's email address, and the desk that draws this list would print it.
+	return named(
+		snapshotResult.docs.map((document) => document.data() as PlaceCorrection),
+		'reviewedBy'
+	);
 }
 
 /**
@@ -134,7 +140,7 @@ export async function decide(
 		...correction,
 		status,
 		reviewedAt: now(),
-		reviewedBy: curator.email
+		reviewedBy: curator.name
 	};
 
 	// A rejection needs no reason. It used to, and the rule was quietly load-bearing: the

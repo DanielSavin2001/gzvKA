@@ -32,7 +32,13 @@ export type QueuedSubmission = Submission & { previewUrl: string | null };
 export interface Curator {
 	uid: string;
 	email: string;
-	name?: string;
+	/**
+	 * What this curator is called on the site, and what every decision they make is stamped
+	 * with. Comes from the `name` field on their document in `admins`, falling back to their
+	 * Google account name and then to "Een beheerder" - so it is always something, and never
+	 * their address.
+	 */
+	name: string;
 }
 
 /**

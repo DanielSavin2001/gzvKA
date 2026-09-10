@@ -20,6 +20,7 @@ import { PhotoFactError, readPhotoFact } from '../../../sharedModels/photo-fact'
 import type { Contributor } from '../../../sharedModels/submission';
 import type { AdminIdentity } from './admin-auth';
 import { firestore } from './externalServices';
+import { named } from './curator-names';
 import * as photoEdits from './photoEditService';
 
 export const PHOTO_FACT_COLLECTION = 'photo-facts';
@@ -78,7 +79,10 @@ export async function list(status: PhotoFactStatus): Promise<PhotoFact[]> {
 		.limit(PAGE)
 		.get();
 
-	return snapshot.docs.map((document) => document.data() as PhotoFact);
+	return named(
+		snapshot.docs.map((document) => document.data() as PhotoFact),
+		'reviewedBy'
+	);
 }
 
 /**
@@ -131,7 +135,7 @@ export async function decide(
 		...fact,
 		status,
 		reviewedAt: now(),
-		reviewedBy: curator.email
+		reviewedBy: curator.name
 	};
 
 	// A rejection needs no reason. It used to, and the rule was quietly load-bearing: the

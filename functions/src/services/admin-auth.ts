@@ -10,15 +10,33 @@
  * record of who added whom and when.
  */
 
+import { curatorName } from '../../../sharedModels/curator';
 import { auth, firestore } from './externalServices';
 
-/** Collection holding one document per curator, keyed by their lower-cased email. */
+/**
+ * Collection holding one document per curator, keyed by their lower-cased email.
+ *
+ * The document was allowed to be empty and mostly was. It now carries one field that is
+ * worth filling in:
+ *
+ *     name: "Daniel Savin"
+ *
+ * That is the name every decision this curator makes is stamped with, and the name the
+ * archive shows in place of the addresses stamped before this field existed. Without it a
+ * curator falls back to whatever Google calls their account, and failing that to "Een
+ * beheerder" - never to their address, which is the whole point.
+ */
 export const ADMIN_COLLECTION = 'admins';
 
 export interface AdminIdentity {
 	uid: string;
 	email: string;
-	name?: string;
+	/**
+	 * What this curator is called on the site. Always set - `curatorName` has a fallback for
+	 * every case - so nothing downstream has to decide what to do without one, and nothing
+	 * downstream is ever tempted to print the address instead.
+	 */
+	name: string;
 }
 
 export class NotAuthorised extends Error {
@@ -69,12 +87,19 @@ export async function requireAdmin(authorization: string | undefined): Promise<A
 	const record = await firestore.collection(ADMIN_COLLECTION).doc(email).get();
 
 	if (!record.exists) {
-		throw new NotAuthorised('Dit account beheert dit archief niet.', 403);
+		// Naming the address is the difference between "I am blocked" and something somebody
+		// can act on: it is the exact string that has to become a document id in `admins`,
+		// lower-cased and with whatever Google actually verified. It is the caller's own
+		// address, told back to them, so it reveals nothing they did not send.
+		throw new NotAuthorised(
+			`Dit account (${email}) beheert dit archief niet. Vraag een beheerder om het toe te voegen.`,
+			403
+		);
 	}
 
 	return {
 		uid: decoded.uid,
 		email,
-		...(decoded.name ? { name: String(decoded.name) } : {})
+		name: curatorName(record.data()?.name, decoded.name)
 	};
 }
