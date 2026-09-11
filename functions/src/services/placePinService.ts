@@ -13,6 +13,7 @@
 
 import type { PlacePin, PlacePinRequest } from '../../../sharedModels/place-pin';
 import type { AdminIdentity } from './admin-auth';
+import { namedIn } from './curator-names';
 import { firestore } from './externalServices';
 
 export const PLACE_PIN_COLLECTION = 'place-pins';
@@ -28,7 +29,7 @@ export async function save(request: PlacePinRequest, curator: AdminIdentity): Pr
 	const pin: PlacePin = {
 		lat: request.lat,
 		lng: request.lng,
-		by: curator.email,
+		by: curator.name,
 		on: new Date().toISOString().slice(0, 10)
 	};
 
@@ -44,7 +45,10 @@ export async function all(): Promise<Record<string, PlacePin>> {
 	for (const document of snapshot.docs) {
 		pins[document.id] = document.data() as PlacePin;
 	}
-	return pins;
+
+	// Public, and `npm run archive:pull` writes these straight into
+	// `static/data/place-coordinates.json`, so `by` must be a name and not an address.
+	return namedIn(pins, 'by');
 }
 
 /** Drops a pin, so the place falls back to the register or the research. */

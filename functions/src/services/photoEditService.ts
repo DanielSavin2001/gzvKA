@@ -15,6 +15,7 @@ import { FieldPath } from '@google-cloud/firestore';
 import type { PhotoEdit, PhotoFields } from '../../../sharedModels/photo-edit';
 import { isEmpty, PhotoEditError } from '../../../sharedModels/photo-edit';
 import type { AdminIdentity } from './admin-auth';
+import { namedIn } from './curator-names';
 import { firestore } from './externalServices';
 import { readAllPages } from './paged-read';
 
@@ -104,7 +105,9 @@ export async function all(): Promise<Record<string, PhotoEdit>> {
 		);
 	}
 
-	return items;
+	// The stamps go out over a public endpoint and into a public repository, so an address
+	// stored before names existed is resolved to a name here rather than published.
+	return namedIn(items, 'editedBy');
 }
 
 /**

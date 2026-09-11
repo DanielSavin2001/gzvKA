@@ -25,6 +25,7 @@ import {
 } from '../../../sharedModels/submission';
 import type { AdminIdentity } from './admin-auth';
 import { firestore, storage } from './externalServices';
+import { named } from './curator-names';
 
 export const SUBMISSION_COLLECTION = 'submissions';
 
@@ -104,7 +105,10 @@ export async function list(status: SubmissionStatus | 'all', limit = 200): Promi
 	if (status !== 'all') query = query.where('status', '==', status) as typeof query;
 
 	const snapshot = await query.get();
-	return snapshot.docs.map((doc) => doc.data() as Submission);
+	return named(
+		snapshot.docs.map((doc) => doc.data() as Submission),
+		'reviewedBy'
+	);
 }
 
 /** Strips the fields a curator may set, ignoring anything else the request carried. */
@@ -191,7 +195,7 @@ export async function review(
 		status: decision.status,
 		storagePath,
 		reviewedAt: new Date().toISOString(),
-		reviewedBy: curator.email,
+		reviewedBy: curator.name,
 		...(decision.rejectionReason ? { rejectionReason: decision.rejectionReason.slice(0, 500) } : {})
 	};
 

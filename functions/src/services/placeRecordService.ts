@@ -10,6 +10,7 @@
 import type { PlaceRecord } from '../../../sharedModels/place-record';
 import { PlaceRecordError, wouldLoop } from '../../../sharedModels/place-record';
 import type { AdminIdentity } from './admin-auth';
+import { namedIn } from './curator-names';
 import { firestore } from './externalServices';
 
 export const PLACE_RECORD_COLLECTION = 'places';
@@ -34,7 +35,7 @@ export async function all(): Promise<Record<string, PlaceRecord>> {
 		places[document.id] = document.data() as PlaceRecord;
 	}
 
-	return places;
+	return namedIn(places, 'by');
 }
 
 /**
@@ -59,7 +60,7 @@ export async function save(
 		}
 	}
 
-	const record: PlaceRecord = { ...fields, by: curator.email, on: now() };
+	const record: PlaceRecord = { ...fields, by: curator.name, on: now() };
 
 	// `set` without merge: a record is the whole statement about a place, and clearing the
 	// parent has to be expressible. Merging would make "no longer under anything" impossible.

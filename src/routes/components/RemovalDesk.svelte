@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 
 	import type { Archive } from '$lib/archive';
+	import { curatorLabel } from '../../../sharedModels/curator';
 	import type { RemovalRequest, RemovalStatus } from '../../../sharedModels/removal-request';
 	import { GROUND_LABELS } from '../../../sharedModels/removal-request';
 	import { removalRequests, reviewRemovalRequest } from '$lib/admin';
@@ -238,7 +239,7 @@
 						<div class="mt-3 flex flex-wrap items-center gap-3">
 							<span class="text-sm text-gray-600 dark:text-gray-400">
 								{request.status === 'accepted' ? 'Weggehaald' : 'Niet weggehaald'} door
-								{request.reviewedBy}{#if request.note} &middot; {request.note}{/if}
+								{curatorLabel(request.reviewedBy)}{#if request.note} &middot; {request.note}{/if}
 							</span>
 							<button
 								type="button"

@@ -20,6 +20,7 @@ import { RemovalRequestError, readRemovalRequest } from '../../../sharedModels/r
 import type { Contributor } from '../../../sharedModels/submission';
 import type { AdminIdentity } from './admin-auth';
 import { firestore } from './externalServices';
+import { named } from './curator-names';
 import * as photoEdits from './photoEditService';
 
 export const REMOVAL_REQUEST_COLLECTION = 'removal-requests';
@@ -62,7 +63,10 @@ export async function list(status: RemovalStatus): Promise<RemovalRequest[]> {
 		.limit(PAGE)
 		.get();
 
-	return snapshot.docs.map((document) => document.data() as RemovalRequest);
+	return named(
+		snapshot.docs.map((document) => document.data() as RemovalRequest),
+		'reviewedBy'
+	);
 }
 
 /**
@@ -122,7 +126,7 @@ export async function decide(
 		...request,
 		status,
 		reviewedAt: now(),
-		reviewedBy: curator.email
+		reviewedBy: curator.name
 	};
 
 	if (note?.trim()) decided.note = note.trim();

@@ -407,8 +407,27 @@ matters — each step below is blocked by the one above it.
    fails the sign-in popup with `auth/unauthorized-domain`.
 
 5. **Add yourself as a curator.** Firestore → create a collection `admins` → add a
-   document whose **ID is your email address, lower-cased** (the contents do not matter;
-   `{ }` is fine). Adding another curator later is one more document.
+   document whose **ID is your email address, lower-cased**, with one field:
+
+   | Field  | Type     | Value          |
+   | ------ | -------- | -------------- |
+   | `name` | `string` | `Daniel Savin` |
+
+   That name is what the archive stamps on every decision you make — the corrected title,
+   the pin on the map, the photograph you approved — and what it shows other curators. It
+   is also what stands in for the addresses stamped before this field existed, so filling
+   it in retroactively names all of your past work as well.
+
+   Leave it out and nothing breaks: the archive falls back to the name on your Google
+   account, and failing that to "Een beheerder". What it will never do is show your email
+   address, because `photoEdits`, `placePins` and `placeRecords` are public endpoints and
+   `npm run archive:pull` commits their answers to this public repository.
+
+   **Adding another curator is one more document**, ID lower-cased address, same `name`
+   field. Nothing to deploy — the check reads this collection on every request, so they can
+   sign in a minute later. Someone who signs in without a document here is told so by name:
+   *"Dit account (…) beheert dit archief niet"*, and the address in that message is exactly
+   the string the document id has to be.
 
 6. **Publish the rules, the indexes and the functions**, all of which are in this
    repository:
