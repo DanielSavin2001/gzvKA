@@ -42,9 +42,9 @@ describe('display titles', () => {
 		expect(titleOf('Antwerpsesteenweg - Garage Meyvis - Nicole Verstrepen - 31.12.2015.jpg')).toBe(
 			'Antwerpsesteenweg - Garage Meyvis'
 		);
-		expect(titleOf('Kapellenbos - Grand Hotel Kapellenbosch - Karel Jespers - 16.04.2024.JPG')).toBe(
-			'Kapellenbos - Grand Hotel Kapellenbosch'
-		);
+		expect(
+			titleOf('Kapellenbos - Grand Hotel Kapellenbosch - Karel Jespers - 16.04.2024.JPG')
+		).toBe('Kapellenbos - Grand Hotel Kapellenbosch');
 		expect(titleOf('Waterstraat - Kapel van de Heuvels - Luc De Cock - 15.05.2020.jpg')).toBe(
 			'Waterstraat - Kapel van de Heuvels'
 		);
@@ -92,12 +92,27 @@ describe('display titles', () => {
 				.split(' ')
 				.filter((word) => word.length > 2 && !/^\d+$/.test(word) && !ignorable.has(word));
 
+		/**
+		 * The donation stamp, and any rescan note stuck to it, taken off the path first.
+		 *
+		 * The stamp is deliberately unsearchable - that is what the next test asserts, and
+		 * why: "2015" answering with the 602 photographs donated that year instead of the
+		 * 36 taken in it is a worse search, not a richer one. A "NIEUW" written after the
+		 * date is part of the stamp, and is the archive talking to itself about a rescan.
+		 *
+		 * Taken off here rather than added to `ignorable`, because "nieuw" IS a real word
+		 * elsewhere in the corpus: "Antwerpsesteenweg - Dorpsplein nieuw - Swatti Alix"
+		 * means the new Dorpsplein, and losing that one should still fail this test.
+		 */
+		const withoutStamp = (path: string): string =>
+			path.replace(/\b\d{1,2}\.\d{1,2}[. ]\d{4}(?:\s+(?:\d{1,3}|NIEUW))?/gi, ' ');
+
 		const unreachable = index.photos.filter((photo) => {
 			const named = photo.st.map((id) => placeNames.get(id) ?? '').join(' ');
 			const haystack = new Set(
 				words([photo.t, photo.s, named, photo.d ?? '', photo.k ?? ''].join(' '))
 			);
-			return words(photo.p).some((word) => !haystack.has(word));
+			return words(withoutStamp(photo.p)).some((word) => !haystack.has(word));
 		});
 
 		expect(unreachable.map((photo) => photo.p)).toEqual([]);

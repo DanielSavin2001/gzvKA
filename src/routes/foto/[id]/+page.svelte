@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 
 	import type { Archive, ArchivePhoto } from '$lib/archive';
 	import { detailUrl, loadArchive, photoAlt, sortForDisplay, thumbUrl } from '$lib/archive';
@@ -341,6 +341,31 @@
 	 */
 	let openAt = -1;
 
+	/**
+	 * Leaving the page closes full screen.
+	 *
+	 * "Alle gegevens van deze foto" inside the overlay points at /foto/<id>, which is the
+	 * route this page already IS. Svelte only tears a page down when the route changes, so
+	 * this component is reused: `data.id` updates underneath, the photograph behind the
+	 * overlay changes - and `openAt` is never touched, so the reader taps the link and gets
+	 * the same black screen back. Nothing else closes it either; the only close paths are
+	 * the Sluiten button and Escape.
+	 *
+	 * A click handler on that one link would not be enough and would fight `closeLightbox`,
+	 * which navigates itself. Navigation is the right event: it also covers the browser's
+	 * Back button, which otherwise returns to the previous photograph with the overlay
+	 * still up and still showing the photograph you tapped through on.
+	 *
+	 * There is a second bug this closes. `lightboxItems` is derived from `siblings`, which
+	 * is derived from the photograph - so after a same-route navigation the old `openAt`
+	 * indexes into a freshly computed list. When the reader arrived without `?lijst` that
+	 * list is rebuilt around the NEW photograph's street, and the overlay either shows an
+	 * unrelated photograph or, past the end, vanishes on its own.
+	 */
+	afterNavigate(() => {
+		openAt = -1;
+	});
+
 	/** The list the arrows walk, so full screen steps through exactly the same order. */
 	$: lightboxItems = ((): LightboxItem[] => {
 		if (siblings.length > 0) return siblings.map((item) => ({ photo: item }));
@@ -367,6 +392,12 @@
 		// Not while someone is typing in the search box in the header.
 		const target = event.target as HTMLElement | null;
 		if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+
+		// Not while full screen is open: the lightbox walks the same list with its own arrow
+		// keys, and this handler navigates. Both used to run on one press, which happened to
+		// agree - until closing on navigation made the second one shut the overlay under the
+		// reader on the first arrow press.
+		if (openAt >= 0) return;
 
 		if (event.key === 'ArrowLeft') step(previous);
 		if (event.key === 'ArrowRight') step(next);
@@ -408,6 +439,7 @@
 		{archive}
 		items={lightboxItems}
 		index={openAt}
+		detailQuery={neighbourQuery}
 		on:close={closeLightbox}
 		on:move={(event) => (openAt = event.detail)}
 	/>

@@ -21,6 +21,18 @@
 	/** Index of the open photograph. -1 closes the lightbox. */
 	export let index = -1;
 
+	/**
+	 * Appended to the "alle gegevens" link, so the list the reader is walking survives it.
+	 *
+	 * The photo page threads `?lijst=` through every one of its links to keep the previous
+	 * and next arrows walking the street, decade, subject or donor the reader came from.
+	 * This link is the one that dropped it, which cost nothing while the address bar was
+	 * hidden behind a full-screen overlay, and costs the whole thread the moment the
+	 * overlay closes properly. A story passes nothing, because a story is not a list this
+	 * page can walk.
+	 */
+	export let detailQuery = '';
+
 	const dispatch = createEventDispatcher<{ close: void; move: number }>();
 
 	/** Pinch/double-tap magnification, applied to the photograph itself. */
@@ -34,6 +46,10 @@
 		index;
 		zoom = { ...NO_ZOOM };
 	}
+	// `epoch: index` on the action below is the other half of this. Putting the component's
+	// own `zoom` back only changes what is drawn; the gesture engine keeps the real state,
+	// and without being told it still believed the previous photograph's magnification -
+	// so the next photograph opened at full view and then leapt on the first touch.
 	$: previous = index > 0 ? items[index - 1] : null;
 	$: next = index >= 0 && index < items.length - 1 ? items[index + 1] : null;
 
@@ -112,7 +128,7 @@
 				onRight: () => previous && dispatch('move', index - 1),
 				enabled: () => zoom.scale === 1
 			}}
-			use:pinchZoom={{ onChange: (state) => (zoom = state) }}
+			use:pinchZoom={{ onChange: (state) => (zoom = state), epoch: index }}
 		>
 			{#if previous}
 				<button
@@ -155,7 +171,7 @@
 			{/if}
 			<a
 				class="mt-2 inline-block text-sm font-semibold text-white/80 underline hover:text-white"
-				href="/foto/{current.photo.id}"
+				href="/foto/{current.photo.id}{detailQuery}"
 			>
 				Alle gegevens van deze foto
 			</a>
