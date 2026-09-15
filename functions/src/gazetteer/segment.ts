@@ -30,8 +30,45 @@ const SEGMENT_SEPARATOR = /(?:\s+-\s*|\s*-\s+)/;
 /**
  * A trailing date-ish token: a full date, a month-year, a bare year, or the archive's
  * "no date" marker.
+ *
+ * The day and month are separated by a dot; the month and the year by a dot or a space.
+ * The space is not a shape anybody chose - it is three filenames where the last dot was
+ * typed as a space ("Plantijn_3 - Robert Vingerhoed - 18.02 2015") - but a stamp the
+ * pattern does not recognise is not merely unread. It falls through to the year rules,
+ * which then file the photograph under the year the archive received it.
  */
-const DATE_TOKEN = /^(?:z\.?d\.?|\d{1,2}\.\d{1,2}\.\d{4}|\d{1,2}\.\d{4}|\d{4})$/i;
+const DATE_TOKEN = /^(?:z\.?d\.?|\d{1,2}\.\d{1,2}[. ]\d{4}|\d{1,2}\.\d{4}|\d{4})$/i;
+
+/**
+ * The first year this archive received anything.
+ *
+ * The earliest donation stamp in the corpus is 15.11.2013, and the distribution climbs
+ * from there: 1 in 2013, 367 in 2014, 507 in 2015, and on to 70 in 2025. Nothing was
+ * donated before the archive existed, so a dd.mm.yyyy dated 2012 or earlier is a date
+ * about the photograph rather than about the archive - the 1947 gymnastics display, the
+ * 1976 Tajje centenary - and must keep dating the picture.
+ *
+ * This bound is what lets the rules below be generous about the shape of a donation stamp
+ * without ever stealing a year from a photograph that is genuinely old.
+ */
+export const ARCHIVE_OPENED = 2013;
+
+/**
+ * A donation stamp with a sequence number or a note stuck onto it: "01.02.2017 2",
+ * "26.09.2019 7", "07.12.2015 NIEUW".
+ *
+ * When one photograph is scanned in several parts the archive numbers them after the date
+ * rather than before it, and that number used to make the whole segment unreadable:
+ * `DATE_TOKEN` is anchored, so "01.02.2017 2" is not a date, and the scan then walked past
+ * the donor as well. The two files below differ by two characters and by everything else:
+ *
+ *   Dorpsstraat - Hoelen - Omer Cleiren - 01.02.2017.jpg     donor, received 01.02.2017
+ *   Dorpsstraat - Hoelen - Omer Cleiren - 01.02.2017 2.jpg   no donor, no date, "Jaartal 2017"
+ *
+ * The second is a photograph of a horse and cart in front of a shop with hand-painted
+ * signage. Nothing about it is from 2017 except the day somebody handed it over.
+ */
+const STAMP_WITH_SEQUENCE = /^(\d{1,2}\.\d{1,2}[. ]\d{4})\s+(\d{1,3}|NIEUW)$/i;
 
 /** The archive's "anonymous donor" marker. */
 const ANONYMOUS_TOKEN = /^z\.?n\.?$/i;
@@ -52,7 +89,7 @@ const INSTITUTIONAL_CONTRIBUTORS = new Map<string, string>([
 ]);
 
 /** A full donation date, which is the only form that yields dateOfAcquisition. */
-const FULL_DATE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
+const FULL_DATE = /^(\d{1,2})\.(\d{1,2})[. ](\d{4})$/;
 
 /**
  * An unambiguous duplicate marker: "_5" or "(9)" at the end of a segment.
@@ -142,10 +179,20 @@ export function splitFilename(filename: string): FilenameParts {
 
 	// Scan from the end: the date and the donor live at the tail of the convention.
 	for (let i = cleaned.length - 1; i >= 0 && dateToken === null; i -= 1) {
-		if (DATE_TOKEN.test(cleaned[i])) {
-			dateToken = cleaned[i];
-			dateKnown = !/^z\.?d\.?$/i.test(cleaned[i]);
+		// A sequence number stuck to the stamp is peeled off first. Without this the
+		// segment is not a date, is not a person either, and the loop below stops on it -
+		// so one numbered scan lost its donor, its donation date and its title all at once,
+		// and gained the donation year as its own.
+		const stamped = donationStamp(cleaned[i], i === cleaned.length - 1);
+		const candidate = stamped?.date ?? cleaned[i];
+
+		if (DATE_TOKEN.test(candidate)) {
+			dateToken = candidate;
+			dateKnown = !/^z\.?d\.?$/i.test(candidate);
 			consumed.add(i);
+			// The number was a duplicate marker all along, so it is recorded as one rather
+			// than discarded with the rest of the segment.
+			if (indexSuffix === null && stamped?.index != null) indexSuffix = stamped.index;
 		} else if (ANONYMOUS_TOKEN.test(cleaned[i])) {
 			// An anonymity marker at the tail: the donor is known to be unknown.
 			contributorKnown = false;
@@ -173,9 +220,7 @@ export function splitFilename(filename: string): FilenameParts {
 		// everything derived from it.
 		if (!contributorKnown) break;
 
-		const institution = INSTITUTIONAL_CONTRIBUTORS.get(
-			normalizePlace(stripTrailingIndex(segment))
-		);
+		const institution = INSTITUTIONAL_CONTRIBUTORS.get(normalizePlace(stripTrailingIndex(segment)));
 		if (institution) {
 			contributor = institution;
 			consumed.add(i);
@@ -254,6 +299,61 @@ export function looksLikePersonName(segment: string): boolean {
 /** Removes a trailing duplicate marker such as the "2" in "Raymond Roeland 2". */
 function stripTrailingIndex(segment: string): string {
 	return segment.replace(UNAMBIGUOUS_INDEX, '').replace(CONTRIBUTOR_INDEX, '').trim();
+}
+
+/**
+ * The donation stamp inside a segment that also carries a sequence number, or null.
+ *
+ * Guarded twice, and both guards are load-bearing.
+ *
+ * `isLast` is the first. The same shape appears mid-filename and means the opposite
+ * there: every one of the twenty-five "Tajje 100 - 09.07.1976 NN - Hugo De Hoon - zd"
+ * photographs carries the date of the 1976 centenary in a middle segment, and 1976 is
+ * exactly the year those pictures should be filed under. In the corpus the split is
+ * total - every bare-number stamp in the last segment is a donation, every one in a
+ * middle segment is an event - with no counter-example either way.
+ *
+ * {@link ARCHIVE_OPENED} is the second, and it is the one that will still be right when
+ * the corpus grows. A stamp from before the archive existed cannot be a donation.
+ */
+function donationStamp(
+	segment: string,
+	isLast: boolean
+): { date: string; index: number | null } | null {
+	if (!isLast) return null;
+
+	const match = STAMP_WITH_SEQUENCE.exec(segment);
+	if (!match) return null;
+
+	const year = Number(FULL_DATE.exec(match[1])?.[3]);
+	if (!Number.isFinite(year) || year < ARCHIVE_OPENED) return null;
+
+	const sequence = Number.parseInt(match[2], 10);
+	return { date: match[1], index: Number.isNaN(sequence) ? null : sequence };
+}
+
+/**
+ * The year a filename's date slot says the archive RECEIVED the photograph, or null.
+ *
+ * The index build asks this before it believes a year read out of the name. Reading the
+ * date slot rather than looking for a date anywhere in the filename is the whole of the
+ * rule: sixty-two photographs carry a year that also appears in some date stamp, and
+ * twenty-eight of them are correctly dated by it, because in those the stamp sits in the
+ * description - a gymnastics display on 06.07.1947, the Tajje centenary on 09.07.1976.
+ * Position in the segment chain tells a donation from an event; the presence of a stamp
+ * does not.
+ *
+ * Bounded by {@link ARCHIVE_OPENED} for the same reason, and because the date slot may
+ * legitimately hold a bare year: "Bunderhof_16 - 1909" and six "Jan Ketelaars N -
+ * Hoghescote - 1988" are dated by theirs, and should stay that way.
+ */
+export function donationYear(parts: FilenameParts): string | null {
+	if (!parts.dateToken) return null;
+
+	const year = /(\d{4})$/.exec(parts.dateToken)?.[1];
+	if (!year || Number(year) < ARCHIVE_OPENED) return null;
+
+	return year;
 }
 
 /** Normalizes a full date token to dd.mm.yyyy, or null for anything else. */

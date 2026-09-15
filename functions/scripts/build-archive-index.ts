@@ -26,7 +26,12 @@ import { readSuppressions, staleSuppressions } from '../../sharedModels/suppress
 import { buildIndex, matchImagePath } from '../src/gazetteer/match';
 import { yearFromFilename } from '../src/utils/photo-year';
 import type { FilenameParts } from '../src/gazetteer/segment';
-import { looksLikePersonName, splitFilename, splitPathContext } from '../src/gazetteer/segment';
+import {
+	donationYear,
+	looksLikePersonName,
+	splitFilename,
+	splitPathContext
+} from '../src/gazetteer/segment';
 
 function findRepoRoot(startDirectory: string): string {
 	let current = startDirectory;
@@ -131,7 +136,16 @@ interface PhotoCorrection {
 	/** Replaces the matched places outright, rather than adding to them. */
 	places?: string[];
 	houseNumber?: number;
-	year?: string;
+	/**
+	 * The year to file the photograph under.
+	 *
+	 * `null` means "this photograph has no year", which is a different statement from
+	 * leaving the field out. Omitting it lets the filename decide; setting it to null
+	 * overrules the filename with silence. The archive needs both, because a filename can
+	 * be confidently wrong - a photograph stamped with the day it was donated - and until
+	 * this existed a correction could only replace one guess with another.
+	 */
+	year?: string | null;
 	title?: string;
 	note?: string;
 	by?: string;
@@ -369,9 +383,24 @@ function main(): void {
 		if (parts.dateOfAcquisition) photo.a = parts.dateOfAcquisition;
 		if (context.topicalOnly) photo.ev = true;
 
+		// A year read out of a filename is only the photograph's year when the filename was
+		// not talking about the archive. `donationYear` answers that from the date SLOT
+		// rather than from the presence of a date anywhere in the name, which is the
+		// difference between "received 01.02.2017" and "photographed at the 09.07.1976
+		// centenary" - the second is a real date for the picture and must survive.
+		//
+		// The old test compared against `dateOfAcquisition`, which is null in exactly the
+		// cases that go wrong: a stamp the segmenter could not read produces no acquisition
+		// date, so the guard did not fire and the unreadable stamp became the year. A
+		// bare year or a month-year in the date slot never produced one either.
 		const named = yearFromFilename(fileName);
-		if (correction?.year) photo.y = correction.year;
-		else if (named && !parts.dateOfAcquisition?.includes(named)) {
+		const received = donationYear(parts);
+		if (correction && 'year' in correction) {
+			// An explicit null clears the year. The archive can be sure a photograph is
+			// undated - "z.d." says so in the filename - and until this existed the
+			// corrections file could only overwrite a wrong year with another guess.
+			if (correction.year) photo.y = correction.year;
+		} else if (named && named !== received) {
 			photo.y = named;
 		}
 
