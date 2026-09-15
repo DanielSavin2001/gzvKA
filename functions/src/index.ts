@@ -58,6 +58,23 @@ export const savePlacePin = controllers.placePinController.savePlacePin;
  * @function savePlaceRecord   curators - create a place, or correct one
  * @function deletePlaceRecord curators - drop the overlay for one place
  */
+/**
+ * Functions behind rewriting the site's own words from /beheer.
+ *
+ * Everything a visitor reads outside a photograph's own caption used to be in a Svelte
+ * component, changeable only by a commit and a deploy - so only by a developer. The timeline
+ * told readers its newest photographs were "tot vorig jaar" for seven years because nobody
+ * who noticed could fix it. These put the standing prose behind the same live overlay a
+ * corrected caption already uses.
+ *
+ * @function siteCopy     public - every rewritten sentence
+ * @function listSiteCopy curators - the same, with who changed each one and what it said before
+ * @function saveSiteCopy curators - rewrite one sentence, or put it back
+ */
+export const siteCopy = controllers.siteCopyController.siteCopy;
+export const listSiteCopy = controllers.siteCopyController.listSiteCopy;
+export const saveSiteCopy = controllers.siteCopyController.saveSiteCopy;
+
 export const placeRecords = controllers.placeRecordController.placeRecords;
 export const savePlaceRecord = controllers.placeRecordController.savePlaceRecord;
 export const deletePlaceRecord = controllers.placeRecordController.deletePlaceRecord;

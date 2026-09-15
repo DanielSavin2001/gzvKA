@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copy } from '$lib/site-copy';
 	import Seo from '../components/Seo.svelte';
 	/**
 	 * How to reach the archive.
@@ -22,20 +23,20 @@
 
 <div class="mx-auto max-w-3xl px-4 py-10">
 	<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
-		Contact
+		{$copy('contact.title')}
 	</h1>
 
 	<p class="mt-4 text-lg text-gray-700 dark:text-gray-300">
-		Het meeste wat mensen ons willen zeggen, gaat over één van deze twee dingen. Voor allebei hoeft
-		u niets aan te maken en niemand te mailen.
+		{$copy('contact.intro')}
 	</p>
 
 	<div class="mt-8 grid gap-4 sm:grid-cols-2">
 		<section class="rounded-xl border border-gray-300 p-5 dark:border-gray-700">
-			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Ik heb een foto</h2>
+			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+				{$copy('contact.foto-kop')}
+			</h2>
 			<p class="mt-2 text-gray-700 dark:text-gray-300">
-				Van uw straat, uw school, het café op de hoek. U hoeft geen account te maken en niets in te
-				vullen behalve de foto zelf. Iemand van het archief bekijkt ze voor ze online komt.
+				{$copy('contact.foto')}
 			</p>
 			<a
 				class="mt-4 inline-block rounded-lg bg-blue-800 px-5 py-2.5 font-semibold text-white hover:bg-blue-900"
@@ -44,10 +45,11 @@
 		</section>
 
 		<section class="rounded-xl border border-gray-300 p-5 dark:border-gray-700">
-			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Er staat iets fout</h2>
+			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+				{$copy('contact.fout-kop')}
+			</h2>
 			<p class="mt-2 text-gray-700 dark:text-gray-300">
-				Een plek op de verkeerde spot, een naam die niet klopt. Waar we het zelf niet zeker weten
-				staat op de kaart een rode cirkel met de reden erbij, en een knop om het recht te zetten.
+				{$copy('contact.fout')}
 			</p>
 			<a
 				class="mt-4 inline-block rounded-lg border-2 border-blue-800 px-5 py-2.5 font-semibold text-blue-800 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950"

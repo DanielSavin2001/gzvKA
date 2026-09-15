@@ -118,6 +118,25 @@ export function photoEditsFile(edits: Record<string, PhotoEdit>): string {
 	});
 }
 
+/**
+ * What `static/data/site-copy.json` holds: the site's own words, where a curator rewrote one.
+ *
+ * Only the overrides. The words the site ships with live in `sharedModels/site-copy.ts`,
+ * where the components read them, so a fresh clone with no Firebase project reads exactly as
+ * it was written and this file is an empty object.
+ */
+export function siteCopyFile(copy: Record<string, string>): string {
+	return stableJson({
+		version: EXPORT_VERSION,
+		_comment:
+			'Sentences the curators rewrote on the site itself, pulled out of Firestore by ' +
+			'`npm run archive:pull`. The live overlay is what visitors read; this is the copy ' +
+			'that survives the database. The original words are in sharedModels/site-copy.ts. ' +
+			'Do not edit by hand: the next pull overwrites it with whatever the overlay says.',
+		copy: sortedByKey(copy)
+	});
+}
+
 /** What `static/data/place-records.json` holds: places a curator made or corrected. */
 export function placeRecordsFile(places: Record<string, PlaceRecord>): string {
 	return stableJson({

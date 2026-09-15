@@ -350,3 +350,37 @@ export function judgePhotoFact(decision: {
 		body: JSON.stringify(decision)
 	});
 }
+
+/** One rewritten sentence, as the curator's own desk sees it. */
+export interface StoredCopy {
+	id: string;
+	text: string;
+	/** What it said before this edit, so one click puts it back. */
+	was?: string;
+	editedBy: string;
+	editedAt: string;
+}
+
+/** Every sentence a curator has rewritten, with who changed it and what it replaced. */
+export async function siteCopyEdits(): Promise<Record<string, StoredCopy>> {
+	const result = await call<{ copy: Record<string, StoredCopy> }>('listSiteCopy');
+	return result.copy ?? {};
+}
+
+/**
+ * Rewrites one of the site's own sentences, or puts it back.
+ *
+ * An empty string is a revert rather than an error: clearing the box means "use the words
+ * the site shipped with", which is the only way back that does not require knowing what
+ * they were.
+ */
+export function saveSiteCopy(
+	id: string,
+	text: string
+): Promise<{ id: string; reverted?: boolean }> {
+	return call<{ id: string; reverted?: boolean }>('saveSiteCopy', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ id, text })
+	});
+}

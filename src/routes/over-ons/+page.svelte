@@ -4,6 +4,7 @@
 
 	import type { Archive } from '$lib/archive';
 	import { loadArchive } from '$lib/archive';
+	import { copy } from '$lib/site-copy';
 
 	/**
 	 * What this archive is.
@@ -11,6 +12,13 @@
 	 * The numbers are read from the archive itself rather than typed into the page, so they
 	 * cannot quietly go stale the way a hand-written "over 4000 photographs" does after the
 	 * next import.
+	 *
+	 * The words come through `$copy`, so a curator can rewrite any of them from /beheer
+	 * without a deploy. What is written in `sharedModels/site-copy.ts` is what the site
+	 * ships with and what these paragraphs render until somebody changes one - which is why
+	 * the prerendered HTML still carries real prose. The three paragraphs carrying a link
+	 * are deliberately left in this file: a plain text box is the wrong shape for them, and
+	 * inviting HTML into one is how a content system starts producing broken pages.
 	 */
 
 	let archive: Archive | null = null;
@@ -37,14 +45,11 @@
 
 <div class="mx-auto max-w-3xl px-4 py-10">
 	<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
-		Over dit archief
+		{$copy('over-ons.title')}
 	</h1>
 
 	<p class="mt-4 text-lg text-gray-700 dark:text-gray-300">
-		&ldquo;Ge zijt van Kapellen als ge &hellip;&rdquo; begon als een verzameling foto's van
-		Kapellen: mensen, straten, scholen, cafés, kapellen en kastelen. Wat er stond was waardevol,
-		maar het was een opslagplaats meer dan een archief &mdash; moeilijk doorzoekbaar, en niet te
-		gebruiken op een telefoon.
+		{$copy('over-ons.intro')}
 	</p>
 
 	<p class="mt-4 text-gray-700 dark:text-gray-300">
@@ -58,13 +63,12 @@
 		doorzoekbaar op straat, op naam en op jaartal, en te bekijken op de kaart.
 	</p>
 
-	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">De teksten</h2>
+	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">
+		{$copy('over-ons.teksten-kop')}
+	</h2>
 
 	<p class="mt-3 text-gray-700 dark:text-gray-300">
-		Het archief was nooit alleen foto's. De oude website droeg ongeveer 290.000 tekens aan verhalen
-		mee: de geschiedenis van elk kasteel en elke kerk, wie welk café hield, en een lange herinnering
-		aan opgroeien in de Nieuwe Wijk in de jaren tachtig. Alle 101 pagina's zijn bewaard en staan nu
-		naast de foto's waar ze over gaan.
+		{$copy('over-ons.teksten')}
 	</p>
 
 	<p class="mt-3 text-gray-700 dark:text-gray-300">
@@ -75,23 +79,21 @@
 		staat letterlijk zo op de oude site.
 	</p>
 
-	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">De kaart</h2>
+	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">
+		{$copy('over-ons.kaart-kop')}
+	</h2>
 
 	<p class="mt-3 text-gray-700 dark:text-gray-300">
-		Straten komen uit het officiële adressenregister. De rest &mdash; kastelen, gehuchten, verdwenen
-		villa's, cafés die er niet meer zijn &mdash; staat in geen enkel register en is met de hand
-		opgezocht.
+		{$copy('over-ons.kaart-register')}
 	</p>
 
 	<p class="mt-3 text-gray-700 dark:text-gray-300">
-		Van die plekken weten we sommige precies en andere bij benadering, en dat verschil is op de
-		kaart te zien: waar we het niet zeker weten staat een rode cirkel, en erbij staat waarom we
-		twijfelen. Weet u het beter, dan kunt u het ter plekke rechtzetten. Dat is geen beleefdheid
-		&mdash; de mensen die weten waar kasteel Beaulieu stond, wonen in Kapellen en niet in deze
-		database.
+		{$copy('over-ons.kaart-twijfel')}
 	</p>
 
-	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">Meedoen</h2>
+	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">
+		{$copy('over-ons.meedoen-kop')}
+	</h2>
 
 	<p class="mt-3 text-gray-700 dark:text-gray-300">
 		Hebt u een oude foto van Kapellen liggen? <a
@@ -101,13 +103,15 @@
 		archief kijkt ernaar voor ze online komt.
 	</p>
 
-	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">Bronnen</h2>
+	<h2 class="mt-10 text-2xl font-bold text-gray-900 dark:text-gray-100">
+		{$copy('over-ons.bronnen-kop')}
+	</h2>
 
 	<ul class="mt-3 list-disc space-y-1 pl-5 text-gray-700 dark:text-gray-300">
-		<li>De foto's en teksten van gzvka.be, bijeengebracht door de gemeenschap van Kapellen.</li>
-		<li>Straatgeometrie uit het Vlaams Adressenregister.</li>
-		<li>Gebouwen en monumenten uit de Inventaris Onroerend Erfgoed.</li>
-		<li>Kaartachtergrond &copy; OpenStreetMap-bijdragers (ODbL).</li>
+		<li>{$copy('over-ons.bron-archief')}</li>
+		<li>{$copy('over-ons.bron-straten')}</li>
+		<li>{$copy('over-ons.bron-erfgoed')}</li>
+		<li>{$copy('over-ons.bron-kaart')}</li>
 	</ul>
 
 	<p class="mt-8 text-sm text-gray-600 dark:text-gray-400">

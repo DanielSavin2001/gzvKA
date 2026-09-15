@@ -1,0 +1,1 @@
+{ "_comment": "Rewritten site text, pulled out of Firestore by `npm run archive:pull`. The words the site ships with live in sharedModels/site-copy.ts; this file only holds what a curator changed.", "version": 1, "copy": {} }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copy } from '$lib/site-copy';
 	import Seo from './components/Seo.svelte';
 	import { onMount } from 'svelte';
 
@@ -122,7 +123,7 @@
 		<h1
 			class="mx-auto max-w-4xl text-3xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl lg:text-5xl"
 		>
-			Het fotoarchief van Kapellen
+			{$copy('index.title')}
 		</h1>
 		<p class="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-400 sm:text-xl">
 			{#if archive}
@@ -189,7 +190,9 @@
 			101 stories below it. The counts and the photographs fill in a moment later.
 		-->
 		<section class="py-8">
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Straten van Kapellen</h2>
+			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+				{$copy('index.straten-kop')}
+			</h2>
 			<p class="mt-1 text-gray-600 dark:text-gray-400">
 				{data.summary.streets.length} straten en pleinen met foto's in het archief.
 			</p>
@@ -200,14 +203,16 @@
 		{#if data.summary.areas.length > 0}
 			<section class="border-t border-gray-200 py-8 dark:border-gray-700">
 				<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-					Kastelen, wijken en gehuchten
+					{$copy('index.gebieden-kop')}
 				</h2>
 				<PlaceList places={data.summary.areas} noun="plaatsen" />
 			</section>
 		{/if}
 	{:else}
 		<section class="py-8">
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Straten van Kapellen</h2>
+			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+				{$copy('index.straten-kop')}
+			</h2>
 			<p class="mt-1 text-gray-600 dark:text-gray-400">
 				{streets.length} straten en pleinen met foto's in het archief.
 			</p>
