@@ -121,8 +121,9 @@ jobs:
           # unmangled. YAML strips this block's common indentation before the shell ever
           # sees it, so the heredoc and its terminator both land at column 0.
           cat > "$RUNNER_TEMP/pr-body.md" <<'BODY'
-          Opened by the nightly `archive:pull`. It reads the three public overlays - photo
-          edits, place pins and place records - and writes them to `static/data/`.
+          Opened by the nightly `archive:pull`. It reads the five public overlays - photo
+          edits, place pins, place records, the site's own words and how its pages are
+          arranged - and writes them to `static/data/`.
 
           Read the diff as the account of what changed on the live site. Merging it means a
           fresh clone reproduces the archive without a Firebase project at all.

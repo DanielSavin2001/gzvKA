@@ -6,3 +6,4 @@ export * as removalRequestController from './removalRequestController';
 export * as placePinController from './placePinController';
 export * as placeRecordController from './placeRecordController';
 export * as siteCopyController from './siteCopyController';
+export * as siteLayoutController from './siteLayoutController';

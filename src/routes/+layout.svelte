@@ -10,6 +10,7 @@
 	import { FlatToast, ToastContainer } from 'svelte-toasts';
 	import { pageView, start } from '$lib/analytics';
 	import { startSiteCopy } from '$lib/site-copy';
+	import { startSiteLayout } from '$lib/site-layout';
 
 	onMount(start);
 
@@ -22,6 +23,9 @@
 	 * HTML already carries - so nothing flashes empty and nothing waits.
 	 */
 	onMount(startSiteCopy);
+
+	/** The same, for how the pages are arranged. */
+	onMount(startSiteLayout);
 
 	/**
 	 * A page view per navigation.

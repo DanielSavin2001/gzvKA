@@ -1,0 +1,5 @@
+{
+	"version": 1,
+	"_comment": "Pages the curators rearranged, pulled out of Firestore by `npm run archive:pull`. The live overlay is what visitors see; this is the copy that survives the database. The arrangement each page ships with is in sharedModels/site-layout.ts. Do not edit by hand: the next pull overwrites it with whatever the overlay says.",
+	"layout": {}
+}

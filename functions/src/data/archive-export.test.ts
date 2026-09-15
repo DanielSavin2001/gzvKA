@@ -7,6 +7,8 @@ import {
 	differs,
 	photoEditsFile,
 	placeRecordsFile,
+	siteCopyFile,
+	siteLayoutFile,
 	sortedByKey,
 	stableJson
 } from '../../../sharedModels/archive-export';
@@ -140,6 +142,24 @@ describe('differs', () => {
 	});
 });
 
+describe('siteCopyFile and siteLayoutFile', () => {
+	it('writes what the endpoint serves, under the key the loader reads', () => {
+		const copy = JSON.parse(siteCopyFile({ 'over-ons.kop': 'Over dit archief' }));
+		const layout = JSON.parse(
+			siteLayoutFile({ '/': { order: ['index.greep', 'index.kaart'], hidden: ['index.verhalen'] } })
+		);
+
+		expect(copy.copy['over-ons.kop']).toBe('Over dit archief');
+		expect(layout.layout['/'].order).toEqual(['index.greep', 'index.kaart']);
+		expect(layout.layout['/'].hidden).toEqual(['index.verhalen']);
+	});
+
+	it('is stable across runs', () => {
+		const written = siteLayoutFile({ '/': { order: ['index.greep'], hidden: [] } });
+		expect(siteLayoutFile({ '/': { order: ['index.greep'], hidden: [] } })).toBe(written);
+	});
+});
+
 describe('the committed copies', () => {
 	const data = path.join(__dirname, '..', '..', '..', 'static', 'data');
 
@@ -147,14 +167,20 @@ describe('the committed copies', () => {
 		// Committed empty rather than absent: the loaders read them as the floor under the
 		// live overlay, and a file that only appears after the first nightly pull is a
 		// fallback nobody has ever exercised.
-		const edits = JSON.parse(fs.readFileSync(path.join(data, 'photo-edits.json'), 'utf8'));
-		const places = JSON.parse(fs.readFileSync(path.join(data, 'place-records.json'), 'utf8'));
+		const read = (name: string) => fs.readFileSync(path.join(data, name), 'utf8');
 
-		expect(edits.edits).toEqual({});
-		expect(places.places).toEqual({});
-		expect(fs.readFileSync(path.join(data, 'photo-edits.json'), 'utf8')).toBe(photoEditsFile({}));
-		expect(fs.readFileSync(path.join(data, 'place-records.json'), 'utf8')).toBe(
-			placeRecordsFile({})
-		);
+		expect(JSON.parse(read('photo-edits.json')).edits).toEqual({});
+		expect(JSON.parse(read('place-records.json')).places).toEqual({});
+		expect(JSON.parse(read('site-copy.json')).copy).toEqual({});
+		expect(JSON.parse(read('site-layout.json')).layout).toEqual({});
+
+		// Byte-for-byte what the exporter writes, not merely the same shape. A committed
+		// fallback that a pull would rewrite makes the first nightly run open a pull request
+		// that changes nothing but whitespace - which is exactly the noise `stableJson` and
+		// `differs` exist to prevent.
+		expect(read('photo-edits.json')).toBe(photoEditsFile({}));
+		expect(read('place-records.json')).toBe(placeRecordsFile({}));
+		expect(read('site-copy.json')).toBe(siteCopyFile({}));
+		expect(read('site-layout.json')).toBe(siteLayoutFile({}));
 	});
 });

@@ -8,12 +8,14 @@
  * database. And because the site fails soft on purpose, an emptied project would render as a
  * perfectly healthy archive running on the generated index. Nobody would notice for weeks.
  *
- * This reads the three public overlays and writes three committed files:
+ * This reads the five public overlays and writes five committed files:
  *
  *   static/data/place-coordinates.json   the pins, folded into the file that already
  *                                        promises to be their durable record
  *   static/data/photo-edits.json         corrections to photographs
  *   static/data/place-records.json       places a curator created or corrected
+ *   static/data/site-copy.json           sentences a curator rewrote on the site itself
+ *   static/data/site-layout.json         pages a curator rearranged
  *
  * Run it with credentials for the project:
  *
@@ -26,7 +28,7 @@
  *
  * ## What this deliberately does not export
  *
- * Only the three collections the site already serves to anybody who asks. `photo-facts`,
+ * Only the five collections the site already serves to anybody who asks. `photo-facts`,
  * `submissions` and `removal-requests` carry names, email addresses and free text written by
  * members of the public - including somebody's reason for not wanting to be in a photograph.
  * This repository is public. Those need a private Firestore export, not a commit, and the
@@ -43,12 +45,14 @@ import {
 	differs,
 	photoEditsFile,
 	placeRecordsFile,
-	siteCopyFile
+	siteCopyFile,
+	siteLayoutFile
 } from '../../sharedModels/archive-export';
 import * as photoEdits from '../src/services/photoEditService';
 import * as placePins from '../src/services/placePinService';
 import * as placeRecords from '../src/services/placeRecordService';
 import * as siteCopy from '../src/services/siteCopyService';
+import * as siteLayout from '../src/services/siteLayoutService';
 
 function findRepoRoot(start: string): string {
 	let current = start;
@@ -67,6 +71,7 @@ const COORDINATES_FILE = path.join(DATA_DIR, 'place-coordinates.json');
 const PHOTO_EDITS_FILE = path.join(DATA_DIR, 'photo-edits.json');
 const PLACE_RECORDS_FILE = path.join(DATA_DIR, 'place-records.json');
 const SITE_COPY_FILE = path.join(DATA_DIR, 'site-copy.json');
+const SITE_LAYOUT_FILE = path.join(DATA_DIR, 'site-layout.json');
 
 function readIfPresent(file: string): string | null {
 	return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
@@ -89,12 +94,13 @@ function write(file: string, contents: string): boolean {
 
 async function main(): Promise<void> {
 	// Read them all before writing any: a half-written pull is worse than none, and these
-	// are four views of one moment.
-	const [pins, edits, records, copy] = await Promise.all([
+	// are five views of one moment.
+	const [pins, edits, records, copy, layout] = await Promise.all([
 		placePins.all(),
 		photoEdits.all(),
 		placeRecords.all(),
-		siteCopy.all()
+		siteCopy.all(),
+		siteLayout.all()
 	]);
 
 	const existingCoordinates = JSON.parse(
@@ -105,7 +111,8 @@ async function main(): Promise<void> {
 		['place-coordinates.json', write(COORDINATES_FILE, coordinatesFile(existingCoordinates, pins))],
 		['photo-edits.json', write(PHOTO_EDITS_FILE, photoEditsFile(edits))],
 		['place-records.json', write(PLACE_RECORDS_FILE, placeRecordsFile(records))],
-		['site-copy.json', write(SITE_COPY_FILE, siteCopyFile(copy))]
+		['site-copy.json', write(SITE_COPY_FILE, siteCopyFile(copy))],
+		['site-layout.json', write(SITE_LAYOUT_FILE, siteLayoutFile(layout))]
 	] as const;
 
 	console.log('Archive pull');
@@ -114,6 +121,7 @@ async function main(): Promise<void> {
 	console.log(`Photo edits             ${Object.keys(edits).length}`);
 	console.log(`Place records           ${Object.keys(records).length}`);
 	console.log(`Rewritten sentences     ${Object.keys(copy).length}`);
+	console.log(`Rearranged pages        ${Object.keys(layout).length}`);
 	console.log('');
 
 	for (const [name, changed] of written) {

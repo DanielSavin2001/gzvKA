@@ -75,6 +75,21 @@ export const siteCopy = controllers.siteCopyController.siteCopy;
 export const listSiteCopy = controllers.siteCopyController.listSiteCopy;
 export const saveSiteCopy = controllers.siteCopyController.saveSiteCopy;
 
+/**
+ * Functions behind rearranging a page from /beheer.
+ *
+ * Only an order and a list of hidden ids, both drawn from a registry the pages declare, so
+ * the worst an arrangement can do is leave a block out - and that is one click from being
+ * undone.
+ *
+ * @function siteLayout     public - every rearranged page
+ * @function listSiteLayout curators - the same, with who last changed each one
+ * @function saveSiteLayout curators - rearrange one page, or put it back
+ */
+export const siteLayout = controllers.siteLayoutController.siteLayout;
+export const listSiteLayout = controllers.siteLayoutController.listSiteLayout;
+export const saveSiteLayout = controllers.siteLayoutController.saveSiteLayout;
+
 export const placeRecords = controllers.placeRecordController.placeRecords;
 export const savePlaceRecord = controllers.placeRecordController.savePlaceRecord;
 export const deletePlaceRecord = controllers.placeRecordController.deletePlaceRecord;
