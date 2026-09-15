@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copy } from '$lib/site-copy';
 	import { askAgain } from '$lib/analytics';
 	import Seo from '../components/Seo.svelte';
 
@@ -32,15 +33,16 @@
 	<h1
 		class="mt-3 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100"
 	>
-		Privacy en cookies
+		{$copy('privacy.title')}
 	</h1>
 
 	<div class="mt-6 space-y-8 text-gray-700 dark:text-gray-300">
 		<section>
-			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Bezoekcijfers</h2>
+			<h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+				{$copy('privacy.bezoekcijfers-kop')}
+			</h2>
 			<p class="mt-2 leading-relaxed">
-				We tellen graag hoeveel mensen het archief bezoeken en welke foto's gezocht worden, zodat we
-				weten waar we aan verder moeten werken. Dat gebeurt met Google Analytics.
+				{$copy('privacy.bezoekcijfers')}
 			</p>
 			<p class="mt-3 leading-relaxed">
 				<strong>Alleen als u ja zegt.</strong> Zegt u nee, dan wordt Google Analytics niet geladen &mdash;
@@ -48,9 +50,7 @@
 				hetzelfde.
 			</p>
 			<p class="mt-3 leading-relaxed">
-				Wat er gemeten wordt als u ja zegt: welke pagina's bezocht worden, uit welk land of welke
-				streek ongeveer, en op wat voor toestel. Geen naam, geen account, en niets dat we aan een
-				persoon kunnen koppelen.
+				{$copy('privacy.gemeten')}
 			</p>
 			<p class="mt-3 leading-relaxed">
 				Heeft uw browser <em>Do Not Track</em> aan staan, dan tellen we niets en vragen we het ook niet.

@@ -156,6 +156,144 @@ export const COPY_SLOTS: CopySlot[] = [
 			'Een plek op de verkeerde spot, een naam die niet klopt. Waar we het zelf niet zeker weten staat op de kaart een rode cirkel met de reden erbij, en een knop om het recht te zetten.'
 	},
 	{
+		id: 'privacy.title',
+		page: '/privacy',
+		label: 'Titel',
+		kind: 'heading',
+		fallback: 'Privacy en cookies'
+	},
+	{
+		id: 'privacy.bezoekcijfers-kop',
+		page: '/privacy',
+		label: 'Kop: bezoekcijfers',
+		kind: 'heading',
+		fallback: 'Bezoekcijfers'
+	},
+	{
+		id: 'privacy.bezoekcijfers',
+		page: '/privacy',
+		label: 'Bezoekcijfers',
+		kind: 'text',
+		fallback:
+			'We tellen graag hoeveel mensen het archief bezoeken en welke foto\u0027s gezocht worden, zodat we weten waar we aan verder moeten werken. Dat gebeurt met Google Analytics.'
+	},
+	{
+		id: 'privacy.gemeten',
+		page: '/privacy',
+		label: 'Wat er gemeten wordt',
+		kind: 'text',
+		fallback:
+			'Wat er gemeten wordt als u ja zegt: welke pagina\u0027s bezocht worden, uit welk land of welke streek ongeveer, en op wat voor toestel. Geen naam, geen account, en niets dat we aan een persoon kunnen koppelen.'
+	},
+	{
+		id: 'verhalen.title',
+		page: '/verhalen',
+		label: 'Titel',
+		kind: 'heading',
+		fallback: 'Verhalen uit Kapellen'
+	},
+	{
+		id: 'verhalen.intro',
+		page: '/verhalen',
+		label: 'Inleiding',
+		kind: 'text',
+		fallback:
+			'Bij de foto\u0027s hoort een verhaal. Deze teksten stonden op de oude website en zijn hier bewaard: de geschiedenis van de kastelen, de caf\u00e9s en de straten, en de herinneringen van wie er opgroeide.'
+	},
+	{
+		id: 'verhalen.leeg',
+		page: '/verhalen',
+		label: 'Als er nog niets is',
+		kind: 'text',
+		fallback: 'Er zijn nog geen verhalen.'
+	},
+	{
+		id: 'onderwerpen.title',
+		page: '/onderwerpen',
+		label: 'Titel',
+		kind: 'heading',
+		fallback: 'Onderwerpen'
+	},
+	{
+		id: 'onderwerpen.intro',
+		page: '/onderwerpen',
+		label: 'Inleiding',
+		kind: 'text',
+		fallback:
+			'Niet elke foto hoort bij een straat. Een klasfoto hoort bij een school, een processie bij een feest. Dit is de ingang voor alles wat op de kaart niet te vinden is.'
+	},
+	{
+		id: 'straten.title',
+		page: '/straten',
+		label: 'Titel',
+		kind: 'heading',
+		fallback: 'Straten en pleinen van Kapellen'
+	},
+	{
+		id: 'straten.intro',
+		page: '/straten',
+		label: 'Inleiding',
+		kind: 'text',
+		fallback:
+			'Elke straat en elk plein waar het archief foto\u0027s van heeft, met hoeveel er zijn.'
+	},
+	{
+		id: 'straten.alle-kop',
+		page: '/straten',
+		label: 'Kop: alle straten',
+		kind: 'heading',
+		fallback: 'Alle straten op een rij'
+	},
+	{
+		id: 'straten.ontbreken-kop',
+		page: '/straten',
+		label: 'Kop: straten zonder foto',
+		kind: 'heading',
+		fallback: 'Straten waar we nog niets van hebben'
+	},
+	{
+		id: 'kastelen.title',
+		page: '/kastelen',
+		label: 'Titel',
+		kind: 'heading',
+		fallback: 'Kastelen, forten en domeinen'
+	},
+	{
+		id: 'kastelen.intro',
+		page: '/kastelen',
+		label: 'Inleiding',
+		kind: 'text',
+		fallback: 'De kastelen, forten en landgoederen van Kapellen en omgeving.'
+	},
+	{
+		id: 'kastelen.alle-kop',
+		page: '/kastelen',
+		label: 'Kop: alle kastelen',
+		kind: 'heading',
+		fallback: 'Alle kastelen op een rij'
+	},
+	{
+		id: 'wijken.title',
+		page: '/wijken',
+		label: 'Titel',
+		kind: 'heading',
+		fallback: 'Wijken, gebouwen en parken'
+	},
+	{
+		id: 'wijken.intro',
+		page: '/wijken',
+		label: 'Inleiding',
+		kind: 'text',
+		fallback: 'Wijken en gehuchten, kerken en scholen, caf\u00e9s, bossen en parken.'
+	},
+	{
+		id: 'wijken.alle-kop',
+		page: '/wijken',
+		label: 'Kop: alle plaatsen',
+		kind: 'heading',
+		fallback: 'Alle plaatsen op een rij'
+	},
+	{
 		id: 'over-ons.title',
 		page: '/over-ons',
 		label: 'Titel',
