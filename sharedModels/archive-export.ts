@@ -33,6 +33,7 @@
 import type { PhotoEdit } from './photo-edit';
 import type { PlacePin } from './place-pin';
 import type { PlaceRecord } from './place-record';
+import type { PageLayout } from './site-layout';
 import type { PlacedCoordinate } from './locate';
 
 export const EXPORT_VERSION = 1;
@@ -134,6 +135,25 @@ export function siteCopyFile(copy: Record<string, string>): string {
 			'that survives the database. The original words are in sharedModels/site-copy.ts. ' +
 			'Do not edit by hand: the next pull overwrites it with whatever the overlay says.',
 		copy: sortedByKey(copy)
+	});
+}
+
+/**
+ * What `static/data/site-layout.json` holds: the pages a curator rearranged.
+ *
+ * Only the changed pages. The arrangement each page ships with is in
+ * `sharedModels/site-layout.ts`, so a fresh clone with no Firebase project draws every page
+ * in the order it was designed and this file is an empty object.
+ */
+export function siteLayoutFile(layout: Record<string, PageLayout>): string {
+	return stableJson({
+		version: EXPORT_VERSION,
+		_comment:
+			'Pages the curators rearranged, pulled out of Firestore by `npm run archive:pull`. ' +
+			'The live overlay is what visitors see; this is the copy that survives the database. ' +
+			'The arrangement each page ships with is in sharedModels/site-layout.ts. ' +
+			'Do not edit by hand: the next pull overwrites it with whatever the overlay says.',
+		layout: sortedByKey(layout)
 	});
 }
 

@@ -384,3 +384,36 @@ export function saveSiteCopy(
 		body: JSON.stringify({ id, text })
 	});
 }
+
+/** One page's arrangement, as the curator's desk sees it. */
+export interface StoredLayout {
+	page: string;
+	order: string[];
+	hidden: string[];
+	editedBy: string;
+	editedAt: string;
+}
+
+/** Every page a curator has rearranged, with who last changed each one. */
+export async function siteLayouts(): Promise<Record<string, StoredLayout>> {
+	const result = await call<{ layout: Record<string, StoredLayout> }>('listSiteLayout');
+	return result.layout ?? {};
+}
+
+/**
+ * Stores one page's arrangement, or puts it back to the one it ships with.
+ *
+ * An arrangement that says nothing - the shipped order, nothing hidden - is a revert, which
+ * is why there is no separate reset call to keep in step with this one.
+ */
+export function saveSiteLayout(
+	page: string,
+	order: string[],
+	hidden: string[]
+): Promise<{ page: string; reverted?: boolean }> {
+	return call<{ page: string; reverted?: boolean }>('saveSiteLayout', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ page, order, hidden })
+	});
+}

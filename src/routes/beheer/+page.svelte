@@ -52,6 +52,7 @@
 	import RemovalDesk from '../components/RemovalDesk.svelte';
 	import ReasonDialog from '../components/ReasonDialog.svelte';
 	import CopyDesk from '../components/CopyDesk.svelte';
+	import LayoutDesk from '../components/LayoutDesk.svelte';
 
 	/**
 	 * The curator's desk.
@@ -96,7 +97,8 @@
 		| 'jaartallen'
 		| 'schenkers'
 		| 'verzoeken'
-		| 'teksten' = 'fotos';
+		| 'teksten'
+		| 'indeling' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
 
@@ -689,11 +691,27 @@
 			</button>
 		</div>
 	{:else}
-		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers'], ['verzoeken', 'Verzoeken'], ['teksten', 'Teksten']] as [value, label] (value)}
+		<!--
+			Wrapped, and smaller on a phone.
+
+			This strip was `flex` with no wrap. Measured at 390px with eight desks its content
+			is 868px wide, which pushes the document to 1037px - and a browser answers that by
+			shrinking the whole page to fit, so /beheer arrived at about a third size with an
+			unusable footer and a column of white space beside it. It had been doing that
+			since well before there were eight desks.
+
+			Wrapping rather than scrolling sideways: a strip that scrolls hides the desks that
+			are off the end, and the one thing a curator has to be able to do on this page is
+			see what it offers.
+		-->
+		<nav
+			class="mt-6 flex flex-wrap gap-1.5 border-b border-gray-200 pb-3 sm:gap-2 dark:border-gray-700"
+		>
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers'], ['verzoeken', 'Verzoeken'], ['teksten', 'Teksten'], ['indeling', 'Indeling']] as [value, label] (value)}
 				<button
 					type="button"
-					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
+					class="rounded-lg px-3 py-2 text-sm font-semibold transition sm:px-4 sm:text-base {desk ===
+					value
 						? 'bg-gray-900 text-white'
 						: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 					on:click={() => {
@@ -719,6 +737,11 @@
 							error = null;
 							return;
 						}
+						if (value === 'indeling') {
+							desk = 'indeling';
+							error = null;
+							return;
+						}
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
 						refresh();
@@ -736,12 +759,14 @@
 				desk === 'jaartallen' ||
 				desk === 'schenkers' ||
 				desk === 'verzoeken' ||
-				desk === 'teksten'}
+				desk === 'teksten' ||
+				desk === 'indeling'}
 		>
 			{#each tabs as [value, label] (value)}
 				<button
 					type="button"
-					class="rounded-lg px-4 py-2 font-medium transition {showing === value
+					class="rounded-lg px-3 py-2 text-sm font-medium transition sm:px-4 sm:text-base {showing ===
+					value
 						? 'bg-blue-800 text-white'
 						: 'border border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
 					on:click={() => {
@@ -875,6 +900,8 @@
 			</datalist>
 		{:else if desk === 'teksten'}
 			<CopyDesk />
+		{:else if desk === 'indeling'}
+			<LayoutDesk />
 		{:else if desk === 'verzoeken'}
 			<div class="mt-6">
 				<RemovalDesk {archive} />

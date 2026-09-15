@@ -1,1 +1,5 @@
-{ "_comment": "Rewritten site text, pulled out of Firestore by `npm run archive:pull`. The words the site ships with live in sharedModels/site-copy.ts; this file only holds what a curator changed.", "version": 1, "copy": {} }
+{
+	"version": 1,
+	"_comment": "Sentences the curators rewrote on the site itself, pulled out of Firestore by `npm run archive:pull`. The live overlay is what visitors read; this is the copy that survives the database. The original words are in sharedModels/site-copy.ts. Do not edit by hand: the next pull overwrites it with whatever the overlay says.",
+	"copy": {}
+}

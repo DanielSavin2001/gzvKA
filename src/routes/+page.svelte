@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { copy } from '$lib/site-copy';
+	import { blocks } from '$lib/site-layout';
 	import Seo from './components/Seo.svelte';
 	import { onMount } from 'svelte';
 
@@ -159,18 +160,6 @@
 
 	<SearchResults {archive} {query} />
 
-	{#if !query.trim()}
-		<!--
-			The map is the front page. It loads its own data, so it sits outside the archive
-			check - and outside it the `id="kaart"` anchor exists in the prerendered HTML,
-			which is what the menu link points at. Prerendering runs with no query, so the
-			anchor is in the static HTML whatever this condition does at runtime.
-		-->
-		<div class="pb-8">
-			<MapExplorer />
-		</div>
-	{/if}
-
 	{#if query.trim()}
 		<!-- Searching: the answer is above, and the browse lists would only bury it. -->
 	{:else if error}
@@ -180,103 +169,121 @@
 			<p class="font-semibold">Het archief kon niet geladen worden</p>
 			<p class="mt-1 text-sm">{error}</p>
 		</div>
-	{:else if !archive}
-		<!--
-			The browse lists, from `load`, before the archive has arrived.
-
-			These are the only links out of the home page, and they were built from an index
-			fetched after the HTML had been served - so the response a crawler received had a
-			heading, a search box it cannot use, and no route to any of the 121 places or the
-			101 stories below it. The counts and the photographs fill in a moment later.
-		-->
-		<section class="py-8">
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-				{$copy('index.straten-kop')}
-			</h2>
-			<p class="mt-1 text-gray-600 dark:text-gray-400">
-				{data.summary.streets.length} straten en pleinen met foto's in het archief.
-			</p>
-
-			<PlaceList places={data.summary.streets} noun="straten" />
-		</section>
-
-		{#if data.summary.areas.length > 0}
-			<section class="border-t border-gray-200 py-8 dark:border-gray-700">
-				<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-					{$copy('index.gebieden-kop')}
-				</h2>
-				<PlaceList places={data.summary.areas} noun="plaatsen" />
-			</section>
-		{/if}
 	{:else}
-		<section class="py-8">
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-				{$copy('index.straten-kop')}
-			</h2>
-			<p class="mt-1 text-gray-600 dark:text-gray-400">
-				{streets.length} straten en pleinen met foto's in het archief.
-			</p>
+		<!--
+			The blocks of the front page, in the order the curators put them.
 
-			<PlaceList places={streets} noun="straten" />
-		</section>
+			`$blocks('/')` is the shipped order until the overlay lands, so the prerendered
+			HTML carries the page as it was designed; an id the page does not know is simply
+			not rendered, so no arrangement can produce a page that does not draw. An
+			`{#if}` chain rather than a component map, because that keeps every block exactly
+			the markup it was - the map is still the map, with its own data and its own
+			clustering.
 
-		<section class="py-8">
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-				Wijken, kastelen en gebouwen
-			</h2>
-			<PlaceList places={areas} noun="plaatsen" />
-		</section>
-
-		{#if stories.length > 0}
-			<section class="py-8">
-				<div class="flex flex-wrap items-end justify-between gap-3">
-					<div>
-						<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-							Verhalen bij de foto's
-						</h2>
-						<p class="mt-1 text-gray-600 dark:text-gray-400">
-							De teksten van de oude website: de geschiedenis van de kastelen, de caf&eacute;s en de
-							straten, en de herinneringen van wie er opgroeide.
-						</p>
-					</div>
-					<a
-						class="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 font-semibold text-gray-800 dark:text-gray-200 hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
-						href="/verhalen"
-					>
-						Alle verhalen
-					</a>
+			The archive check lives inside the blocks rather than around them. Before it
+			arrives, the two place lists are drawn from `load` data: they are the only links
+			out of the home page, and a crawler that got a heading, an unusable search box
+			and no route to any of the 131 places was the bug that put them there.
+		-->
+		{#each $blocks('/') as block (block)}
+			{#if block === 'index.kaart'}
+				<!--
+					The map is the front page. It loads its own data, so it does not wait on
+					the archive, and its `id="kaart"` anchor - which the menu links at - is in
+					the prerendered HTML.
+				-->
+				<div class="pb-8">
+					<MapExplorer />
 				</div>
+			{:else if block === 'index.straten' && !archive}
+				<section class="py-8">
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						{$copy('index.straten-kop')}
+					</h2>
+					<p class="mt-1 text-gray-600 dark:text-gray-400">
+						{data.summary.streets.length} straten en pleinen met foto's in het archief.
+					</p>
 
-				<ul class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-					{#each stories as story (story.slug)}
-						<li>
-							<a
-								class="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-left transition hover:border-blue-600 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-								href="/verhaal/{story.slug}"
-							>
-								<h3 class="text-lg font-bold leading-snug text-gray-900 dark:text-gray-100">
-									{story.title}
-								</h3>
-								<p class="mt-2 flex-1 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-									{story.excerpt}
-								</p>
-								<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-									{readingMinutes(story.prose)} min lezen
-								</p>
-							</a>
-						</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
+					<PlaceList places={data.summary.streets} noun="straten" />
+				</section>
+			{:else if block === 'index.gebieden' && !archive && data.summary.areas.length > 0}
+				<section class="border-t border-gray-200 py-8 dark:border-gray-700">
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						{$copy('index.gebieden-kop')}
+					</h2>
+					<PlaceList places={data.summary.areas} noun="plaatsen" />
+				</section>
+			{:else if block === 'index.straten'}
+				<section class="py-8">
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						{$copy('index.straten-kop')}
+					</h2>
+					<p class="mt-1 text-gray-600 dark:text-gray-400">
+						{streets.length} straten en pleinen met foto's in het archief.
+					</p>
 
-		<section class="py-8">
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Een greep uit het archief</h2>
-			<div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-				{#each featured as photo (photo.id)}
-					<PhotoCard {archive} {photo} />
-				{/each}
-			</div>
-		</section>
+					<PlaceList places={streets} noun="straten" />
+				</section>
+			{:else if block === 'index.gebieden' && archive}
+				<section class="py-8">
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						Wijken, kastelen en gebouwen
+					</h2>
+					<PlaceList places={areas} noun="plaatsen" />
+				</section>
+			{:else if block === 'index.verhalen' && archive && stories.length > 0}
+				<section class="py-8">
+					<div class="flex flex-wrap items-end justify-between gap-3">
+						<div>
+							<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+								Verhalen bij de foto's
+							</h2>
+							<p class="mt-1 text-gray-600 dark:text-gray-400">
+								De teksten van de oude website: de geschiedenis van de kastelen, de caf&eacute;s en
+								de straten, en de herinneringen van wie er opgroeide.
+							</p>
+						</div>
+						<a
+							class="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 font-semibold text-gray-800 dark:text-gray-200 hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+							href="/verhalen"
+						>
+							Alle verhalen
+						</a>
+					</div>
+
+					<ul class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+						{#each stories as story (story.slug)}
+							<li>
+								<a
+									class="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-left transition hover:border-blue-600 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+									href="/verhaal/{story.slug}"
+								>
+									<h3 class="text-lg font-bold leading-snug text-gray-900 dark:text-gray-100">
+										{story.title}
+									</h3>
+									<p class="mt-2 flex-1 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+										{story.excerpt}
+									</p>
+									<p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+										{readingMinutes(story.prose)} min lezen
+									</p>
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{:else if block === 'index.greep' && archive}
+				<section class="py-8">
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						Een greep uit het archief
+					</h2>
+					<div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+						{#each featured as photo (photo.id)}
+							<PhotoCard {archive} {photo} />
+						{/each}
+					</div>
+				</section>
+			{/if}
+		{/each}
 	{/if}
 </div>
