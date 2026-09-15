@@ -42,11 +42,13 @@ import {
 	coordinatesWithoutPins,
 	differs,
 	photoEditsFile,
-	placeRecordsFile
+	placeRecordsFile,
+	siteCopyFile
 } from '../../sharedModels/archive-export';
 import * as photoEdits from '../src/services/photoEditService';
 import * as placePins from '../src/services/placePinService';
 import * as placeRecords from '../src/services/placeRecordService';
+import * as siteCopy from '../src/services/siteCopyService';
 
 function findRepoRoot(start: string): string {
 	let current = start;
@@ -64,6 +66,7 @@ const DATA_DIR = path.join(REPO_ROOT, 'static', 'data');
 const COORDINATES_FILE = path.join(DATA_DIR, 'place-coordinates.json');
 const PHOTO_EDITS_FILE = path.join(DATA_DIR, 'photo-edits.json');
 const PLACE_RECORDS_FILE = path.join(DATA_DIR, 'place-records.json');
+const SITE_COPY_FILE = path.join(DATA_DIR, 'site-copy.json');
 
 function readIfPresent(file: string): string | null {
 	return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
@@ -85,12 +88,13 @@ function write(file: string, contents: string): boolean {
 }
 
 async function main(): Promise<void> {
-	// Read all three before writing any: a half-written pull is worse than none, and these
-	// are three views of one moment.
-	const [pins, edits, records] = await Promise.all([
+	// Read them all before writing any: a half-written pull is worse than none, and these
+	// are four views of one moment.
+	const [pins, edits, records, copy] = await Promise.all([
 		placePins.all(),
 		photoEdits.all(),
-		placeRecords.all()
+		placeRecords.all(),
+		siteCopy.all()
 	]);
 
 	const existingCoordinates = JSON.parse(
@@ -100,7 +104,8 @@ async function main(): Promise<void> {
 	const written = [
 		['place-coordinates.json', write(COORDINATES_FILE, coordinatesFile(existingCoordinates, pins))],
 		['photo-edits.json', write(PHOTO_EDITS_FILE, photoEditsFile(edits))],
-		['place-records.json', write(PLACE_RECORDS_FILE, placeRecordsFile(records))]
+		['place-records.json', write(PLACE_RECORDS_FILE, placeRecordsFile(records))],
+		['site-copy.json', write(SITE_COPY_FILE, siteCopyFile(copy))]
 	] as const;
 
 	console.log('Archive pull');
@@ -108,6 +113,7 @@ async function main(): Promise<void> {
 	console.log(`Place pins              ${Object.keys(pins).length}`);
 	console.log(`Photo edits             ${Object.keys(edits).length}`);
 	console.log(`Place records           ${Object.keys(records).length}`);
+	console.log(`Rewritten sentences     ${Object.keys(copy).length}`);
 	console.log('');
 
 	for (const [name, changed] of written) {

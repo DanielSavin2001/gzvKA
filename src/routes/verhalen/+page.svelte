@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copy } from '$lib/site-copy';
 	import PlaceMap from '../components/PlaceMap.svelte';
 	import Seo from '../components/Seo.svelte';
 
@@ -36,17 +37,15 @@
 
 	<header class="mt-3">
 		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl">
-			Verhalen uit Kapellen
+			{$copy('verhalen.title')}
 		</h1>
 		<p class="mt-3 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-			Bij de foto's hoort een verhaal. Deze teksten stonden op de oude website en zijn hier bewaard:
-			de geschiedenis van de kastelen, de cafés en de straten, en de herinneringen van wie er
-			opgroeide.
+			{$copy('verhalen.intro')}
 		</p>
 	</header>
 
 	{#if stories.length === 0}
-		<p class="py-16 text-center text-gray-600 dark:text-gray-400">Er zijn nog geen verhalen.</p>
+		<p class="py-16 text-center text-gray-600 dark:text-gray-400">{$copy('verhalen.leeg')}</p>
 	{:else}
 		<p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
 			{stories.length} verhalen &middot; {Math.round(totalProse / 1000)}.000 tekens

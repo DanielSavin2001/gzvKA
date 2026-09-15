@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copy } from '$lib/site-copy';
 	import { onMount } from 'svelte';
 
 	import type { Decade } from '$lib/page-data';
@@ -88,11 +89,10 @@
 
 	<header class="mt-3">
 		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
-			De tijdlijn van Kapellen
+			{$copy('tijdlijn.title')}
 		</h1>
 		<p class="mt-3 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-			Van de topografische kaart van 1841 tot vorig jaar. Klik een balk om naar dat decennium te
-			springen.
+			{$copy('tijdlijn.intro')}
 		</p>
 		<!--
 			The denominator, said plainly. 608 of 4,504 photographs carry a year, and a

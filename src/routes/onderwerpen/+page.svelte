@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copy } from '$lib/site-copy';
 	import type { SubjectRow } from '$lib/page-data';
 	import Seo from '../components/Seo.svelte';
 
@@ -38,11 +39,10 @@
 
 	<header class="mt-3">
 		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
-			Onderwerpen
+			{$copy('onderwerpen.title')}
 		</h1>
 		<p class="mt-3 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-			Niet elke foto hoort bij een straat. Een klasfoto hoort bij een school, een processie bij een
-			feest. Dit is de ingang voor alles wat op de kaart niet te vinden is.
+			{$copy('onderwerpen.intro')}
 		</p>
 		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 			{data.subjects.length} onderwerpen &middot; {photographs.toLocaleString('nl-BE')} foto's

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { copy } from '$lib/site-copy';
 	import PlaceList from '../components/PlaceList.svelte';
 	import PlaceMap from '../components/PlaceMap.svelte';
 	import Seo from '../components/Seo.svelte';
@@ -24,10 +25,10 @@
 
 	<header class="mt-3">
 		<h1 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-100">
-			Kastelen, forten en domeinen
+			{$copy('kastelen.title')}
 		</h1>
 		<p class="mt-3 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-			De kastelen, forten en landgoederen van Kapellen en omgeving.
+			{$copy('kastelen.intro')}
 		</p>
 		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 			{data.places.length} plaatsen &middot; {photographs.toLocaleString('nl-BE')} foto's
@@ -51,7 +52,9 @@
 	</div>
 
 	<div class="mt-10 border-t border-gray-200 pt-8 dark:border-gray-700">
-		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Alle kastelen op een rij</h2>
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+			{$copy('kastelen.alle-kop')}
+		</h2>
 		<PlaceList places={data.places} noun="kastelen" />
 	</div>
 </div>

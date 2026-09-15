@@ -9,8 +9,19 @@
 	import favicon from '$lib/images/logo/png/logo-color-rounded.png';
 	import { FlatToast, ToastContainer } from 'svelte-toasts';
 	import { pageView, start } from '$lib/analytics';
+	import { startSiteCopy } from '$lib/site-copy';
 
 	onMount(start);
+
+	/**
+	 * The curators' rewrites, fetched once for the whole site.
+	 *
+	 * Here rather than per page because the text they change is spread across a dozen routes
+	 * and a visitor walking three of them should cost one request, not three. The pages
+	 * render the words the site shipped with until this lands, which is what the prerendered
+	 * HTML already carries - so nothing flashes empty and nothing waits.
+	 */
+	onMount(startSiteCopy);
 
 	/**
 	 * A page view per navigation.

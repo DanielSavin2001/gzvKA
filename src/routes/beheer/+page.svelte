@@ -51,6 +51,7 @@
 	import PlaceDesk from '../components/PlaceDesk.svelte';
 	import RemovalDesk from '../components/RemovalDesk.svelte';
 	import ReasonDialog from '../components/ReasonDialog.svelte';
+	import CopyDesk from '../components/CopyDesk.svelte';
 
 	/**
 	 * The curator's desk.
@@ -88,7 +89,14 @@
 	 * *in*, and the 4,504 already here - every field of them read out of a filename - had no
 	 * way to be corrected at all.
 	 */
-	let desk: 'fotos' | 'archief' | 'correcties' | 'jaartallen' | 'schenkers' | 'verzoeken' = 'fotos';
+	let desk:
+		| 'fotos'
+		| 'archief'
+		| 'correcties'
+		| 'jaartallen'
+		| 'schenkers'
+		| 'verzoeken'
+		| 'teksten' = 'fotos';
 	let reports: PlaceCorrection[] = [];
 	let reportBusy: string | null = null;
 
@@ -682,7 +690,7 @@
 		</div>
 	{:else}
 		<nav class="mt-6 flex gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
-			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers'], ['verzoeken', 'Verzoeken']] as [value, label] (value)}
+			{#each [['fotos', 'Inzendingen'], ['archief', "Foto's in het archief"], ['jaartallen', 'Jaartallen'], ['correcties', 'Plaatsen op de kaart'], ['schenkers', 'Schenkers'], ['verzoeken', 'Verzoeken'], ['teksten', 'Teksten']] as [value, label] (value)}
 				<button
 					type="button"
 					class="rounded-lg px-4 py-2 font-semibold transition {desk === value
@@ -706,6 +714,11 @@
 							error = null;
 							return;
 						}
+						if (value === 'teksten') {
+							desk = 'teksten';
+							error = null;
+							return;
+						}
 						desk = value === 'correcties' ? 'correcties' : 'fotos';
 						showing = 'pending';
 						refresh();
@@ -722,7 +735,8 @@
 			class:hidden={desk === 'archief' ||
 				desk === 'jaartallen' ||
 				desk === 'schenkers' ||
-				desk === 'verzoeken'}
+				desk === 'verzoeken' ||
+				desk === 'teksten'}
 		>
 			{#each tabs as [value, label] (value)}
 				<button
@@ -859,6 +873,8 @@
 					<option value={subject.name} />
 				{/each}
 			</datalist>
+		{:else if desk === 'teksten'}
+			<CopyDesk />
 		{:else if desk === 'verzoeken'}
 			<div class="mt-6">
 				<RemovalDesk {archive} />
